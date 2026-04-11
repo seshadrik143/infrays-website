@@ -1,32 +1,85 @@
 import { Link } from 'react-router-dom'
 import { ArrowRight } from 'lucide-react'
 
-const integrations = [
-  { name: 'Prometheus', category: 'Metrics', color: '#e6522c' },
-  { name: 'OpenTelemetry', category: 'Observability', color: '#4ca4e0' },
-  { name: 'Kubernetes', category: 'Orchestration', color: '#326ce5' },
-  { name: 'Docker', category: 'Containers', color: '#2496ed' },
-  { name: 'Grafana Tempo', category: 'Tracing', color: '#f5810e' },
-  { name: 'Grafana Loki', category: 'Logging', color: '#f5810e' },
-  { name: 'VictoriaMetrics', category: 'Storage', color: '#621dee' },
-  { name: 'AWS CloudWatch', category: 'Cloud', color: '#ff9900' },
-  { name: 'Azure Monitor', category: 'Cloud', color: '#0078d4' },
-  { name: 'Google Cloud', category: 'Cloud', color: '#4285f4' },
-  { name: 'PagerDuty', category: 'Alerting', color: '#06ac38' },
-  { name: 'Slack', category: 'Notifications', color: '#4a154b' },
-  { name: 'Microsoft Teams', category: 'Notifications', color: '#6264a7' },
-  { name: 'GitHub', category: 'CI/CD', color: '#6e40c9' },
-  { name: 'Jira', category: 'Ticketing', color: '#0052cc' },
-  { name: 'ServiceNow', category: 'ITSM', color: '#62d84e' },
-  { name: 'Terraform', category: 'IaC', color: '#7b42bc' },
-  { name: 'Pulumi', category: 'IaC', color: '#8a3391' },
-  { name: 'StatsD', category: 'Metrics', color: '#44cc11' },
-  { name: 'Elasticsearch', category: 'Search', color: '#00bfb3' },
-  { name: 'MySQL', category: 'Database', color: '#4479a1' },
-  { name: 'PostgreSQL', category: 'Database', color: '#336791' },
-  { name: 'Redis', category: 'Cache', color: '#dc382d' },
-  { name: 'NGINX', category: 'Web', color: '#009639' },
+const categories: { name: string; color: string; items: string[] }[] = [
+  {
+    name: 'Observability',
+    color: 'cyan',
+    items: ['OpenTelemetry', 'Prometheus', 'VictoriaMetrics', 'Grafana Tempo', 'Grafana Loki', 'StatsD', 'OTLP/HTTP'],
+  },
+  {
+    name: 'Containers & Orchestration',
+    color: 'blue',
+    items: ['Kubernetes', 'Docker', 'Helm', 'NodePulseAgent CRD', 'containerd', 'Podman'],
+  },
+  {
+    name: 'Cloud & Secrets',
+    color: 'sky',
+    items: ['AWS CloudWatch', 'AWS Secrets Manager', 'Azure Monitor', 'GCP Monitoring', 'GCP Secrets Manager', 'HashiCorp Vault'],
+  },
+  {
+    name: 'Databases',
+    color: 'orange',
+    items: ['PostgreSQL', 'MySQL', 'Redis', 'MongoDB', 'Cassandra', 'Elasticsearch', 'Couchbase', 'InfluxDB', 'TimescaleDB', 'MSSQL', 'Oracle'],
+  },
+  {
+    name: 'Message Queues',
+    color: 'yellow',
+    items: ['Apache Kafka', 'RabbitMQ', 'ActiveMQ', 'NATS', 'ZooKeeper'],
+  },
+  {
+    name: 'Web & Proxy',
+    color: 'green',
+    items: ['NGINX', 'HAProxy', 'Apache Tomcat', 'PHP-FPM'],
+  },
+  {
+    name: 'Alerting & Incident',
+    color: 'red',
+    items: ['PagerDuty', 'Slack', 'Microsoft Teams', 'Email (SMTP)', 'OpsGenie', 'Webhooks'],
+  },
+  {
+    name: 'Ticketing & ITSM',
+    color: 'indigo',
+    items: ['Jira', 'ServiceNow', 'GitHub Issues'],
+  },
+  {
+    name: 'CI/CD & IaC',
+    color: 'violet',
+    items: ['GitHub Actions', 'Terraform Provider', 'Pulumi Provider'],
+  },
+  {
+    name: 'Service Discovery',
+    color: 'teal',
+    items: ['Consul', 'etcd', 'AWS IMDSv2', 'GCP Metadata', 'Azure Instance Metadata'],
+  },
+  {
+    name: 'Runtimes & APM',
+    color: 'pink',
+    items: ['JVM (JMX)', 'Node.js', 'Python', 'Go pprof', 'Windows WMI'],
+  },
+  {
+    name: 'Legacy Monitoring',
+    color: 'rose',
+    items: ['Nagios', 'Zabbix', 'Icinga', 'Memcached', 'RTSP / Video'],
+  },
 ]
+
+const colorMap: Record<string, { badge: string; dot: string; card: string }> = {
+  cyan:   { badge: 'bg-cyan-500/15 text-cyan-400 border-cyan-500/25',        dot: 'bg-cyan-400',    card: 'border-cyan-500/15' },
+  blue:   { badge: 'bg-blue-500/15 text-blue-400 border-blue-500/25',        dot: 'bg-blue-400',    card: 'border-blue-500/15' },
+  sky:    { badge: 'bg-sky-500/15 text-sky-400 border-sky-500/25',           dot: 'bg-sky-400',     card: 'border-sky-500/15' },
+  orange: { badge: 'bg-orange-500/15 text-orange-400 border-orange-500/25',  dot: 'bg-orange-400',  card: 'border-orange-500/15' },
+  yellow: { badge: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/25',  dot: 'bg-yellow-400',  card: 'border-yellow-500/15' },
+  green:  { badge: 'bg-green-500/15 text-green-400 border-green-500/25',     dot: 'bg-green-400',   card: 'border-green-500/15' },
+  red:    { badge: 'bg-red-500/15 text-red-400 border-red-500/25',           dot: 'bg-red-400',     card: 'border-red-500/15' },
+  indigo: { badge: 'bg-indigo-500/15 text-indigo-400 border-indigo-500/25',  dot: 'bg-indigo-400',  card: 'border-indigo-500/15' },
+  violet: { badge: 'bg-violet-500/15 text-violet-400 border-violet-500/25',  dot: 'bg-violet-400',  card: 'border-violet-500/15' },
+  teal:   { badge: 'bg-teal-500/15 text-teal-400 border-teal-500/25',        dot: 'bg-teal-400',    card: 'border-teal-500/15' },
+  pink:   { badge: 'bg-pink-500/15 text-pink-400 border-pink-500/25',        dot: 'bg-pink-400',    card: 'border-pink-500/15' },
+  rose:   { badge: 'bg-rose-500/15 text-rose-400 border-rose-500/25',        dot: 'bg-rose-400',    card: 'border-rose-500/15' },
+}
+
+const totalIntegrations = categories.reduce((acc, c) => acc + c.items.length, 0)
 
 export default function IntegrationsGrid() {
   return (
@@ -37,32 +90,41 @@ export default function IntegrationsGrid() {
         <div className="text-center mb-14">
           <span className="badge-purple mb-4">Integrations</span>
           <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-5">
-            Works with your{' '}
-            <span className="text-gradient-purple">entire stack</span>
+            {totalIntegrations}+ integrations.{' '}
+            <span className="text-gradient-purple">Zero vendor lock-in.</span>
           </h2>
-          <p className="text-lg text-white/40 max-w-xl mx-auto">
-            infraYS connects to everything you already use. Native OTLP support means any
-            OpenTelemetry-compatible tool works out of the box.
+          <p className="text-lg text-white/40 max-w-2xl mx-auto">
+            Native OTLP means every OpenTelemetry-compatible tool works out of the box.
+            67 community collector plugins, cloud secrets managers, IaC providers, and full ITSM integration.
           </p>
         </div>
 
-        {/* Grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-10">
-          {integrations.map((integration) => (
-            <div key={integration.name}
-              className="group border border-white/[0.07] rounded-xl p-4 text-center hover:border-white/20 transition-all duration-300 cursor-default hover:-translate-y-1"
-              style={{ background: 'rgba(17, 17, 32, 0.6)' }}>
-              {/* Color dot */}
-              <div className="w-8 h-8 rounded-full mx-auto mb-3 flex items-center justify-center text-sm font-bold text-white"
-                style={{ background: `${integration.color}25`, border: `1px solid ${integration.color}40` }}>
-                <span style={{ color: integration.color }}>{integration.name[0]}</span>
+        {/* Category grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
+          {categories.map((cat) => {
+            const c = colorMap[cat.color]
+            return (
+              <div key={cat.name}
+                className={`border ${c.card} rounded-2xl p-5`}
+                style={{ background: 'rgba(17,17,32,0.7)' }}>
+                <div className="flex items-center gap-2 mb-4">
+                  <span className={`text-xs px-2.5 py-1 rounded-full border font-medium ${c.badge}`}>
+                    {cat.name}
+                  </span>
+                  <span className="text-xs text-white/25 ml-auto">{cat.items.length}</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {cat.items.map((item) => (
+                    <span key={item}
+                      className="flex items-center gap-1.5 text-xs text-white/55 bg-white/[0.04] border border-white/[0.06] px-2.5 py-1 rounded-full hover:text-white/80 hover:border-white/10 transition-colors cursor-default">
+                      <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${c.dot}`} />
+                      {item}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div className="text-xs font-semibold text-white/70 group-hover:text-white transition-colors leading-tight">
-                {integration.name}
-              </div>
-              <div className="text-xs text-white/25 mt-0.5">{integration.category}</div>
-            </div>
-          ))}
+            )
+          })}
         </div>
 
         {/* Plugin SDK CTA */}

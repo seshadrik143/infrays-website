@@ -4,30 +4,28 @@ import { Zap, Github, Twitter, Linkedin, MessageSquare } from 'lucide-react'
 const footerLinks = {
   Product: [
     { href: '/features', label: 'Features' },
+    { href: '/enterprise', label: 'Enterprise' },
     { href: '/pricing', label: 'Pricing' },
     { href: '/integrations', label: 'Integrations' },
     { href: '/install', label: 'Installation' },
-    { href: '/blog', label: "What's New" },
   ],
-  Docs: [
-    { href: '/docs', label: 'Getting Started' },
-    { href: '/docs#agent', label: 'Agent Config' },
-    { href: '/docs#api', label: 'API Reference' },
+  Developers: [
+    { href: '/docs', label: 'Documentation' },
+    { href: '/cli', label: 'CLI Reference' },
+    { href: '/changelog', label: 'Changelog' },
     { href: '/docs#sdk', label: 'Plugin SDK' },
-    { href: '/docs#kubernetes', label: 'Kubernetes / Helm' },
+    { href: '/docs#api', label: 'API Reference' },
   ],
   Company: [
     { href: '/blog', label: 'Blog' },
-    { href: '#', label: 'Careers' },
-    { href: '#', label: 'Status Page' },
-    { href: '#', label: 'Security' },
-    { href: '#', label: 'Contact' },
+    { href: '/changelog', label: "What's New" },
+    { href: 'mailto:hello@infrays.dev', label: 'Contact' },
+    { href: 'https://github.com/seshadrik143/infrays-website', label: 'GitHub', external: true },
   ],
   Legal: [
-    { href: '#', label: 'Privacy Policy' },
-    { href: '#', label: 'Terms of Service' },
-    { href: '#', label: 'Cookie Policy' },
-    { href: '#', label: 'GDPR' },
+    { href: 'mailto:hello@infrays.dev', label: 'Privacy Policy' },
+    { href: 'mailto:hello@infrays.dev', label: 'Terms of Service' },
+    { href: 'mailto:hello@infrays.dev', label: 'GDPR / Data Requests' },
   ],
 }
 
@@ -74,11 +72,20 @@ export default function Footer() {
               <h4 className="text-xs font-semibold text-white/30 uppercase tracking-widest mb-4">{category}</h4>
               <ul className="space-y-2.5">
                 {links.map((link) => (
-                  <li key={link.href}>
-                    <Link to={link.href}
-                      className="text-sm text-white/50 hover:text-white/90 transition-colors">
-                      {link.label}
-                    </Link>
+                  <li key={link.label}>
+                    {(link.href.startsWith('http') || link.href.startsWith('mailto') || (link as {external?: boolean}).external) ? (
+                      <a href={link.href}
+                        target={link.href.startsWith('http') ? '_blank' : undefined}
+                        rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                        className="text-sm text-white/50 hover:text-white/90 transition-colors">
+                        {link.label}
+                      </a>
+                    ) : (
+                      <Link to={link.href}
+                        className="text-sm text-white/50 hover:text-white/90 transition-colors">
+                        {link.label}
+                      </Link>
+                    )}
                   </li>
                 ))}
               </ul>

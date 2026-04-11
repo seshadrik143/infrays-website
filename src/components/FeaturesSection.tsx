@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import {
   BarChart3, FileText, GitBranch, Brain, Bell, Shield,
   Activity, Globe, Cpu, Database, Cloud, Puzzle,
-  ArrowRight
+  ArrowRight, Network, Bug, BarChart2
 } from 'lucide-react'
 
 const features = [
@@ -87,8 +87,29 @@ const features = [
     icon: Puzzle,
     color: 'violet',
     title: 'Plugin Ecosystem',
-    desc: '17+ community plugins, custom collector SDK, webhook templates, and integrations with GitHub, Jira, ServiceNow, and PagerDuty.',
-    tags: ['SDK', 'Marketplace', 'Terraform'],
+    desc: '67+ community plugins, custom collector SDK, webhook & dashboard templates, and integrations with GitHub, Jira, ServiceNow, and PagerDuty. Terraform & Pulumi providers included.',
+    tags: ['67 Plugins', 'SDK', 'Terraform', 'Pulumi'],
+  },
+  {
+    icon: Network,
+    color: 'amber',
+    title: 'Auto-Discovery & Topology',
+    desc: '/proc-based service scan, TCP flow tracking, and cloud metadata detection (AWS/GCP/Azure IMDSv2). Visualize your entire service topology automatically.',
+    tags: ['eBPF', 'Service Map', 'Cloud Detect'],
+  },
+  {
+    icon: Bug,
+    color: 'red',
+    title: 'Error Tracking',
+    desc: 'Automatic error grouping with SHA-256 fingerprinting, first/last seen tracking, stack trace capture, and error rate trends per service.',
+    tags: ['Fingerprinting', 'Grouping', 'Stacks'],
+  },
+  {
+    icon: BarChart2,
+    color: 'lime',
+    title: 'Alert Analytics & Coverage',
+    desc: 'MTTR tracking, alert fatigue scoring, flap detection, and coverage scoring to measure how well your infrastructure is monitored.',
+    tags: ['MTTR', 'Fatigue Score', 'Coverage'],
   },
 ]
 
@@ -105,6 +126,9 @@ const colorMap: Record<string, { bg: string; border: string; text: string; glow:
   rose:   { bg: 'bg-rose-500/10',   border: 'border-rose-500/20',   text: 'text-rose-400',   glow: 'group-hover:shadow-[0_0_30px_rgba(244,63,94,0.12)]' },
   sky:    { bg: 'bg-sky-500/10',    border: 'border-sky-500/20',    text: 'text-sky-400',    glow: 'group-hover:shadow-[0_0_30px_rgba(14,165,233,0.12)]' },
   violet: { bg: 'bg-violet-500/10', border: 'border-violet-500/20', text: 'text-violet-400', glow: 'group-hover:shadow-[0_0_30px_rgba(124,58,237,0.12)]' },
+  amber:  { bg: 'bg-amber-500/10',  border: 'border-amber-500/20',  text: 'text-amber-400',  glow: 'group-hover:shadow-[0_0_30px_rgba(245,158,11,0.12)]' },
+  red:    { bg: 'bg-red-500/10',    border: 'border-red-500/20',    text: 'text-red-400',    glow: 'group-hover:shadow-[0_0_30px_rgba(239,68,68,0.12)]' },
+  lime:   { bg: 'bg-lime-500/10',   border: 'border-lime-500/20',   text: 'text-lime-400',   glow: 'group-hover:shadow-[0_0_30px_rgba(132,204,22,0.12)]' },
 }
 
 export default function FeaturesSection() {

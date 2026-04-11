@@ -4,7 +4,7 @@ const specs = [
   { value: '< 30MB', label: 'Agent RAM Usage' },
   { value: '10s',    label: 'Default Scrape Interval' },
   { value: 'MIT',    label: 'License' },
-  { value: '21+',    label: 'Collector Types' },
+  { value: '67+',    label: 'Collector Plugins' },
   { value: 'v1.0',   label: 'Current Release' },
 ]
 
