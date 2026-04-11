@@ -35,35 +35,42 @@ const features = [
 
 export default function ComparisonTable() {
   return (
-    <section className="section" id="features-list">
-      <div className="container-lg">
+    <section className="section relative overflow-hidden" id="features-list"
+      style={{ background: 'rgba(6,6,14,0.5)' }}>
+      <div className="container-lg relative z-10">
         {/* Header */}
         <div className="text-center mb-12">
-          <span className="badge-green mb-4">What's Included</span>
+          <span className="badge-green mb-5">What's Included</span>
           <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-5">
-            Everything in one platform
+            Everything in{' '}
+            <span className="text-gradient-cyan">one platform</span>
           </h2>
-          <p className="text-lg text-white/40 max-w-xl mx-auto">
+          <p className="text-lg text-white/40 max-w-xl mx-auto leading-relaxed">
             infraYS ships with a complete observability stack out of the box —
             no extra tools, no plugins to buy, no surprise limits.
           </p>
         </div>
 
         {/* Feature checklist */}
-        <div className="border border-white/[0.07] rounded-2xl overflow-hidden"
-          style={{ background: 'rgba(17, 17, 32, 0.7)' }}>
+        <div className="rounded-2xl overflow-hidden"
+          style={{
+            background: 'rgba(11,11,22,0.8)',
+            border: '1px solid rgba(255,255,255,0.06)',
+            backdropFilter: 'blur(10px)',
+          }}>
           <div className="grid md:grid-cols-2">
             {features.map((f, i) => (
               <div key={f.label}
-                className={`flex items-start gap-4 px-6 py-4 border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors
+                className={`flex items-start gap-4 px-6 py-4 transition-colors hover:bg-white/[0.025]
                   ${i % 2 === 1 ? 'md:border-l border-white/[0.04]' : ''}
-                  ${i >= features.length - 2 ? 'border-b-0' : ''}`}>
-                <div className="w-6 h-6 rounded-full bg-green-500/15 border border-green-500/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  ${i < features.length - 2 ? 'border-b border-white/[0.04]' : ''}`}>
+                <div className="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                  style={{ background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)' }}>
                   <Check className="w-3.5 h-3.5 text-green-400" />
                 </div>
                 <div>
-                  <div className="text-sm font-semibold text-white/85">{f.label}</div>
-                  <div className="text-xs text-white/35 mt-0.5">{f.desc}</div>
+                  <div className="text-sm font-semibold text-white/80">{f.label}</div>
+                  <div className="text-xs text-white/30 mt-0.5 leading-relaxed">{f.desc}</div>
                 </div>
               </div>
             ))}
@@ -71,14 +78,18 @@ export default function ComparisonTable() {
         </div>
 
         {/* Free forever note */}
-        <div className="mt-6 border border-green-500/20 rounded-2xl p-6 text-center"
-          style={{ background: 'rgba(16, 185, 129, 0.04)' }}>
-          <p className="text-sm text-white/60">
+        <div className="mt-6 rounded-2xl p-6 text-center"
+          style={{
+            background: 'rgba(16,185,129,0.04)',
+            border: '1px solid rgba(16,185,129,0.15)',
+          }}>
+          <p className="text-sm text-white/55 leading-relaxed">
             <span className="text-green-400 font-bold">All features above are included when self-hosting.</span>{' '}
             infraYS is MIT licensed — download, deploy, and run it on your own infrastructure at no cost.
             Cloud plans add managed hosting and priority support.
           </p>
-          <Link to="/pricing" className="inline-flex items-center gap-2 mt-4 text-sm text-cyan-400 hover:text-cyan-300 transition-colors font-medium">
+          <Link to="/pricing"
+            className="inline-flex items-center gap-2 mt-4 text-sm text-cyan-400 hover:text-cyan-300 transition-colors font-medium">
             View pricing plans <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

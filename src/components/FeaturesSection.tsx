@@ -45,7 +45,7 @@ const features = [
     icon: Bell,
     color: 'yellow',
     title: 'Intelligent Alerting',
-    desc: 'Flap detection, alert correlation, baseline-aware thresholds, and on-call scheduling. Fire fewer, better alerts. Integrates with PagerDuty, Slack, Teams.',
+    desc: 'Flap detection, alert correlation, baseline-aware thresholds, and on-call scheduling. Fire fewer, better alerts.',
     tags: ['PagerDuty', 'Slack', 'On-Call'],
   },
   {
@@ -87,14 +87,14 @@ const features = [
     icon: Puzzle,
     color: 'violet',
     title: 'Plugin Ecosystem',
-    desc: '67+ community plugins, custom collector SDK, webhook & dashboard templates, and integrations with GitHub, Jira, ServiceNow, and PagerDuty. Terraform & Pulumi providers included.',
-    tags: ['67 Plugins', 'SDK', 'Terraform', 'Pulumi'],
+    desc: '67+ community plugins, custom collector SDK, webhook & dashboard templates, Terraform & Pulumi providers. Integrates with GitHub, Jira, ServiceNow.',
+    tags: ['67 Plugins', 'SDK', 'Terraform'],
   },
   {
     icon: Network,
     color: 'amber',
     title: 'Auto-Discovery & Topology',
-    desc: '/proc-based service scan, TCP flow tracking, and cloud metadata detection (AWS/GCP/Azure IMDSv2). Visualize your entire service topology automatically.',
+    desc: '/proc-based service scan, TCP flow tracking, and cloud metadata detection (AWS/GCP/Azure IMDSv2). Visualize your entire service topology.',
     tags: ['eBPF', 'Service Map', 'Cloud Detect'],
   },
   {
@@ -113,22 +113,22 @@ const features = [
   },
 ]
 
-const colorMap: Record<string, { bg: string; border: string; text: string; glow: string }> = {
-  cyan:   { bg: 'bg-cyan-500/10',   border: 'border-cyan-500/20',   text: 'text-cyan-400',   glow: 'group-hover:shadow-[0_0_30px_rgba(0,212,255,0.12)]' },
-  purple: { bg: 'bg-purple-500/10', border: 'border-purple-500/20', text: 'text-purple-400', glow: 'group-hover:shadow-[0_0_30px_rgba(139,92,246,0.12)]' },
-  blue:   { bg: 'bg-blue-500/10',   border: 'border-blue-500/20',   text: 'text-blue-400',   glow: 'group-hover:shadow-[0_0_30px_rgba(59,130,246,0.12)]' },
-  orange: { bg: 'bg-orange-500/10', border: 'border-orange-500/20', text: 'text-orange-400', glow: 'group-hover:shadow-[0_0_30px_rgba(249,115,22,0.12)]' },
-  pink:   { bg: 'bg-pink-500/10',   border: 'border-pink-500/20',   text: 'text-pink-400',   glow: 'group-hover:shadow-[0_0_30px_rgba(236,72,153,0.12)]' },
-  yellow: { bg: 'bg-yellow-500/10', border: 'border-yellow-500/20', text: 'text-yellow-400', glow: 'group-hover:shadow-[0_0_30px_rgba(234,179,8,0.12)]' },
-  teal:   { bg: 'bg-teal-500/10',   border: 'border-teal-500/20',   text: 'text-teal-400',   glow: 'group-hover:shadow-[0_0_30px_rgba(20,184,166,0.12)]' },
-  green:  { bg: 'bg-green-500/10',  border: 'border-green-500/20',  text: 'text-green-400',  glow: 'group-hover:shadow-[0_0_30px_rgba(16,185,129,0.12)]' },
-  indigo: { bg: 'bg-indigo-500/10', border: 'border-indigo-500/20', text: 'text-indigo-400', glow: 'group-hover:shadow-[0_0_30px_rgba(99,102,241,0.12)]' },
-  rose:   { bg: 'bg-rose-500/10',   border: 'border-rose-500/20',   text: 'text-rose-400',   glow: 'group-hover:shadow-[0_0_30px_rgba(244,63,94,0.12)]' },
-  sky:    { bg: 'bg-sky-500/10',    border: 'border-sky-500/20',    text: 'text-sky-400',    glow: 'group-hover:shadow-[0_0_30px_rgba(14,165,233,0.12)]' },
-  violet: { bg: 'bg-violet-500/10', border: 'border-violet-500/20', text: 'text-violet-400', glow: 'group-hover:shadow-[0_0_30px_rgba(124,58,237,0.12)]' },
-  amber:  { bg: 'bg-amber-500/10',  border: 'border-amber-500/20',  text: 'text-amber-400',  glow: 'group-hover:shadow-[0_0_30px_rgba(245,158,11,0.12)]' },
-  red:    { bg: 'bg-red-500/10',    border: 'border-red-500/20',    text: 'text-red-400',    glow: 'group-hover:shadow-[0_0_30px_rgba(239,68,68,0.12)]' },
-  lime:   { bg: 'bg-lime-500/10',   border: 'border-lime-500/20',   text: 'text-lime-400',   glow: 'group-hover:shadow-[0_0_30px_rgba(132,204,22,0.12)]' },
+const colorMap: Record<string, { bg: string; border: string; text: string; shadow: string }> = {
+  cyan:   { bg: 'rgba(0,212,255,0.08)',    border: 'rgba(0,212,255,0.2)',    text: 'text-cyan-400',   shadow: '0 0 30px rgba(0,212,255,0.08)' },
+  purple: { bg: 'rgba(168,85,247,0.08)',   border: 'rgba(168,85,247,0.2)',   text: 'text-purple-400', shadow: '0 0 30px rgba(168,85,247,0.08)' },
+  blue:   { bg: 'rgba(59,130,246,0.08)',   border: 'rgba(59,130,246,0.2)',   text: 'text-blue-400',   shadow: '0 0 30px rgba(59,130,246,0.08)' },
+  orange: { bg: 'rgba(249,115,22,0.08)',   border: 'rgba(249,115,22,0.2)',   text: 'text-orange-400', shadow: '0 0 30px rgba(249,115,22,0.08)' },
+  pink:   { bg: 'rgba(236,72,153,0.08)',   border: 'rgba(236,72,153,0.2)',   text: 'text-pink-400',   shadow: '0 0 30px rgba(236,72,153,0.08)' },
+  yellow: { bg: 'rgba(234,179,8,0.08)',    border: 'rgba(234,179,8,0.2)',    text: 'text-yellow-400', shadow: '0 0 30px rgba(234,179,8,0.08)' },
+  teal:   { bg: 'rgba(20,184,166,0.08)',   border: 'rgba(20,184,166,0.2)',   text: 'text-teal-400',   shadow: '0 0 30px rgba(20,184,166,0.08)' },
+  green:  { bg: 'rgba(16,185,129,0.08)',   border: 'rgba(16,185,129,0.2)',   text: 'text-green-400',  shadow: '0 0 30px rgba(16,185,129,0.08)' },
+  indigo: { bg: 'rgba(99,102,241,0.08)',   border: 'rgba(99,102,241,0.2)',   text: 'text-indigo-400', shadow: '0 0 30px rgba(99,102,241,0.08)' },
+  rose:   { bg: 'rgba(244,63,94,0.08)',    border: 'rgba(244,63,94,0.2)',    text: 'text-rose-400',   shadow: '0 0 30px rgba(244,63,94,0.08)' },
+  sky:    { bg: 'rgba(14,165,233,0.08)',   border: 'rgba(14,165,233,0.2)',   text: 'text-sky-400',    shadow: '0 0 30px rgba(14,165,233,0.08)' },
+  violet: { bg: 'rgba(124,58,237,0.08)',   border: 'rgba(124,58,237,0.2)',   text: 'text-violet-400', shadow: '0 0 30px rgba(124,58,237,0.08)' },
+  amber:  { bg: 'rgba(245,158,11,0.08)',   border: 'rgba(245,158,11,0.2)',   text: 'text-amber-400',  shadow: '0 0 30px rgba(245,158,11,0.08)' },
+  red:    { bg: 'rgba(239,68,68,0.08)',    border: 'rgba(239,68,68,0.2)',    text: 'text-red-400',    shadow: '0 0 30px rgba(239,68,68,0.08)' },
+  lime:   { bg: 'rgba(132,204,22,0.08)',   border: 'rgba(132,204,22,0.2)',   text: 'text-lime-400',   shadow: '0 0 30px rgba(132,204,22,0.08)' },
 }
 
 export default function FeaturesSection() {
@@ -137,35 +137,58 @@ export default function FeaturesSection() {
       <div className="container-lg">
         {/* Header */}
         <div className="text-center mb-16">
-          <span className="badge-cyan mb-4">Platform Features</span>
+          <span className="badge-cyan mb-5">Platform Features</span>
           <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-5">
-            Every signal. One platform.
+            Every signal.{' '}
+            <span className="text-gradient-cyan">One platform.</span>
           </h2>
-          <p className="text-lg text-white/40 max-w-2xl mx-auto">
+          <p className="text-lg text-white/40 max-w-2xl mx-auto leading-relaxed">
             infraYS brings metrics, logs, traces, alerting, and cost tracking together in a single agent
             and unified dashboard — at a fraction of the cost.
           </p>
         </div>
 
         {/* Feature Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {features.map((f) => {
             const c = colorMap[f.color]
             return (
               <div key={f.title}
-                className={`feature-card group border border-white/[0.07] rounded-2xl p-6 ${c.glow} transition-all duration-300`}
-                style={{ background: 'rgba(17, 17, 32, 0.6)' }}>
-                <div className={`w-11 h-11 rounded-xl ${c.bg} border ${c.border} flex items-center justify-center mb-5`}>
-                  <f.icon className={`w-5 h-5 ${c.text}`} />
-                </div>
-                <h3 className="text-base font-bold text-white mb-2">{f.title}</h3>
-                <p className="text-sm text-white/40 leading-relaxed mb-4">{f.desc}</p>
-                <div className="flex flex-wrap gap-2">
-                  {f.tags.map((tag) => (
-                    <span key={tag} className={`text-xs px-2.5 py-1 rounded-full ${c.bg} ${c.text} font-medium`}>
-                      {tag}
-                    </span>
-                  ))}
+                className="group relative rounded-2xl p-6 transition-all duration-350 cursor-default overflow-hidden"
+                style={{
+                  background: 'rgba(13,13,24,0.7)',
+                  border: `1px solid rgba(255,255,255,0.06)`,
+                  backdropFilter: 'blur(8px)',
+                }}>
+                {/* Hover glow overlay */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400 pointer-events-none rounded-2xl"
+                  style={{ background: `radial-gradient(circle at 30% 30%, ${c.bg}, transparent 70%)` }} />
+                {/* Hover border */}
+                <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400 pointer-events-none rounded-2xl"
+                  style={{ boxShadow: `inset 0 0 0 1px ${c.border}, ${c.shadow}` }} />
+
+                <div className="relative z-10">
+                  {/* Icon */}
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-110"
+                    style={{
+                      background: c.bg,
+                      border: `1px solid ${c.border}`,
+                    }}>
+                    <f.icon className={`w-5 h-5 ${c.text}`} />
+                  </div>
+
+                  <h3 className="text-base font-bold text-white mb-2 group-hover:text-white transition-colors">{f.title}</h3>
+                  <p className="text-sm text-white/40 leading-relaxed mb-4">{f.desc}</p>
+
+                  <div className="flex flex-wrap gap-2">
+                    {f.tags.map((tag) => (
+                      <span key={tag}
+                        className={`text-xs px-2.5 py-1 rounded-full font-medium ${c.text}`}
+                        style={{ background: c.bg, border: `1px solid ${c.border}` }}>
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
                 </div>
               </div>
             )
