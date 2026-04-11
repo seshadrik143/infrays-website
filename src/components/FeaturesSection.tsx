@@ -172,9 +172,13 @@ export default function FeaturesSection() {
           })}
         </div>
 
-        <div className="text-center mt-12">
+        <div className="text-center mt-12 flex flex-wrap justify-center gap-4">
           <Link to="/features" className="btn-secondary">
             View All Features
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+          <Link to="/plugins" className="btn-secondary">
+            Browse Plugin Catalog
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

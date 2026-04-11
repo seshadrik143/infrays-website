@@ -7,7 +7,8 @@ const navLinks = [
     label: 'Product',
     children: [
       { to: '/features', label: 'Features', desc: 'Full platform overview' },
-      { to: '/integrations', label: 'Integrations', desc: '67+ plugins & connectors' },
+      { to: '/plugins', label: 'Plugin Catalog', desc: '52+ collector & notifier plugins' },
+      { to: '/integrations', label: 'Integrations', desc: 'Full tech stack coverage' },
       { to: '/enterprise', label: 'Enterprise', desc: 'Security, compliance & HA' },
       { to: '/install', label: 'Installation', desc: 'Up in 60 seconds' },
     ],

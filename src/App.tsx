@@ -11,6 +11,7 @@ import ChangelogPage from './pages/ChangelogPage'
 import EnterprisePage from './pages/EnterprisePage'
 import CLIPage from './pages/CLIPage'
 import BlogPostPage from './pages/BlogPostPage'
+import PluginsPage from './pages/PluginsPage'
 
 
 class ErrorBoundary extends React.Component<{children: React.ReactNode}, {error: Error | null}> {
@@ -59,6 +60,7 @@ export default function App() {
         <Route path="/enterprise" element={<EnterprisePage />} />
         <Route path="/cli" element={<CLIPage />} />
         <Route path="/blog/:slug" element={<BlogPostPage />} />
+        <Route path="/plugins" element={<PluginsPage />} />
       </Routes>
     </ErrorBoundary>
   )
