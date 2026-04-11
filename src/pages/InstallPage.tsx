@@ -222,7 +222,7 @@ export default function InstallPage() {
               {[
                 { title: 'Read the Docs', desc: 'Full configuration reference, collector guides, and API docs.', href: '/docs', icon: '📖' },
                 { title: 'Set Up Alerts', desc: 'Configure alert rules, on-call schedules, and integrations.', href: '/docs#alerts', icon: '🔔' },
-                { title: 'Join the Community', desc: 'Get help, share dashboards, and contribute plugins.', href: 'https://github.com/seshadrik143/infrays', icon: '💬' },
+                { title: 'Join the Community', desc: 'Get help, share dashboards, and contribute plugins.', href: '/contact', icon: '💬' },
               ].map((item) => (
                 <Link key={item.title} to={item.href}
                   className="group border border-white/[0.07] rounded-xl p-5 hover:border-cyan-500/20 transition-all"

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, Github, Zap } from 'lucide-react'
+import { ArrowRight, Zap } from 'lucide-react'
 
 export default function CTABanner() {
   return (
@@ -56,11 +56,6 @@ export default function CTABanner() {
                 Deploy Now — It's Free
                 <ArrowRight className="w-5 h-5" />
               </Link>
-              <a href="https://github.com/seshadrik143/infrays" target="_blank" rel="noopener noreferrer"
-                className="btn-secondary text-base px-9 py-4">
-                <Github className="w-5 h-5" />
-                Star on GitHub
-              </a>
             </div>
 
             <p className="text-xs text-white/20 tracking-wide">

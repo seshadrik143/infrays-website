@@ -282,11 +282,9 @@ export default function PluginsPage() {
                 Plugin SDK Docs
                 <ArrowRight className="w-4 h-4" />
               </Link>
-              <a href="https://github.com/seshadrik143/infrays-website"
-                target="_blank" rel="noopener noreferrer"
-                className="btn-secondary">
+              <Link to="/contact" className="btn-secondary">
                 Contribute a Plugin
-              </a>
+              </Link>
             </div>
           </div>
         </section>

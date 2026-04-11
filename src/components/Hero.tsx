@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Terminal, Github, Zap, Shield, Activity } from 'lucide-react'
+import { ArrowRight, Terminal, Zap, Shield, Activity } from 'lucide-react'
 
 const terminalLines = [
   { delay: 0,    text: '$ curl -fsSL https://get.infrays.dev | sh',   color: 'text-white/60' },
@@ -98,12 +98,6 @@ export default function Hero() {
 
             {/* Bottom social proof */}
             <div className="animate-fade-up delay-500 flex items-center gap-5 text-sm text-white/30">
-              <a href="https://github.com/seshadrik143/infrays" target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-2 hover:text-white/60 transition-colors">
-                <Github className="w-4 h-4" />
-                Open source on GitHub
-              </a>
-              <span className="w-px h-4 bg-white/10" />
               <span>Self-hostable</span>
               <span className="w-px h-4 bg-white/10" />
               <span>No telemetry</span>

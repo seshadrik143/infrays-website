@@ -1,4 +1,4 @@
-import { Github, MessageSquare, ArrowRight, Users, Star, GitPullRequest } from 'lucide-react'
+import { MessageSquare, ArrowRight, Users, Star, GitPullRequest } from 'lucide-react'
 
 const cards = [
   {
@@ -90,14 +90,14 @@ export default function Testimonials() {
             <div>
               <h3 className="text-base font-bold text-white">Join the conversation</h3>
               <p className="text-sm text-white/40 mt-1">
-                Ask questions, share configs, and connect with other infraYS users on GitHub Discussions.
+                Ask questions, share configs, and connect with other infraYS users.
               </p>
             </div>
           </div>
-          <a href="https://github.com/seshadrik143/infrays" target="_blank" rel="noopener noreferrer"
+          <a href="/contact"
             className="btn-secondary whitespace-nowrap flex-shrink-0 flex items-center gap-2">
-            <Github className="w-4 h-4" />
-            GitHub Discussions
+            <MessageSquare className="w-4 h-4" />
+            Join Community
             <ArrowRight className="w-4 h-4" />
           </a>
         </div>
