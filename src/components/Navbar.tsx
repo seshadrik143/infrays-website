@@ -14,6 +14,7 @@ const navLinks = [
     ],
   },
   { to: '/pricing', label: 'Pricing' },
+  { to: '/contact', label: 'Contact' },
   {
     label: 'Developers',
     children: [

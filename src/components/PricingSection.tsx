@@ -88,7 +88,7 @@ const tiers = [
       'Custom integrations',
     ],
     cta: 'Contact Sales',
-    ctaHref: '#',
+    ctaHref: '/contact',
     badge: null,
   },
 ]

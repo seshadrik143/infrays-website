@@ -20,13 +20,13 @@ const footerLinks = {
   Company: [
     { href: '/blog', label: 'Blog' },
     { href: '/changelog', label: "What's New" },
-    { href: 'mailto:hello@infrays.dev', label: 'Contact' },
+    { href: '/contact', label: 'Contact' },
     { href: 'https://github.com/seshadrik143/infrays-website', label: 'GitHub', external: true },
   ],
   Legal: [
-    { href: 'mailto:hello@infrays.dev', label: 'Privacy Policy' },
-    { href: 'mailto:hello@infrays.dev', label: 'Terms of Service' },
-    { href: 'mailto:hello@infrays.dev', label: 'GDPR / Data Requests' },
+    { href: '/contact', label: 'Privacy Policy' },
+    { href: '/contact', label: 'Terms of Service' },
+    { href: '/contact', label: 'GDPR / Data Requests' },
   ],
 }
 

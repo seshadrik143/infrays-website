@@ -123,10 +123,10 @@ export default function EnterprisePage() {
               AES-256 encryption, Vault integration, and Raft HA — all self-hosted, all open source.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <a href="mailto:hello@infrays.dev" className="btn-primary">
+              <Link to="/contact" className="btn-primary">
                 Talk to Sales
                 <ArrowRight className="w-4 h-4" />
-              </a>
+              </Link>
               <Link to="/install" className="btn-secondary">
                 Deploy Now
               </Link>
@@ -260,10 +260,10 @@ export default function EnterprisePage() {
               solution engineer to support your procurement process.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <a href="mailto:hello@infrays.dev" className="btn-primary">
+              <Link to="/contact" className="btn-primary">
                 Request Security Package
                 <ArrowRight className="w-4 h-4" />
-              </a>
+              </Link>
               <Link to="/docs" className="btn-secondary">
                 <FileText className="w-4 h-4" />
                 Read Security Docs
