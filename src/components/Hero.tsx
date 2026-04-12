@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Terminal, Zap, Shield, Activity, Github } from 'lucide-react'
+import { ArrowRight, Terminal, Zap, Shield, Activity } from 'lucide-react'
 
 const terminalLines = [
   { delay: 0,    text: '$ curl -fsSL https://get.infrays.dev | sh',   color: 'text-white/60' },
@@ -91,15 +91,9 @@ export default function Hero() {
                 Deploy Free Now
                 <ArrowRight className="w-5 h-5" />
               </Link>
-              <a
-                href="https://github.com/NodepulseRepo/NodePulse"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-secondary text-base px-8 py-4 flex items-center gap-2"
-              >
-                <Github className="w-5 h-5" />
-                Star on GitHub
-              </a>
+              <Link to="/docs" className="btn-secondary text-base px-8 py-4">
+                Read the Docs
+              </Link>
             </div>
 
             {/* Bottom social proof */}

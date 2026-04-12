@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Menu, X, Zap, ChevronDown, Github } from 'lucide-react'
+import { Menu, X, Zap, ChevronDown } from 'lucide-react'
 
 const navLinks = [
   {
@@ -110,15 +110,6 @@ export default function Navbar() {
 
         {/* Right CTAs */}
         <div className="hidden md:flex items-center gap-3">
-          <a
-            href="https://github.com/NodepulseRepo/NodePulse"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-sm text-white/50 hover:text-white transition-colors px-3 py-2 rounded-lg hover:bg-white/[0.05]"
-          >
-            <Github className="w-4 h-4" />
-            <span>GitHub</span>
-          </a>
           <Link to="/install" className="btn-primary text-sm py-2 px-5">
             Get Started Free
           </Link>
