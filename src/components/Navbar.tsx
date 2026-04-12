@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Menu, X, Zap, ChevronDown } from 'lucide-react'
+import { Menu, X, Zap, ChevronDown, Github } from 'lucide-react'
 
 const navLinks = [
   {
@@ -55,15 +55,11 @@ export default function Navbar() {
       <nav className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5 group shrink-0">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center relative overflow-hidden transition-transform duration-300 group-hover:scale-110"
-            style={{ background: 'linear-gradient(135deg, #00d4ff, #a855f7)' }}>
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-              style={{ background: 'linear-gradient(135deg, #a855f7, #00d4ff)' }} />
-            <Zap className="w-4 h-4 text-white fill-white relative z-10" />
-          </div>
-          <span className="text-lg font-bold tracking-tight text-white">
-            infra<span className="text-gradient-cyan">YS</span>
-          </span>
+          <img
+            src="/icons/infrays-logo.svg"
+            alt="infraYS"
+            className="h-9 transition-opacity duration-300 group-hover:opacity-90"
+          />
         </Link>
 
         {/* Desktop nav */}
@@ -114,6 +110,15 @@ export default function Navbar() {
 
         {/* Right CTAs */}
         <div className="hidden md:flex items-center gap-3">
+          <a
+            href="https://github.com/NodepulseRepo/NodePulse"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-sm text-white/50 hover:text-white transition-colors px-3 py-2 rounded-lg hover:bg-white/[0.05]"
+          >
+            <Github className="w-4 h-4" />
+            <span>GitHub</span>
+          </a>
           <Link to="/install" className="btn-primary text-sm py-2 px-5">
             Get Started Free
           </Link>

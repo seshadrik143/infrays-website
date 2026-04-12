@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 60" fill="none">
+  <defs>
+    <linearGradient id="iconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#15b370"/>
+      <stop offset="100%" stop-color="#0a7a4e"/>
+    </linearGradient>
+    <linearGradient id="pulseGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#15b370" stop-opacity="0"/>
+      <stop offset="50%" stop-color="#15b370"/>
+      <stop offset="100%" stop-color="#15b370" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Icon mark: hexagon with circuit/pulse inside -->
+  <g transform="translate(4, 4)">
+    <!-- Hexagon background -->
+    <polygon
+      points="26,1 49,14 49,38 26,51 3,38 3,14"
+      fill="url(#iconGrad)"
+      rx="3"
+    />
+    <!-- Inner hexagon ring -->
+    <polygon
+      points="26,7 44,17 44,35 26,45 8,35 8,17"
+      fill="none"
+      stroke="rgba(255,255,255,0.15)"
+      stroke-width="1"
+    />
+    <!-- Pulse / signal line -->
+    <polyline
+      points="10,26 16,26 19,18 22,33 25,22 28,30 31,26 42,26"
+      fill="none"
+      stroke="white"
+      stroke-width="2.2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    />
+    <!-- Dot at start -->
+    <circle cx="10" cy="26" r="1.8" fill="white" opacity="0.6"/>
+    <!-- Dot at end -->
+    <circle cx="42" cy="26" r="1.8" fill="white" opacity="0.6"/>
+  </g>
+
+  <!-- Wordmark: infraYS -->
+  <g transform="translate(68, 14)">
+    <!-- infra — regular weight -->
+    <text
+      x="0" y="28"
+      font-family="'Segoe UI', 'Inter', 'Arial', sans-serif"
+      font-size="26"
+      font-weight="400"
+      letter-spacing="-0.5"
+      fill="#e2e8f0"
+    >infra</text>
+    <!-- YS — bold + green -->
+    <text
+      x="64" y="28"
+      font-family="'Segoe UI', 'Inter', 'Arial', sans-serif"
+      font-size="26"
+      font-weight="700"
+      letter-spacing="-0.5"
+      fill="#15b370"
+    >YS</text>
+  </g>
+
+  <!-- Tagline -->
+  <text
+    x="68" y="52"
+    font-family="'Segoe UI', 'Inter', 'Arial', sans-serif"
+    font-size="9.5"
+    font-weight="400"
+    letter-spacing="2.5"
+    fill="#64748b"
+  >INFRASTRUCTURE SOLUTIONS</text>
+</svg>

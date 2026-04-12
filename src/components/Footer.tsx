@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Zap, Twitter, Linkedin, MessageSquare } from 'lucide-react'
+import { Zap, Twitter, Linkedin, MessageSquare, Github } from 'lucide-react'
 
 const footerLinks = {
   Product: [
@@ -21,6 +21,7 @@ const footerLinks = {
     { href: '/blog', label: 'Blog' },
     { href: '/changelog', label: "What's New" },
     { href: '/contact', label: 'Contact' },
+    { href: 'https://github.com/NodepulseRepo/NodePulse', label: 'GitHub' },
   ],
   Legal: [
     { href: '/contact', label: 'Privacy Policy' },
@@ -30,6 +31,7 @@ const footerLinks = {
 }
 
 const socials = [
+  { href: 'https://github.com/NodepulseRepo/NodePulse', icon: Github, label: 'GitHub', external: true },
   { href: '#', icon: Twitter, label: 'Twitter', external: false },
   { href: '#', icon: Linkedin, label: 'LinkedIn', external: false },
   { href: '#', icon: MessageSquare, label: 'Discord', external: false },

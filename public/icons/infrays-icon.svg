@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" fill="none">
+  <defs>
+    <linearGradient id="iconGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#15b370"/>
+      <stop offset="100%" stop-color="#0a7a4e"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Hexagon background -->
+  <polygon
+    points="28,2 52,15 52,41 28,54 4,41 4,15"
+    fill="url(#iconGrad2)"
+  />
+  <!-- Inner ring -->
+  <polygon
+    points="28,8 47,19 47,37 28,48 9,37 9,19"
+    fill="none"
+    stroke="rgba(255,255,255,0.15)"
+    stroke-width="1.2"
+  />
+  <!-- Pulse line -->
+  <polyline
+    points="11,28 17,28 20,19 23,36 26,23 29,31 32,28 45,28"
+    fill="none"
+    stroke="white"
+    stroke-width="2.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <!-- End dots -->
+  <circle cx="11" cy="28" r="2" fill="white" opacity="0.5"/>
+  <circle cx="45" cy="28" r="2" fill="white" opacity="0.5"/>
+</svg>
