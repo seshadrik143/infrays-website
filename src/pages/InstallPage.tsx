@@ -15,7 +15,7 @@ const methods = [
     steps: [
       {
         label: 'Download and install',
-        code: 'curl -fsSL https://get.infrays.dev | sh',
+        code: 'curl -fsSL https://get.infrays.org | sh',
         lang: 'bash',
       },
       {
@@ -69,7 +69,7 @@ sudo systemctl status infrays-agent`,
     steps: [
       {
         label: 'Add Helm repo',
-        code: `helm repo add infrays https://charts.infrays.dev
+        code: `helm repo add infrays https://charts.infrays.org
 helm repo update`,
         lang: 'bash',
       },

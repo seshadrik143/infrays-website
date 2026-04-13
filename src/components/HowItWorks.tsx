@@ -6,7 +6,7 @@ const steps = [
     icon: Download,
     title: 'Install the Agent',
     desc: 'One curl command. The infraYS agent auto-registers with your server, discovers running services, and starts collecting immediately. Zero config required.',
-    code: '$ curl -fsSL https://get.infrays.dev | sh',
+    code: '$ curl -fsSL https://get.infrays.org | sh',
     output: '→ Agent registered ✓  Server connected ✓',
     outputColor: 'text-green-400',
     color: 'cyan',

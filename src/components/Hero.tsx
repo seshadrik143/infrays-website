@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Terminal, Zap, Shield, Activity } from 'lucide-react'
 
 const terminalLines = [
-  { delay: 0,    text: '$ curl -fsSL https://get.infrays.dev | sh',   color: 'text-white/60' },
+  { delay: 0,    text: '$ curl -fsSL https://get.infrays.org | sh',   color: 'text-white/60' },
   { delay: 900,  text: '→ Downloading infraYS agent v1.0.0...',        color: 'text-cyan-400' },
   { delay: 1800, text: '→ Installing to /usr/local/bin/',               color: 'text-cyan-400' },
   { delay: 2700, text: '→ Agent registered ✓  Server connected ✓',     color: 'text-green-400' },
