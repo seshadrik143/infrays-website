@@ -3,7 +3,7 @@ import Footer from '@/components/Footer'
 import { useState } from 'react'
 import { Mail, MessageSquare, ArrowRight, CheckCircle2, Copy } from 'lucide-react'
 
-const SALES_EMAIL = 'infrays.sales@gmail.com'
+const SALES_EMAIL = 'sales@infrays.org'
 
 const topics = [
   'Sales & Pricing',

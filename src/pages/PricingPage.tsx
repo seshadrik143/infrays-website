@@ -28,7 +28,7 @@ const faq = [
   },
   {
     q: 'Do you offer discounts for startups or open-source projects?',
-    a: 'Yes. OSS projects with a public repository get 50% off Pro. Startups under $1M ARR get 30% off. Contact us at infrays.sales@gmail.com.',
+    a: 'Yes. OSS projects with a public repository get 50% off Pro. Startups under $1M ARR get 30% off. Contact us at sales@infrays.org.',
   },
 ]
 
