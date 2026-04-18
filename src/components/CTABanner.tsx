@@ -59,7 +59,7 @@ export default function CTABanner() {
             </div>
 
             <p className="text-xs text-white/20 tracking-wide">
-              MIT Licensed · Self-hosted · No telemetry sent without consent
+              Apache 2.0 · 15-day free trial · No telemetry sent without consent
             </p>
           </div>
         </div>

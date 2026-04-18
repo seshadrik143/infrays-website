@@ -3,16 +3,16 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Terminal, Zap, Shield, Activity } from 'lucide-react'
 
 const terminalLines = [
-  { delay: 0,    text: '$ curl -fsSL https://get.infrays.org | sh',   color: 'text-white/60' },
-  { delay: 900,  text: '→ Downloading infraYS agent v1.0.0...',        color: 'text-cyan-400' },
-  { delay: 1800, text: '→ Installing to /usr/local/bin/',               color: 'text-cyan-400' },
-  { delay: 2700, text: '→ Agent registered ✓  Server connected ✓',     color: 'text-green-400' },
-  { delay: 3600, text: '$ infrays-agent start',                         color: 'text-white/60' },
-  { delay: 4500, text: '✦ Collecting 847 metrics/s  Latency: 2ms',      color: 'text-purple-400' },
+  { delay: 0,    text: '$ curl -fsSL https://get.infrays.org/install | sudo bash', color: 'text-white/60' },
+  { delay: 900,  text: '→ Fetching latest release: v0.33.0...',                    color: 'text-cyan-400' },
+  { delay: 1800, text: '→ Installing server + agent + npctl...',                   color: 'text-cyan-400' },
+  { delay: 2700, text: '→ Trial started — 15 days remaining ✓',                    color: 'text-green-400' },
+  { delay: 3600, text: '$ systemctl status nodepulse-server nodepulse-agent',      color: 'text-white/60' },
+  { delay: 4500, text: '✦ Collecting 847 metrics/s  Latency: 2ms',                 color: 'text-purple-400' },
 ]
 
 const pills = [
-  { icon: Shield, label: 'MIT Licensed', color: 'text-green-400' },
+  { icon: Shield, label: 'Apache 2.0', color: 'text-green-400' },
   { icon: Zap, label: '< 30MB RAM', color: 'text-cyan-400' },
   { icon: Activity, label: 'Single Binary', color: 'text-purple-400' },
 ]
@@ -143,7 +143,7 @@ export default function Hero() {
               {[
                 { label: 'Binary Size', value: '~12MB', color: 'text-cyan-400', glow: 'rgba(0,212,255,0.15)' },
                 { label: 'Agent RAM',   value: '< 30MB', color: 'text-purple-400', glow: 'rgba(168,85,247,0.15)' },
-                { label: 'License',    value: 'MIT',    color: 'text-green-400',  glow: 'rgba(16,185,129,0.15)' },
+                { label: 'License',    value: 'Apache 2.0', color: 'text-green-400', glow: 'rgba(16,185,129,0.15)' },
               ].map((stat) => (
                 <div key={stat.label}
                   className="gradient-border text-center py-4 px-3 transition-all duration-300 hover:scale-105"

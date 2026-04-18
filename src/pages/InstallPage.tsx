@@ -1,36 +1,59 @@
 
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import { Terminal, Package, Server, Cloud, Copy, CheckCircle2, ArrowRight } from 'lucide-react'
+import { Terminal, Package, Server, Cloud, Copy, CheckCircle2, ArrowRight, Key, Clock } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useState } from 'react'
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false)
+  const copy = () => {
+    navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+  return (
+    <button onClick={copy}
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border border-white/[0.08] hover:border-cyan-500/30 hover:text-cyan-400"
+      style={{ background: 'rgba(255,255,255,0.04)', color: copied ? '#22d3ee' : 'rgba(255,255,255,0.35)' }}>
+      {copied ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+      {copied ? 'Copied' : 'Copy'}
+    </button>
+  )
+}
 
 const methods = [
   {
     id: 'curl',
     icon: Terminal,
-    title: 'Quick Install (Recommended)',
+    title: 'One-Line Install (Recommended)',
     badge: 'Fastest',
     badgeColor: 'badge-cyan',
-    desc: 'One command installs and starts the agent. Works on Ubuntu, Debian, RHEL, CentOS, Fedora, and Alpine.',
+    desc: 'Installs the NodePulse server, agent, and npctl CLI. A 15-day free trial starts automatically — no license key required. Works on any systemd-based Linux (amd64 / arm64).',
     steps: [
       {
-        label: 'Download and install',
-        code: 'curl -fsSL https://get.infrays.org | sh',
+        label: 'Download and install everything',
+        code: 'curl -fsSL https://get.infrays.org/install | sudo bash',
         lang: 'bash',
       },
       {
-        label: 'Configure your server endpoint',
-        code: `# Edit /etc/infrays/agent.yaml
-server_url: "http://your-server:8080"
-api_key: "your-api-key"
-agent_name: "production-01"`,
-        lang: 'yaml',
+        label: 'Services start automatically',
+        code: `# Check status
+sudo systemctl status nodepulse-server
+sudo systemctl status nodepulse-agent
+
+# View logs
+journalctl -u nodepulse-server -f
+journalctl -u nodepulse-agent  -f`,
+        lang: 'bash',
       },
       {
-        label: 'Start the agent',
-        code: `sudo systemctl enable infrays-agent
-sudo systemctl start infrays-agent
-sudo systemctl status infrays-agent`,
+        label: 'Open the dashboard',
+        code: `# Dashboard:  http://<your-host>:8080
+# Default login: admin / changeme  ← change on first login
+# Config:  /etc/nodepulse/server.yaml
+#          /etc/nodepulse/agent.yaml
+# License: /etc/nodepulse/license.yaml`,
         lang: 'bash',
       },
     ],
@@ -41,20 +64,20 @@ sudo systemctl status infrays-agent`,
     title: 'Docker',
     badge: 'Container',
     badgeColor: 'badge-purple',
-    desc: 'Run the agent as a sidecar or standalone container. Mounts host proc for system metrics.',
+    desc: 'Run the NodePulse agent as a sidecar or standalone container. Mounts host /proc for system metrics.',
     steps: [
       {
         label: 'Pull and run',
         code: `docker run -d \\
-  --name infrays-agent \\
+  --name nodepulse-agent \\
   --pid=host \\
   --network=host \\
   -v /proc:/host/proc:ro \\
   -v /sys:/host/sys:ro \\
   -v /var/run/docker.sock:/var/run/docker.sock:ro \\
-  -e INFRAYS_SERVER_URL=http://your-server:8080 \\
-  -e INFRAYS_API_KEY=your-api-key \\
-  infrays/agent:latest`,
+  -e NODEPULSE_SERVER_URL=http://your-server:8080 \\
+  -e NODEPULSE_API_KEY=your-api-key \\
+  ghcr.io/nodepulserepo/nodepulse-agent:latest`,
         lang: 'bash',
       },
     ],
@@ -69,13 +92,13 @@ sudo systemctl status infrays-agent`,
     steps: [
       {
         label: 'Add Helm repo',
-        code: `helm repo add infrays https://charts.infrays.org
+        code: `helm repo add nodepulse https://charts.infrays.org
 helm repo update`,
         lang: 'bash',
       },
       {
         label: 'Install chart',
-        code: `helm install infrays-agent infrays/agent \\
+        code: `helm install nodepulse nodepulse/nodepulse \\
   --namespace monitoring \\
   --create-namespace \\
   --set server.url=http://your-server:8080 \\
@@ -86,7 +109,7 @@ helm repo update`,
       {
         label: 'Verify pods are running',
         code: `kubectl get pods -n monitoring
-# infrays-agent-xxxxx   1/1   Running   0   30s`,
+# nodepulse-agent-xxxxx   1/1   Running   0   30s`,
         lang: 'bash',
       },
     ],
@@ -97,21 +120,21 @@ helm repo update`,
     title: 'Docker Compose (Full Stack)',
     badge: 'All-in-one',
     badgeColor: 'badge-cyan',
-    desc: 'Spin up the complete infraYS stack — server, agent, VictoriaMetrics, and dashboard — locally.',
+    desc: 'Spin up the complete NodePulse stack — server, agent, VictoriaMetrics, and dashboard — with a single command.',
     steps: [
       {
-        label: 'Clone and start',
-        code: `git clone https://github.com/seshadrik143/infrays-website.git
-cd infrays-website
+        label: 'Download and start',
+        code: `curl -fsSL https://get.infrays.org/docker-compose.yml -o docker-compose.yml
+curl -fsSL https://get.infrays.org/.env.example -o .env
+# Edit .env with your settings
 docker compose up -d`,
         lang: 'bash',
       },
       {
         label: 'Access the dashboard',
-        code: `# Dashboard:   http://localhost:5176
-# Server API:  http://localhost:8080
-# Metrics DB:  http://localhost:8428
-# Default login: admin / admin123`,
+        code: `# Dashboard:   http://localhost:8080
+# VictoriaMetrics: http://localhost:8428
+# Default login: admin / changeme`,
         lang: 'bash',
       },
     ],
@@ -119,12 +142,12 @@ docker compose up -d`,
 ]
 
 const requirements = [
-  { label: 'OS', value: 'Linux (amd64 / arm64) · macOS · Windows WSL2' },
-  { label: 'Memory', value: '< 30MB RAM (agent only)' },
+  { label: 'OS', value: 'Linux (amd64 / arm64) · systemd required' },
+  { label: 'Memory', value: '< 30MB RAM (agent)  ~256MB (server)' },
   { label: 'CPU', value: '< 1% single core at 10s interval' },
   { label: 'Go', value: 'Not required — single static binary' },
-  { label: 'Ports', value: 'Agent outbound: 8080 · Server: 8080, 8428 · Dashboard: 5176' },
-  { label: 'Kernel', value: '≥ 4.4 recommended (for eBPF auto-discovery)' },
+  { label: 'Ports', value: 'Server: 8080  VictoriaMetrics: 8428' },
+  { label: 'Kernel', value: '≥ 4.4 recommended (for eBPF collectors)' },
 ]
 
 export default function InstallPage() {
@@ -140,10 +163,27 @@ export default function InstallPage() {
               Deploy in{' '}
               <span className="text-gradient-cyan">60 seconds</span>
             </h1>
-            <p className="text-lg text-white/40 max-w-xl mx-auto">
-              Choose your installation method. The agent is a single static binary —
-              no dependencies, no runtime, no surprises.
+            <p className="text-lg text-white/40 max-w-xl mx-auto mb-8">
+              One command installs the server, agent, and CLI.
+              Always installs the latest release — no version pinning needed.
             </p>
+
+            {/* Trial banner */}
+            <div className="inline-flex items-center gap-6 border border-cyan-500/20 rounded-2xl px-6 py-4 text-sm"
+              style={{ background: 'rgba(0,212,255,0.05)' }}>
+              <div className="flex items-center gap-2 text-cyan-400 font-semibold">
+                <Clock className="w-4 h-4" />
+                15-day free trial
+              </div>
+              <span className="w-px h-4 bg-white/10" />
+              <span className="text-white/50">No credit card required at install</span>
+              <span className="w-px h-4 bg-white/10" />
+              <div className="flex items-center gap-2 text-white/50">
+                <Key className="w-4 h-4" />
+                <span>Get a license key at</span>
+                <Link to="/pricing" className="text-cyan-400 hover:underline font-medium">infrays.org/pricing</Link>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -199,7 +239,10 @@ export default function InstallPage() {
                           <div className="terminal-dot bg-[#ff5f57]" />
                           <div className="terminal-dot bg-[#ffbd2e]" />
                           <div className="terminal-dot bg-[#28ca41]" />
-                          <span className="ml-auto text-xs text-white/20 font-mono">{step.lang}</span>
+                          <span className="ml-auto flex items-center gap-2">
+                            <span className="text-xs text-white/20 font-mono">{step.lang}</span>
+                            <CopyButton text={step.code} />
+                          </span>
                         </div>
                         <pre className="p-5 text-sm font-mono text-cyan-300 overflow-x-auto leading-relaxed">
                           <code>{step.code}</code>
@@ -213,6 +256,69 @@ export default function InstallPage() {
           </div>
         </section>
 
+        {/* License / Trial info */}
+        <section className="section py-16 border-t border-white/[0.06]"
+          style={{ background: 'rgba(0,212,255,0.03)' }}>
+          <div className="container-md">
+            <div className="grid md:grid-cols-2 gap-8 items-start">
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <Clock className="w-5 h-5 text-cyan-400" />
+                  <h2 className="text-xl font-black text-white">15-Day Free Trial</h2>
+                </div>
+                <p className="text-sm text-white/50 leading-relaxed mb-4">
+                  After installation, NodePulse automatically starts a 15-day free trial.
+                  No license key, no credit card — just install and go.
+                </p>
+                <ul className="space-y-2 text-sm text-white/50">
+                  {[
+                    'All features unlocked during trial',
+                    'Warning emails at 7, 3, and 1 day before expiry',
+                    'Trial status visible in Dashboard → Settings → License',
+                    'API: GET /api/v1/license',
+                  ].map((item) => (
+                    <li key={item} className="flex items-center gap-2">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-cyan-500/60 flex-shrink-0" />
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <Key className="w-5 h-5 text-purple-400" />
+                  <h2 className="text-xl font-black text-white">Activating a License Key</h2>
+                </div>
+                <p className="text-sm text-white/50 leading-relaxed mb-4">
+                  After your trial, activate a license key to keep NodePulse running.
+                  Keys are issued instantly at checkout.
+                </p>
+                <div className="terminal rounded-xl mb-4">
+                  <div className="terminal-header">
+                    <div className="terminal-dot bg-[#ff5f57]" />
+                    <div className="terminal-dot bg-[#ffbd2e]" />
+                    <div className="terminal-dot bg-[#28ca41]" />
+                    <span className="ml-auto text-xs text-white/20 font-mono">bash</span>
+                  </div>
+                  <pre className="p-4 text-sm font-mono text-cyan-300 overflow-x-auto leading-relaxed">
+                    <code>{`# Via API
+curl -X POST http://localhost:8080/api/v1/license \\
+  -H "Authorization: Bearer <token>" \\
+  -d '{"key":"NPLIC-..."}'
+
+# Or: Dashboard → Settings → License → Activate Key`}</code>
+                  </pre>
+                </div>
+                <Link to="/pricing"
+                  className="inline-flex items-center gap-2 btn-primary text-sm px-5 py-2.5">
+                  View Pricing & Get a Key
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Next Steps */}
         <section className="section py-16 border-t border-white/[0.06]"
           style={{ background: 'rgba(8,8,16,0.5)' }}>
@@ -222,7 +328,7 @@ export default function InstallPage() {
               {[
                 { title: 'Read the Docs', desc: 'Full configuration reference, collector guides, and API docs.', href: '/docs', icon: '📖' },
                 { title: 'Set Up Alerts', desc: 'Configure alert rules, on-call schedules, and integrations.', href: '/docs#alerts', icon: '🔔' },
-                { title: 'Join the Community', desc: 'Get help, share dashboards, and contribute plugins.', href: '/contact', icon: '💬' },
+                { title: 'Get a License', desc: 'Browse plans and activate a license key after your trial.', href: '/pricing', icon: '🔑' },
               ].map((item) => (
                 <Link key={item.title} to={item.href}
                   className="group border border-white/[0.07] rounded-xl p-5 hover:border-cyan-500/20 transition-all"

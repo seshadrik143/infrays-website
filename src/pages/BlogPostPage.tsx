@@ -94,7 +94,7 @@ const posts: Record<string, {
       '## Where Self-Hosting Wins',
       'Self-hosting wins when: you have a team that can handle ops, your data is sensitive and can\'t leave your network, you\'re cost-conscious at scale, or you want the flexibility to customize the stack.',
       '## The infraYS Middle Ground',
-      'infraYS is designed for both. The MIT-licensed server runs on your infrastructure at a fraction of the SaaS cost. The managed cloud tier ($49–$199/month) covers teams that want the economics of self-hosting with the ops simplicity of SaaS.',
+      'infraYS is designed for both. The Apache 2.0-licensed NodePulse server runs on your infrastructure at a fraction of the SaaS cost. The managed cloud tier ($49–$199/month) covers teams that want the economics of self-hosting with the ops simplicity of SaaS.',
     ],
   },
   'ebpf-autodiscovery': {

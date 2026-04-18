@@ -7,8 +7,8 @@ import { Check } from 'lucide-react'
 
 const faq = [
   {
-    q: 'Is infraYS really free for self-hosted?',
-    a: 'Yes. The entire codebase is MIT licensed. Self-hosting gives you all features — metrics, logs, traces, profiling, AI, multi-tenancy, RBAC — with no license key or call-home required. The paid cloud plans are only for our managed hosting service.',
+    q: 'How does the self-hosted trial work?',
+    a: 'Install NodePulse with one command and a 15-day free trial starts automatically — no credit card, no license key. After the trial, a valid license key is required to continue. Keys are issued instantly at checkout and activated in your dashboard under Settings → License.',
   },
   {
     q: 'How are metrics counted?',
@@ -47,7 +47,7 @@ export default function PricingPage() {
             </h1>
             <p className="text-lg text-white/40 max-w-xl mx-auto">
               Transparent pricing, no hidden fees, no per-seat costs.
-              Self-host forever free with the MIT-licensed codebase.
+              Start with a 15-day free trial. Apache 2.0 licensed codebase.
             </p>
           </div>
         </section>
