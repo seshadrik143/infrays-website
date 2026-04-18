@@ -102,7 +102,7 @@ export default function Footer() {
               <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
               All Systems Operational
             </span>
-            <span className="text-xs text-white/25">v1.0.0 — MIT License</span>
+            <span className="text-xs text-white/25">v0.33.0 — Apache 2.0</span>
           </div>
         </div>
       </div>

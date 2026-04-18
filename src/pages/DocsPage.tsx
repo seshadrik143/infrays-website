@@ -191,9 +191,9 @@ export default function DocsPage() {
                 <div className="terminal-dot bg-[#28ca41]" />
               </div>
               <div className="p-5 text-left">
-                <p className="font-mono text-sm text-cyan-400">$ curl -fsSL https://get.infrays.org/ctl | sh</p>
-                <p className="font-mono text-sm text-green-400 mt-2">✓ infrays installed to /usr/local/bin/infrays</p>
-                <p className="font-mono text-sm text-white/40 mt-1">$ infrays --help</p>
+                <p className="font-mono text-sm text-cyan-400">$ curl -fsSL https://get.infrays.org/install | sudo bash</p>
+                <p className="font-mono text-sm text-green-400 mt-2">→ Trial started — 15 days remaining ✓</p>
+                <p className="font-mono text-sm text-white/40 mt-1">$ npctl --help</p>
               </div>
             </div>
           </div>

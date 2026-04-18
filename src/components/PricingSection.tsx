@@ -125,8 +125,8 @@ export default function PricingSection() {
             pricing
           </h2>
           <p className="text-lg text-white/40 max-w-xl mx-auto">
-            No per-seat pricing. No surprise bills. Start free, scale when you need to.
-            Self-host for free forever.
+            No per-seat pricing. No surprise bills. Start with a 15-day free trial,
+            then a license key to keep running.
           </p>
         </div>
 
@@ -184,8 +184,8 @@ export default function PricingSection() {
           style={{ background: 'rgba(16, 185, 129, 0.04)' }}>
           <p className="text-sm text-white/50">
             <span className="text-green-400 font-semibold">Self-hosting?</span>{' '}
-            infraYS is fully open-source (MIT licensed). Run the server on your own infrastructure
-            with all features included — no license key required. Cloud pricing applies only to our managed cloud service.
+            infraYS is Apache 2.0 licensed. Self-hosting starts with a free 15-day trial.
+            After the trial, a license key is required. Cloud pricing applies only to our managed cloud service.
           </p>
         </div>
       </div>

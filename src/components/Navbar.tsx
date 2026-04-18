@@ -7,7 +7,7 @@ const navLinks = [
     label: 'Product',
     children: [
       { to: '/features',     label: 'Features',       desc: 'Full platform overview' },
-      { to: '/plugins',      label: 'Plugin Catalog',  desc: '52+ collector & notifier plugins' },
+      { to: '/plugins',      label: 'Plugin Catalog',  desc: '67+ collector & notifier plugins' },
       { to: '/integrations', label: 'Integrations',   desc: 'Full tech stack coverage' },
       { to: '/enterprise',   label: 'Enterprise',     desc: 'Security, compliance & HA' },
       { to: '/install',      label: 'Installation',   desc: 'Up in 60 seconds' },
@@ -20,7 +20,7 @@ const navLinks = [
     children: [
       { to: '/docs',       label: 'Documentation', desc: 'Guides & API reference' },
       { to: '/cli',        label: 'CLI Reference',  desc: '20+ commands, shell completion' },
-      { to: '/changelog',  label: 'Changelog',      desc: '27 phases of features shipped' },
+      { to: '/changelog',  label: 'Changelog',      desc: '34 phases of features shipped' },
     ],
   },
   { to: '/blog', label: 'Blog' },

@@ -2,7 +2,7 @@ import { Check, ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 const features = [
-  { label: 'Open Source (MIT License)', desc: 'Full source code available, no license key' },
+  { label: 'Open Source (Apache 2.0)', desc: '15-day free trial, then a license key required' },
   { label: 'Single Agent Binary', desc: 'One 12MB binary, no runtime dependencies' },
   { label: 'Metrics + Logs + Traces + Profiles', desc: 'All four observability pillars in one agent' },
   { label: 'AI-Powered Anomaly Detection', desc: 'Z-score + Isolation Forest baseline analysis' },
@@ -85,8 +85,8 @@ export default function ComparisonTable() {
           }}>
           <p className="text-sm text-white/55 leading-relaxed">
             <span className="text-green-400 font-bold">All features above are included when self-hosting.</span>{' '}
-            infraYS is MIT licensed — download, deploy, and run it on your own infrastructure at no cost.
-            Cloud plans add managed hosting and priority support.
+            infraYS is Apache 2.0 licensed. Install and start a 15-day free trial — no credit card needed.
+            A license key is required after the trial. Cloud plans add managed hosting and priority support.
           </p>
           <Link to="/pricing"
             className="inline-flex items-center gap-2 mt-4 text-sm text-cyan-400 hover:text-cyan-300 transition-colors font-medium">

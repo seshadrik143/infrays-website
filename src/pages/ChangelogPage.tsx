@@ -365,7 +365,7 @@ export default function ChangelogPage() {
           <div className="container-md text-center">
             <span className="badge-cyan mb-4">Changelog</span>
             <h1 className="text-5xl font-black tracking-tight mb-5">
-              27 phases.{' '}
+              34 phases.{' '}
               <span className="text-gradient-cyan">One platform.</span>
             </h1>
             <p className="text-lg text-white/40 max-w-xl mx-auto">
