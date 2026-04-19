@@ -1,0 +1,209 @@
+version: "3.9"
+
+# NodePulse — production stack
+#
+# Uses pre-built images from ghcr.io — no source code or build tools required.
+#
+# Quick start:
+#   cp .env.example .env        # fill in your values
+#   docker compose up -d
+#
+# Pin to a specific release:
+#   NODEPULSE_VERSION=v0.34.0 docker compose up -d
+#
+# For local development (build from source):
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+
+services:
+  # ── VictoriaMetrics (time-series storage) ───────────────────────────────────
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:v1.101.0
+    container_name: nodepulse-vm
+    ports:
+      - "${VM_PORT:-8428}:8428"
+    volumes:
+      - vm-data:/storage
+    command:
+      - "-storageDataPath=/storage"
+      - "-retentionPeriod=${VM_RETENTION:-30d}"
+      - "-httpListenAddr=:8428"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8428/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── NodePulse Server ────────────────────────────────────────────────────────
+  nodepulse-server:
+    image: ghcr.io/nodepulserepo/nodepulse-server:${NODEPULSE_VERSION:-latest}
+    container_name: nodepulse-server
+    ports:
+      - "${SERVER_PORT:-8080}:8080"
+      - "8089:8089"         # Raft peer port (HA mode)
+    volumes:
+      - ./config/server.yaml:/app/config/config.yaml:ro
+      - server-data:/app/data
+    environment:
+      - VM_URL=http://victoriametrics:8428
+      - AI_ENGINE_URL=http://nodepulse-ai:8090
+    depends_on:
+      victoriametrics:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 5s
+      start_period: 15s
+      retries: 3
+
+  # ── NodePulse Dashboard ─────────────────────────────────────────────────────
+  nodepulse-dashboard:
+    image: ghcr.io/nodepulserepo/nodepulse-dashboard:${NODEPULSE_VERSION:-latest}
+    container_name: nodepulse-dashboard
+    ports:
+      - "${DASHBOARD_PORT:-3000}:80"
+    depends_on:
+      nodepulse-server:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80/"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ── NodePulse Agent (monitors this Docker host) ─────────────────────────────
+  nodepulse-agent:
+    image: ghcr.io/nodepulserepo/nodepulse-agent:${NODEPULSE_VERSION:-latest}
+    container_name: nodepulse-agent
+    network_mode: host          # read host network metrics
+    pid: host                   # read host process metrics
+    volumes:
+      - ./config/agent.yaml:/app/config/config.yaml:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - agent-data:/var/lib/nodepulse
+    depends_on:
+      nodepulse-server:
+        condition: service_healthy
+    restart: unless-stopped
+    cap_add:
+      - SYS_PTRACE            # process inspection
+
+  # ── AI / Anomaly Engine ─────────────────────────────────────────────────────
+  nodepulse-ai:
+    image: ghcr.io/nodepulserepo/nodepulse-ai:${NODEPULSE_VERSION:-latest}
+    container_name: nodepulse-ai
+    ports:
+      - "8090:8090"
+    environment:
+      - VM_URL=http://victoriametrics:8428
+      - AI_ENGINE_PORT=8090
+      - SCAN_INTERVAL_SECONDS=60
+      - BASELINE_HOURS=168
+      - ZSCORE_THRESHOLD=3.0
+    depends_on:
+      victoriametrics:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8090/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # ── Loki (log aggregation) ──────────────────────────────────────────────────
+  loki:
+    image: grafana/loki:2.9.4
+    container_name: nodepulse-loki
+    command: ["-config.file=/etc/loki/loki.yaml"]
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./loki/loki.yaml:/etc/loki/loki.yaml:ro
+      - loki-data:/var/loki
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3100/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ── Tempo (distributed tracing) ─────────────────────────────────────────────
+  tempo:
+    image: grafana/tempo:2.4.1
+    container_name: nodepulse-tempo
+    command: ["-config.file=/etc/tempo/tempo.yaml"]
+    ports:
+      - "4317:4317"   # OTLP gRPC
+      - "4318:4318"   # OTLP HTTP
+      - "3200:3200"   # TraceQL queries
+    volumes:
+      - ./tempo/tempo.yaml:/etc/tempo/tempo.yaml:ro
+      - tempo-data:/var/tempo
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3200/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ── Cloud importers (AWS / Azure / GCP) — optional ──────────────────────────
+  nodepulse-cloud-importers:
+    image: ghcr.io/nodepulserepo/nodepulse-cloud-importers:${NODEPULSE_VERSION:-latest}
+    container_name: nodepulse-cloud-importers
+    ports:
+      - "8091:8091"
+    environment:
+      - CLOUD_IMPORTER_PORT=8091
+      - IMPORT_INTERVAL_SECONDS=300
+      - NODEPULSE_SERVER_URL=http://nodepulse-server:8080
+      # AWS — uncomment and set to enable CloudWatch import
+      # - AWS_ENABLED=true
+      # - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      # - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      # - AWS_REGIONS=us-east-1,us-west-2
+      # Azure — uncomment and set to enable Azure Monitor import
+      # - AZURE_ENABLED=true
+      # - AZURE_SUBSCRIPTION_ID=${AZURE_SUBSCRIPTION_ID}
+      # - AZURE_TENANT_ID=${AZURE_TENANT_ID}
+      # - AZURE_CLIENT_ID=${AZURE_CLIENT_ID}
+      # - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET}
+    depends_on:
+      nodepulse-server:
+        condition: service_healthy
+    restart: unless-stopped
+    profiles:
+      - cloud             # enable with: docker compose --profile cloud up -d
+
+  # ── PostgreSQL — optional (enable --profile postgres for HA deployments) ────
+  postgres:
+    image: postgres:16-alpine
+    container_name: nodepulse-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB:       nodepulse
+      POSTGRES_USER:     nodepulse
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nodepulse_secret}
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nodepulse"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    profiles:
+      - postgres
+
+volumes:
+  vm-data:
+  server-data:
+  agent-data:
+  loki-data:
+  tempo-data:
+  pg-data:
