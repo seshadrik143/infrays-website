@@ -328,7 +328,7 @@ curl -X POST http://localhost:8080/api/v1/license \\
               {[
                 { title: 'Read the Docs', desc: 'Full configuration reference, collector guides, and API docs.', href: '/docs', icon: '📖' },
                 { title: 'Set Up Alerts', desc: 'Configure alert rules, on-call schedules, and integrations.', href: '/docs#alerts', icon: '🔔' },
-                { title: 'Get a License', desc: 'Browse plans and activate a license key after your trial.', href: '/pricing', icon: '🔑' },
+                { title: 'Get a License', desc: 'Contact us to get a license key after your trial.', href: '/contact', icon: '🔑' },
               ].map((item) => (
                 <Link key={item.title} to={item.href}
                   className="group border border-white/[0.07] rounded-xl p-5 hover:border-cyan-500/20 transition-all"

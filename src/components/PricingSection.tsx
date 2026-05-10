@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Check, ArrowRight, Zap } from 'lucide-react'
+import { Check, ArrowRight, Zap, Key } from 'lucide-react'
 
 const tiers = [
   {
@@ -180,13 +180,20 @@ export default function PricingSection() {
         </div>
 
         {/* Self-host note */}
-        <div className="mt-10 text-center border border-white/[0.06] rounded-2xl p-6"
+        <div className="mt-10 border border-white/[0.06] rounded-2xl p-6"
           style={{ background: 'rgba(16, 185, 129, 0.04)' }}>
-          <p className="text-sm text-white/50">
-            <span className="text-green-400 font-semibold">Self-hosting?</span>{' '}
-            infraYS is Apache 2.0 licensed. Self-hosting starts with a free 15-day trial.
-            After the trial, a license key is required. Cloud pricing applies only to our managed cloud service.
-          </p>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-white/50 text-center sm:text-left">
+              <span className="text-green-400 font-semibold">Self-hosting?</span>{' '}
+              infraYS is Apache 2.0 licensed. Self-hosting starts with a free 15-day trial.
+              After the trial, a license key is required. Cloud pricing applies only to our managed cloud service.
+            </p>
+            <Link to="/contact"
+              className="btn-secondary text-sm whitespace-nowrap flex-shrink-0 flex items-center gap-2">
+              <Key className="w-4 h-4" />
+              Get License Key
+            </Link>
+          </div>
         </div>
       </div>
     </section>
