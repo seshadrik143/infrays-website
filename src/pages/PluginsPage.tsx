@@ -84,7 +84,6 @@ const plugins: Plugin[] = [
 ]
 
 const allCategories = ['All', ...Array.from(new Set(plugins.map(p => p.category))).sort()]
-const allTypes = ['All', 'collector', 'notifier', 'dashboard_template']
 
 const typeIcon: Record<string, React.ElementType> = {
   collector: Package,

@@ -43,7 +43,7 @@ const sections = [
     title: 'API Reference',
     color: 'orange',
     articles: [
-      { title: 'Swagger UI', href: 'http://localhost:8080/api/v1/docs', desc: 'Interactive API explorer' },
+      { title: 'Swagger UI', href: '/docs#api', desc: 'Interactive API explorer' },
       { title: 'Authentication', href: '#auth', desc: 'JWT + API keys' },
       { title: 'Metrics API', href: '#metrics-api', desc: 'Query and write metrics' },
       { title: 'Webhooks', href: '#webhooks', desc: 'Outbound event hooks' },
@@ -103,10 +103,10 @@ export default function DocsPage() {
                 Quick Start
                 <ArrowRight className="w-4 h-4" />
               </Link>
-              <a href="http://localhost:8080/api/v1/docs" target="_blank" rel="noopener noreferrer" className="btn-secondary">
+              <Link to="/docs#api" className="btn-secondary">
                 <Code2 className="w-4 h-4" />
                 API Reference
-              </a>
+              </Link>
             </div>
           </div>
         </section>

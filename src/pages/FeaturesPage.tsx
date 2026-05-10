@@ -69,7 +69,7 @@ export default function FeaturesPage() {
                 return (
                   <div key={p.title}
                     className={`border rounded-2xl p-6 bg-gradient-to-b ${c}`}
-                    style={{ background: 'rgba(17,17,32,0.8)' }}>
+                    style={{ backgroundColor: 'rgba(17,17,32,0.8)' }}>
                     <h3 className={`text-2xl font-black mb-1 ${c.split(' ').pop()}`}>{p.title}</h3>
                     <p className="text-xs text-white/50 font-medium mb-4">{p.desc}</p>
                     <p className="text-sm text-white/40 leading-relaxed">{p.detail}</p>

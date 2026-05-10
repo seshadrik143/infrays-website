@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import HomePage from './pages/HomePage'
 import FeaturesPage from './pages/FeaturesPage'
 import InstallPage from './pages/InstallPage'
@@ -38,10 +38,10 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {error:
 }
 
 function ScrollToTop() {
-  // Scroll to top on route change
+  const { pathname } = useLocation()
   useEffect(() => {
     window.scrollTo(0, 0)
-  })
+  }, [pathname])
   return null
 }
 
