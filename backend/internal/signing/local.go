@@ -3,6 +3,7 @@ package signing
 import (
 	"context"
 	"crypto/ed25519"
+	"crypto/x509"
 	"encoding/pem"
 	"errors"
 	"fmt"
@@ -27,10 +28,15 @@ type LocalSigner struct {
 }
 
 // LoadLocalSigner reads a PEM-encoded Ed25519 private key from path
-// and returns a Signer ready to use. The path must contain the raw
-// key bytes (32-byte seed expanded to 64 bytes via Go's
-// ed25519.NewKeyFromSeed semantics — same format mint-license
-// generates).
+// and returns a Signer ready to use.
+//
+// Supported PEM block contents (auto-detected):
+//
+//   - PKCS#8 DER (48 bytes for Ed25519) — what openssl genpkey produces.
+//   - Raw 64-byte ed25519.PrivateKey form — what Go's ed25519 package
+//     marshals to with custom code; also what older NodePulse
+//     mint-license dev keys use.
+//   - Raw 32-byte Ed25519 seed — expanded via ed25519.NewKeyFromSeed.
 //
 // Caller is responsible for ensuring the file has restrictive
 // permissions (0400) before this is called.
@@ -46,10 +52,25 @@ func LoadLocalSigner(kid, path string) (*LocalSigner, error) {
 	if block == nil {
 		return nil, errors.New("signing: no PEM block in key file")
 	}
-	if len(block.Bytes) != ed25519.PrivateKeySize {
-		return nil, fmt.Errorf("signing: unexpected private-key size %d (want %d)", len(block.Bytes), ed25519.PrivateKeySize)
+
+	var priv ed25519.PrivateKey
+	switch len(block.Bytes) {
+	case ed25519.PrivateKeySize: // 64
+		priv = ed25519.PrivateKey(block.Bytes)
+	case ed25519.SeedSize: // 32
+		priv = ed25519.NewKeyFromSeed(block.Bytes)
+	default:
+		// Try PKCS#8 (what openssl genpkey -algorithm ED25519 produces).
+		anyKey, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+		if err != nil {
+			return nil, fmt.Errorf("signing: unrecognized key format (size=%d): %w", len(block.Bytes), err)
+		}
+		ed, ok := anyKey.(ed25519.PrivateKey)
+		if !ok {
+			return nil, fmt.Errorf("signing: PKCS#8 key is not Ed25519 (got %T)", anyKey)
+		}
+		priv = ed
 	}
-	priv := ed25519.PrivateKey(block.Bytes)
 	pub, ok := priv.Public().(ed25519.PublicKey)
 	if !ok {
 		return nil, errors.New("signing: failed to derive public key")

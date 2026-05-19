@@ -1,0 +1,75 @@
+package store
+
+import (
+	"context"
+	"errors"
+)
+
+// ErrNotFound is returned when a lookup misses. Callers should check
+// for this with errors.Is — implementations may wrap it.
+var ErrNotFound = errors.New("store: not found")
+
+// ErrAlreadyExists is returned when uniqueness is violated (e.g.
+// creating a customer with an existing email).
+var ErrAlreadyExists = errors.New("store: already exists")
+
+// ErrConsumed is returned by ConsumeEnrollmentToken when the token
+// was already redeemed by a DIFFERENT deployment. Same-deployment
+// retries inside the idempotency window return the cached response.
+var ErrConsumed = errors.New("store: enrollment token already consumed by another deployment")
+
+// Store is the persistence abstraction. The in-memory implementation
+// in memory.go satisfies it; a PostgreSQL adapter in pg.go (TODO)
+// satisfies it equivalently for production. Handlers depend on this
+// interface, never on a concrete type.
+//
+// All methods take context.Context so a Postgres impl can honor
+// request cancellation. The memory impl ignores ctx (besides
+// checking for early cancel).
+type Store interface {
+	// ── Customers ───────────────────────────────────────────────
+	CreateCustomer(ctx context.Context, c *Customer) error
+	GetCustomer(ctx context.Context, id string) (*Customer, error)
+	GetCustomerByEmail(ctx context.Context, email string) (*Customer, error)
+	UpdateCustomer(ctx context.Context, c *Customer) error
+
+	// ── Subscriptions ──────────────────────────────────────────
+	CreateSubscription(ctx context.Context, s *Subscription) error
+	GetSubscription(ctx context.Context, id string) (*Subscription, error)
+	GetSubscriptionByStripeID(ctx context.Context, stripeID string) (*Subscription, error)
+	ListSubscriptionsByCustomer(ctx context.Context, customerID string) ([]*Subscription, error)
+	UpdateSubscription(ctx context.Context, s *Subscription) error
+
+	// ── Deployments ────────────────────────────────────────────
+	UpsertDeployment(ctx context.Context, d *Deployment) error
+	GetDeployment(ctx context.Context, deploymentID string) (*Deployment, error)
+	ListDeploymentsByCustomer(ctx context.Context, customerID string) ([]*Deployment, error)
+	ListFlaggedDeployments(ctx context.Context) ([]*Deployment, error)
+
+	// ── Enrollment tokens ──────────────────────────────────────
+	CreateEnrollmentToken(ctx context.Context, t *EnrollmentToken) error
+	GetEnrollmentTokenByHash(ctx context.Context, tokenHash string) (*EnrollmentToken, error)
+	// ConsumeEnrollmentToken records a successful redemption. If the
+	// token was already consumed by the SAME deployment within the
+	// idempotency window, returns the cached response JWS (no error).
+	// If consumed by a DIFFERENT deployment, returns ErrConsumed.
+	ConsumeEnrollmentToken(ctx context.Context, tokenHash, deploymentID, responseJWS string) error
+
+	// ── Licenses ───────────────────────────────────────────────
+	CreateLicense(ctx context.Context, l *License) error
+	GetLicenseByJTI(ctx context.Context, jti string) (*License, error)
+	GetLatestLicenseForLicenseID(ctx context.Context, licenseID string) (*License, error)
+	RevokeLicenseByJTI(ctx context.Context, jti, reason string) error
+	IsJTIRevoked(ctx context.Context, jti string) (bool, error)
+
+	// ── Entitlement sets ───────────────────────────────────────
+	CreateEntitlementSet(ctx context.Context, e *EntitlementSet) error
+	GetEntitlementSet(ctx context.Context, id string) (*EntitlementSet, error)
+
+	// ── Admin users ────────────────────────────────────────────
+	CreateAdminUser(ctx context.Context, a *AdminUser) error
+	GetAdminUserByEmail(ctx context.Context, email string) (*AdminUser, error)
+
+	// ── Lifecycle ──────────────────────────────────────────────
+	Close() error
+}
