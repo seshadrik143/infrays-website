@@ -143,3 +143,19 @@ type AdminUser struct {
 	LastLogin    time.Time
 	CreatedAt    time.Time
 }
+
+// WebhookEvent records every Stripe (or future provider) webhook for
+// idempotent replay-safe processing. Stripe retries events on 5xx
+// responses; without de-dup we'd double-issue licenses, double-cancel
+// subscriptions, etc.
+//
+// Identified by the provider's own event ID (Stripe assigns "evt_...").
+type WebhookEvent struct {
+	ID          string    // provider event ID, e.g. "evt_1Abc..."
+	Type        string    // "customer.subscription.created"
+	Payload     []byte    // raw JSON body (for replay / audit)
+	ReceivedAt  time.Time
+	ProcessedAt time.Time // zero if pending
+	Status      string    // "pending" | "processed" | "failed"
+	LastError   string    // populated on Status="failed"
+}

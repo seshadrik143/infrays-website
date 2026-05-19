@@ -30,6 +30,7 @@ import (
 	"github.com/seshadrik143/infrays-website/backend/internal/issuer"
 	"github.com/seshadrik143/infrays-website/backend/internal/signing"
 	"github.com/seshadrik143/infrays-website/backend/internal/store"
+	"github.com/seshadrik143/infrays-website/backend/internal/stripebill"
 )
 
 func main() {
@@ -109,6 +110,35 @@ func main() {
 		log.Println("⚠  NP_ISSUER_ADMIN_SECRET is not set — admin endpoints will reject all requests")
 	}
 
+	// ── Phase 51: Stripe wiring ────────────────────────────────────
+	// All three env vars optional — issuer runs without Stripe
+	// before sales is set up. Webhooks + checkout routes only
+	// register when their respective configs are present.
+	var stripeWebhook, stripeCheckout issuer.StripeBillHandler
+	priceMap, err := stripebill.ParseTierMappingFromEnv(os.Getenv("NP_STRIPE_PRICE_MAP"))
+	if err != nil {
+		log.Fatalf("stripe price map: %v", err)
+	}
+	if whSecret := os.Getenv("NP_STRIPE_WEBHOOK_SECRET"); whSecret != "" {
+		wh, err := stripebill.NewHandler(stripebill.Config{
+			WebhookSecret: whSecret,
+			PriceMap:      priceMap,
+		}, st, auditLog)
+		if err != nil {
+			log.Fatalf("stripe webhook: %v", err)
+		}
+		stripeWebhook = wh
+		log.Println("stripe: webhook handler registered")
+	}
+	if apiKey := os.Getenv("NP_STRIPE_SECRET_KEY"); apiKey != "" {
+		ch, err := stripebill.NewCheckoutHandler(apiKey, os.Getenv("NP_APP_URL"), priceMap)
+		if err != nil {
+			log.Fatalf("stripe checkout: %v", err)
+		}
+		stripeCheckout = ch
+		log.Println("stripe: checkout handler registered")
+	}
+
 	srv := issuer.NewServer(issuer.Config{
 		Store:                st,
 		Audit:                auditLog,
@@ -116,6 +146,8 @@ func main() {
 		IssuerURL:            *issuerURL,
 		DefaultGraceDays:     *graceDays,
 		RefreshIntervalHours: *refreshHours,
+		StripeWebhook:        stripeWebhook,
+		StripeCheckout:       stripeCheckout,
 	})
 
 	httpSrv := &http.Server{

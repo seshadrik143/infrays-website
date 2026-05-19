@@ -2,7 +2,10 @@ module github.com/seshadrik143/infrays-website/backend
 
 go 1.25.0
 
-require github.com/jackc/pgx/v5 v5.9.2
+require (
+	github.com/jackc/pgx/v5 v5.9.2
+	github.com/stripe/stripe-go/v82 v82.5.1
+)
 
 require (
 	github.com/jackc/pgpassfile v1.0.0 // indirect

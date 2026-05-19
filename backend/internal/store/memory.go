@@ -22,6 +22,7 @@ type Memory struct {
 	licensesByLicID   map[string][]string         // license_id → []jti (newest last)
 	entitlementSets   map[string]*EntitlementSet  // by ID
 	adminUsers        map[string]*AdminUser       // by email
+	webhookEvents     map[string]*WebhookEvent    // by provider event ID
 }
 
 // NewMemory returns a fresh in-memory Store.
@@ -37,6 +38,7 @@ func NewMemory() *Memory {
 		licensesByLicID:  map[string][]string{},
 		entitlementSets:  map[string]*EntitlementSet{},
 		adminUsers:       map[string]*AdminUser{},
+		webhookEvents:    map[string]*WebhookEvent{},
 	}
 }
 
@@ -56,6 +58,44 @@ func (m *Memory) Close() error {
 	m.licensesByLicID = map[string][]string{}
 	m.entitlementSets = map[string]*EntitlementSet{}
 	m.adminUsers = map[string]*AdminUser{}
+	m.webhookEvents = map[string]*WebhookEvent{}
+	return nil
+}
+
+// ── Webhook events ─────────────────────────────────────────────
+
+func (m *Memory) RecordWebhookEvent(_ context.Context, e *WebhookEvent) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if _, exists := m.webhookEvents[e.ID]; exists {
+		return ErrAlreadyExists
+	}
+	cp := *e
+	m.webhookEvents[e.ID] = &cp
+	return nil
+}
+
+func (m *Memory) GetWebhookEvent(_ context.Context, id string) (*WebhookEvent, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	e, ok := m.webhookEvents[id]
+	if !ok {
+		return nil, ErrNotFound
+	}
+	cp := *e
+	return &cp, nil
+}
+
+func (m *Memory) MarkWebhookProcessed(_ context.Context, id string, status, lastError string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	e, ok := m.webhookEvents[id]
+	if !ok {
+		return ErrNotFound
+	}
+	e.Status = status
+	e.LastError = lastError
+	e.ProcessedAt = time.Now().UTC()
 	return nil
 }
 

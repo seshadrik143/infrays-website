@@ -21,16 +21,31 @@ import (
 	"github.com/seshadrik143/infrays-website/backend/internal/store"
 )
 
+// StripeBillHandler is the narrow http.Handler interface that the
+// Stripe webhook + Checkout handlers satisfy. We keep this an
+// interface (rather than a concrete *stripebill.Handler) to avoid
+// pulling the stripe-go dep into this package.
+type StripeBillHandler interface {
+	http.Handler
+}
+
 // Config holds the issuer's wiring. Constructed by main; tests
 // construct it directly.
 type Config struct {
-	Store           store.Store
-	Audit           audit.Log
-	Signer          signing.Signer
-	IssuerURL       string // e.g. "license.infrays.org" — embedded in JWS iss claim
-	DefaultGraceDays int   // license grace_until = expires_at + N days
-	RefreshIntervalHours int // hint to clients
-	Now             func() time.Time // injectable for tests
+	Store                store.Store
+	Audit                audit.Log
+	Signer               signing.Signer
+	IssuerURL            string           // e.g. "license.infrays.org" — embedded in JWS iss claim
+	DefaultGraceDays     int              // license grace_until = expires_at + N days
+	RefreshIntervalHours int              // hint to clients
+	Now                  func() time.Time // injectable for tests
+
+	// Phase 51: Stripe wiring. Both optional — when nil, the
+	// /v1/webhooks/stripe and /v1/checkout/create-session routes are
+	// not registered. Lets the issuer run without Stripe credentials
+	// during pre-launch dev.
+	StripeWebhook  StripeBillHandler
+	StripeCheckout StripeBillHandler
 }
 
 // Server is the HTTP handler container. Keep it concise — handlers
@@ -65,6 +80,14 @@ func (s *Server) Routes() *http.ServeMux {
 	mux.HandleFunc("GET /v1/entitlements/", s.handleEntitlements)
 	mux.HandleFunc("GET /v1/well-known/keys", s.handleWellKnownKeys)
 	mux.HandleFunc("GET /healthz", s.handleHealthz)
+
+	// Phase 51: Stripe — registered only when configured.
+	if s.cfg.StripeWebhook != nil {
+		mux.Handle("POST /v1/webhooks/stripe", s.cfg.StripeWebhook)
+	}
+	if s.cfg.StripeCheckout != nil {
+		mux.Handle("POST /v1/checkout/create-session", s.cfg.StripeCheckout)
+	}
 
 	// Admin (auth handled in middleware; for Phase 49 these are
 	// behind a shared-secret header — Phase 52.5 wires real RBAC).

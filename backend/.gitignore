@@ -1,0 +1,14 @@
+# Local-only secrets. The Fly.io deploy runbook generates these in
+# the backend/ working directory as part of step 4. They belong on
+# the local machine + Fly Secrets, NEVER in git.
+fly-dev-priv.pem
+fly-dev-pub.pem
+*.pem
+
+# Local build outputs
+/issuer
+/kms-mint
+/tmp
+
+# Test cache
+/coverage.out

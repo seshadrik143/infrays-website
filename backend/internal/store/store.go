@@ -70,6 +70,14 @@ type Store interface {
 	CreateAdminUser(ctx context.Context, a *AdminUser) error
 	GetAdminUserByEmail(ctx context.Context, email string) (*AdminUser, error)
 
+	// ── Webhook events (idempotency) ───────────────────────────
+	// RecordWebhookEvent inserts an event by its provider ID. Returns
+	// ErrAlreadyExists if the same event ID has been seen before — the
+	// handler should respond 200 OK to Stripe without re-processing.
+	RecordWebhookEvent(ctx context.Context, e *WebhookEvent) error
+	GetWebhookEvent(ctx context.Context, id string) (*WebhookEvent, error)
+	MarkWebhookProcessed(ctx context.Context, id string, status, lastError string) error
+
 	// ── Lifecycle ──────────────────────────────────────────────
 	Close() error
 }

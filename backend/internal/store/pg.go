@@ -562,6 +562,54 @@ func (s *PG) GetAdminUserByEmail(ctx context.Context, email string) (*AdminUser,
 	return &a, nil
 }
 
+// ── Webhook events ─────────────────────────────────────────────
+
+func (s *PG) RecordWebhookEvent(ctx context.Context, e *WebhookEvent) error {
+	_, err := s.pool.Exec(ctx, `
+		INSERT INTO webhook_events (id, type, payload, received_at, status, last_error)
+		VALUES ($1, $2, $3, $4, $5, $6)
+	`, e.ID, e.Type, e.Payload, e.ReceivedAt, e.Status, nullStr(e.LastError))
+	if err != nil {
+		if isUniqueViolation(err) {
+			return ErrAlreadyExists
+		}
+		return err
+	}
+	return nil
+}
+
+func (s *PG) GetWebhookEvent(ctx context.Context, id string) (*WebhookEvent, error) {
+	var e WebhookEvent
+	var processedAt *time.Time
+	var lastError *string
+	err := s.pool.QueryRow(ctx, `
+		SELECT id, type, payload, received_at, processed_at, status, last_error
+		FROM webhook_events WHERE id=$1
+	`, id).Scan(&e.ID, &e.Type, &e.Payload, &e.ReceivedAt, &processedAt, &e.Status, &lastError)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	e.ProcessedAt = (&optTime{processedAt}).Time()
+	e.LastError = (&optStr{lastError}).String()
+	return &e, nil
+}
+
+func (s *PG) MarkWebhookProcessed(ctx context.Context, id, status, lastError string) error {
+	tag, err := s.pool.Exec(ctx, `
+		UPDATE webhook_events SET processed_at=NOW(), status=$2, last_error=$3 WHERE id=$1
+	`, id, status, nullStr(lastError))
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
 // isUniqueViolation matches pgx's exposure of Postgres SQLSTATE 23505
 // without dropping a hard dependency on jackc/pgerrcode.
 func isUniqueViolation(err error) bool {

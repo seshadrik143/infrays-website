@@ -113,3 +113,17 @@ CREATE TABLE IF NOT EXISTS admin_users (
     last_login      TIMESTAMPTZ,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Webhook idempotency. Stripe (and any future provider) retries
+-- events on 5xx responses; the unique primary key prevents double-
+-- processing. Payload kept for audit / replay.
+CREATE TABLE IF NOT EXISTS webhook_events (
+    id              TEXT PRIMARY KEY,         -- "evt_..." from Stripe
+    type            TEXT NOT NULL,
+    payload         BYTEA NOT NULL,
+    received_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    processed_at    TIMESTAMPTZ,
+    status          TEXT NOT NULL DEFAULT 'pending',
+    last_error      TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_webhook_events_status ON webhook_events(status) WHERE status IN ('pending', 'failed');
