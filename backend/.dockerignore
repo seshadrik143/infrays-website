@@ -1,0 +1,22 @@
+# Reduce build context size — only ship Go sources to the daemon.
+.git
+.gitignore
+*.md
+docs/
+
+# Test artifacts
+**/*_test.go.bak
+**/.go-test-cache
+**/coverage.out
+**/test-results
+
+# Editor / OS
+.vscode
+.idea
+.DS_Store
+*.swp
+
+# Local build outputs
+/tmp
+issuer
+kms-mint

@@ -1,0 +1,68 @@
+# Fly.io app config for the infraYS license issuer.
+#
+# Deploy:
+#   fly auth login
+#   fly apps create infrays-license       # one-time, if not done in `fly launch`
+#   fly secrets set NP_ISSUER_ADMIN_SECRET="<generate via: openssl rand -hex 32>"
+#   fly secrets set NP_LICENSE_SIGNER_KEY="$(cat dev-priv.pem)"
+#   fly deploy
+#
+# Map custom domain:
+#   fly certs add license.infrays.org     # prints the DNS records to add at Spaceship
+#   fly certs add app.infrays.org         # same target; portal handlers in Phase 52
+#
+# Tear down:
+#   fly apps destroy infrays-license
+
+app = "infrays-license"
+primary_region = "iad"  # us-east-1 (Ashburn) — closest to most US customers + Stripe webhooks
+
+[build]
+  dockerfile = "Dockerfile"
+
+# ── HTTP service ──────────────────────────────────────────────────────────
+# Fly terminates TLS on its edge and forwards plaintext to the container
+# on internal_port. force_https rejects port-80 traffic with a 301.
+[http_service]
+  internal_port = 8080
+  force_https = true
+
+  # Scale to zero when no traffic — costs $0 during idle. Cold starts
+  # are ~3 seconds, acceptable for the refresh path (NodePulse clients
+  # backoff on failure anyway).
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  # Two-machine ceiling on autoscale. License traffic is request-light
+  # (one /v1/refresh per customer per 24h). Bumping this is a config
+  # change, not a redeploy.
+  [http_service.concurrency]
+    type = "requests"
+    soft_limit = 100
+    hard_limit = 200
+
+# ── Health check ──────────────────────────────────────────────────────────
+# Fly probes /healthz every 30s. Three consecutive failures retire the
+# instance and start a replacement.
+[[http_service.checks]]
+  interval = "30s"
+  timeout = "5s"
+  grace_period = "10s"
+  method = "GET"
+  path = "/healthz"
+
+# ── VM sizing ─────────────────────────────────────────────────────────────
+# shared-cpu-1x @ 256MB covers the Phase 49 in-memory MVP comfortably.
+# Bump to `performance-1x` + 512MB if Postgres latency becomes the
+# bottleneck (won't happen pre-customer #100).
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
+
+# ── Environment ───────────────────────────────────────────────────────────
+# Public env vars only — secrets live in `fly secrets`. Override any
+# CMD flag here without rebuilding by adding to [processes] table.
+[env]
+  # Logged at startup; doesn't affect behavior.
+  ISSUER_DEPLOYMENT_ENV = "fly-iad-prod"

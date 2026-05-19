@@ -39,7 +39,8 @@ func main() {
 	refreshHours := flag.Int("refresh-hours", 24, "Hint to clients for how often to refresh")
 
 	signerSource := flag.String("signer", "local", "local | gcp-kms | vault")
-	signerKeyFile := flag.String("signer-key-file", "", "Path to Ed25519 PEM (local source)")
+	signerKeyFile := flag.String("signer-key-file", "", "Path to Ed25519 PEM (local source). Use --signer-key-pem-env for cloud deploys.")
+	signerKeyPemEnv := flag.String("signer-key-pem-env", "", "Env var name holding PEM-encoded Ed25519 private key (e.g. NP_LICENSE_SIGNER_KEY). Preferred over --signer-key-file for cloud deploys with secrets managers (Fly.io, Cloud Run, etc.).")
 	signerKID := flag.String("signer-kid", "np-dev-2026-01", "Key id embedded in JWS header")
 
 	pgURL := flag.String("pg-url", "", "PostgreSQL DSN. When empty, uses in-memory store (lost on restart). Env override: PG_URL")
@@ -57,10 +58,18 @@ func main() {
 	var err error
 	switch *signerSource {
 	case "local":
-		if *signerKeyFile == "" {
-			log.Fatal("--signer-key-file is required for --signer=local")
+		switch {
+		case *signerKeyPemEnv != "":
+			raw := os.Getenv(*signerKeyPemEnv)
+			if raw == "" {
+				log.Fatalf("env %s is empty or unset", *signerKeyPemEnv)
+			}
+			signer, err = signing.NewLocalSignerFromPEMBytes(*signerKID, []byte(raw))
+		case *signerKeyFile != "":
+			signer, err = signing.LoadLocalSigner(*signerKID, *signerKeyFile)
+		default:
+			log.Fatal("--signer-key-file OR --signer-key-pem-env is required for --signer=local")
 		}
-		signer, err = signing.LoadLocalSigner(*signerKID, *signerKeyFile)
 	default:
 		log.Fatalf("unsupported --signer=%s (only 'local' is wired in Phase 49; see backend/docs/LICENSE_KEY_CUSTODY.md)", *signerSource)
 	}
