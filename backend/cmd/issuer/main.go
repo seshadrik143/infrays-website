@@ -42,7 +42,15 @@ func main() {
 	signerKeyFile := flag.String("signer-key-file", "", "Path to Ed25519 PEM (local source)")
 	signerKID := flag.String("signer-kid", "np-dev-2026-01", "Key id embedded in JWS header")
 
+	pgURL := flag.String("pg-url", "", "PostgreSQL DSN. When empty, uses in-memory store (lost on restart). Env override: PG_URL")
+
 	flag.Parse()
+
+	// Env override for pg-url so the operator can set it without
+	// putting credentials in argv (which leaks to ps).
+	if env := os.Getenv("PG_URL"); env != "" && *pgURL == "" {
+		*pgURL = env
+	}
 
 	// Build the signer.
 	var signer signing.Signer
@@ -61,9 +69,25 @@ func main() {
 	}
 	defer signer.Close()
 
-	// In-memory store + audit log. PG adapter coming in Phase 49.x.
-	st := store.NewMemory()
+	// Store: PG when configured, in-memory otherwise.
+	var st store.Store
+	if *pgURL != "" {
+		pg, err := store.NewPG(context.Background(), *pgURL)
+		if err != nil {
+			log.Fatalf("pg: %v", err)
+		}
+		st = pg
+		log.Printf("store: PostgreSQL")
+	} else {
+		st = store.NewMemory()
+		log.Println("⚠  store: in-memory (state lost on restart; set --pg-url for production)")
+	}
 	defer st.Close()
+
+	// Audit log stays in-memory for Phase 49. PG audit follows the
+	// hash-chain pattern from NodePulse Phase 38; deferred until a
+	// real operator deploys this — building it now would block the
+	// dev / smoke loop on Postgres.
 	auditLog := audit.NewMemory()
 	defer auditLog.Close()
 
