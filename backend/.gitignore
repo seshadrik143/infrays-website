@@ -12,3 +12,4 @@ fly-dev-pub.pem
 
 # Test cache
 /coverage.out
+smoke.sh
