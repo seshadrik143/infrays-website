@@ -45,6 +45,13 @@ type Subscription struct {
 	ManualOffline        bool      // true = sales-issued, no Stripe
 	CreatedAt            time.Time
 	UpdatedAt            time.Time
+
+	// TrialRemindersSent records which day-threshold reminder emails
+	// have already been sent for this trial. Idempotency tracking so
+	// the scheduler doesn't send the 7-day reminder seven times in a
+	// row. Values are day counts: e.g. [30, 7] means the 30-day and
+	// 7-day reminders have fired; the 1-day still hasn't.
+	TrialRemindersSent []int
 }
 
 // Deployment is a unique NodePulse install. Identified by

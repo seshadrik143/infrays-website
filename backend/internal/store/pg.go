@@ -17,6 +17,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -146,12 +147,12 @@ func (s *PG) UpdateCustomer(ctx context.Context, c *Customer) error {
 func (s *PG) CreateSubscription(ctx context.Context, sub *Subscription) error {
 	_, err := s.pool.Exec(ctx, `
 		INSERT INTO subscriptions (id,customer_id,tier,stripe_subscription_id,stripe_price_id,status,
-			current_period_start,current_period_end,cancel_at,canceled_at,trial_end,manual_offline,created_at,updated_at)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+			current_period_start,current_period_end,cancel_at,canceled_at,trial_end,manual_offline,trial_reminders_sent,created_at,updated_at)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
 	`, sub.ID, sub.CustomerID, sub.Tier, nullStr(sub.StripeSubscriptionID), nullStr(sub.StripePriceID), sub.Status,
 		nullTime(sub.CurrentPeriodStart), nullTime(sub.CurrentPeriodEnd),
 		nullTime(sub.CancelAt), nullTime(sub.CanceledAt), nullTime(sub.TrialEnd),
-		sub.ManualOffline, sub.CreatedAt, sub.UpdatedAt)
+		sub.ManualOffline, intSliceToCSV(sub.TrialRemindersSent), sub.CreatedAt, sub.UpdatedAt)
 	if err != nil {
 		if isUniqueViolation(err) {
 			return ErrAlreadyExists
@@ -159,6 +160,32 @@ func (s *PG) CreateSubscription(ctx context.Context, sub *Subscription) error {
 		return err
 	}
 	return nil
+}
+
+// ListSubscriptionsWithTrialEndIn returns subs with non-zero
+// trial_end falling in (start, end]. Caller passes both bounds
+// rather than using SQL NOW() so the scheduler's injected clock
+// flows through to tests. Indexed via idx_subscriptions_trial_end.
+func (s *PG) ListSubscriptionsWithTrialEndIn(ctx context.Context, start, end time.Time) ([]*Subscription, error) {
+	rows, err := s.pool.Query(ctx, sqlSelectSubscription+`
+		WHERE trial_end IS NOT NULL
+		  AND trial_end > $1
+		  AND trial_end <= $2
+		ORDER BY trial_end ASC
+	`, start, end)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []*Subscription
+	for rows.Next() {
+		sub, err := s.scanSubscription(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, sub)
+	}
+	return out, rows.Err()
 }
 
 func (s *PG) GetSubscription(ctx context.Context, id string) (*Subscription, error) {
@@ -190,12 +217,12 @@ func (s *PG) UpdateSubscription(ctx context.Context, sub *Subscription) error {
 	tag, err := s.pool.Exec(ctx, `
 		UPDATE subscriptions SET tier=$2,stripe_subscription_id=$3,stripe_price_id=$4,status=$5,
 			current_period_start=$6,current_period_end=$7,cancel_at=$8,canceled_at=$9,trial_end=$10,
-			manual_offline=$11,updated_at=$12
+			manual_offline=$11,trial_reminders_sent=$12,updated_at=$13
 		WHERE id=$1
 	`, sub.ID, sub.Tier, nullStr(sub.StripeSubscriptionID), nullStr(sub.StripePriceID), sub.Status,
 		nullTime(sub.CurrentPeriodStart), nullTime(sub.CurrentPeriodEnd),
 		nullTime(sub.CancelAt), nullTime(sub.CanceledAt), nullTime(sub.TrialEnd),
-		sub.ManualOffline, sub.UpdatedAt)
+		sub.ManualOffline, intSliceToCSV(sub.TrialRemindersSent), sub.UpdatedAt)
 	if err != nil {
 		return err
 	}
@@ -208,7 +235,7 @@ func (s *PG) UpdateSubscription(ctx context.Context, sub *Subscription) error {
 const sqlSelectSubscription = `
 	SELECT id,customer_id,tier,stripe_subscription_id,stripe_price_id,status,
 		current_period_start,current_period_end,cancel_at,canceled_at,trial_end,
-		manual_offline,created_at,updated_at
+		manual_offline,trial_reminders_sent,created_at,updated_at
 	FROM subscriptions
 `
 
@@ -220,9 +247,10 @@ func (s *PG) scanSubscription(row rowScanner) (*Subscription, error) {
 	var sub Subscription
 	var stripeID, stripePriceID *string
 	var startTime, endTime, cancelAt, canceledAt, trialEnd *time.Time
+	var remindersCSV string
 	err := row.Scan(&sub.ID, &sub.CustomerID, &sub.Tier, &stripeID, &stripePriceID, &sub.Status,
 		&startTime, &endTime, &cancelAt, &canceledAt, &trialEnd,
-		&sub.ManualOffline, &sub.CreatedAt, &sub.UpdatedAt)
+		&sub.ManualOffline, &remindersCSV, &sub.CreatedAt, &sub.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrNotFound
 	}
@@ -236,7 +264,42 @@ func (s *PG) scanSubscription(row rowScanner) (*Subscription, error) {
 	sub.CancelAt = (&optTime{cancelAt}).Time()
 	sub.CanceledAt = (&optTime{canceledAt}).Time()
 	sub.TrialEnd = (&optTime{trialEnd}).Time()
+	sub.TrialRemindersSent = csvToIntSlice(remindersCSV)
 	return &sub, nil
+}
+
+// intSliceToCSV serializes []int{30, 7} to "30,7" for PG storage.
+// Empty slice → "".
+func intSliceToCSV(xs []int) string {
+	if len(xs) == 0 {
+		return ""
+	}
+	parts := make([]string, len(xs))
+	for i, n := range xs {
+		parts[i] = fmt.Sprintf("%d", n)
+	}
+	return strings.Join(parts, ",")
+}
+
+// csvToIntSlice parses "30,7" back to []int{30, 7}. Empty input → nil.
+// Malformed entries are silently skipped (defensive — don't break
+// scheduler on a corrupted row).
+func csvToIntSlice(s string) []int {
+	if s == "" {
+		return nil
+	}
+	var out []int
+	for _, p := range strings.Split(s, ",") {
+		p = strings.TrimSpace(p)
+		if p == "" {
+			continue
+		}
+		var n int
+		if _, err := fmt.Sscanf(p, "%d", &n); err == nil {
+			out = append(out, n)
+		}
+	}
+	return out
 }
 
 // ── Deployments ────────────────────────────────────────────────

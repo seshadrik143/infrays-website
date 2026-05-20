@@ -200,6 +200,30 @@ func (m *Memory) ListSubscriptionsByCustomer(_ context.Context, customerID strin
 	return out, nil
 }
 
+// ListSubscriptionsWithTrialEndIn returns subs with non-zero
+// TrialEnd in the (start, end] window. Iterates everything — fine
+// at the scale this implementation supports.
+func (m *Memory) ListSubscriptionsWithTrialEndIn(_ context.Context, start, end time.Time) ([]*Subscription, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var out []*Subscription
+	for _, s := range m.subscriptions {
+		if s.TrialEnd.IsZero() {
+			continue
+		}
+		if s.TrialEnd.After(start) && !s.TrialEnd.After(end) {
+			cp := *s
+			// Defensive copy of slice so caller mutations don't
+			// affect stored state.
+			if len(s.TrialRemindersSent) > 0 {
+				cp.TrialRemindersSent = append([]int{}, s.TrialRemindersSent...)
+			}
+			out = append(out, &cp)
+		}
+	}
+	return out, nil
+}
+
 func (m *Memory) UpdateSubscription(_ context.Context, s *Subscription) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()

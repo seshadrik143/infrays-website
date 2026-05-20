@@ -32,6 +32,7 @@ import (
 	"github.com/seshadrik143/infrays-website/backend/internal/signing"
 	"github.com/seshadrik143/infrays-website/backend/internal/store"
 	"github.com/seshadrik143/infrays-website/backend/internal/stripebill"
+	"github.com/seshadrik143/infrays-website/backend/internal/trialscheduler"
 )
 
 func main() {
@@ -172,6 +173,26 @@ func main() {
 		IdleTimeout:  60 * time.Second,
 	}
 
+	// ── Phase 51.5: trial-expiring reminder scheduler ──────────────
+	// Periodic job that sends 30/7/1-day-before-trial-end reminders
+	// to customers in trial. Runs as a goroutine; survives without
+	// real Postmark (uses the same email.Sender — falls back to
+	// noop when NP_POSTMARK_SERVER_TOKEN is unset).
+	trialSched, err := trialscheduler.New(trialscheduler.Config{
+		Store:         st,
+		Email:         mailer,
+		Audit:         auditLog,
+		AppURL:        appURL,
+		CheckInterval: time.Hour,
+		Thresholds:    []int{30, 7, 1},
+	})
+	if err != nil {
+		log.Fatalf("trialscheduler: %v", err)
+	}
+	trialCtx, trialCancel := context.WithCancel(context.Background())
+	trialSched.Start(trialCtx)
+	log.Println("trialscheduler: started (thresholds 30/7/1 days, tick=1h)")
+
 	go func() {
 		log.Printf("issuer listening on %s (signer=%s kid=%s)", *addr, *signerSource, signer.KID())
 		if err := httpSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -183,6 +204,8 @@ func main() {
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 	<-sigCh
 	log.Println("issuer shutting down")
+	trialCancel()
+	trialSched.Stop()
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := httpSrv.Shutdown(shutdownCtx); err != nil {

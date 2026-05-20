@@ -38,11 +38,20 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     canceled_at             TIMESTAMPTZ,
     trial_end               TIMESTAMPTZ,
     manual_offline          BOOLEAN NOT NULL DEFAULT FALSE,
+    trial_reminders_sent    TEXT NOT NULL DEFAULT '',  -- CSV of day-thresholds: "30,7"
     created_at              TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at              TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_subscriptions_customer ON subscriptions(customer_id);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_status   ON subscriptions(status);
+-- For the trial-expiring scheduler — fast lookup of subs with trial_end
+-- in a near-future window. Partial index keeps it small.
+CREATE INDEX IF NOT EXISTS idx_subscriptions_trial_end ON subscriptions(trial_end) WHERE trial_end IS NOT NULL;
+
+-- Idempotent-add column for pre-existing deployments that ran the
+-- schema before Phase 51.5. New deploys see it inline above; old
+-- deploys pick it up via this ALTER.
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS trial_reminders_sent TEXT NOT NULL DEFAULT '';
 
 CREATE TABLE IF NOT EXISTS deployments (
     id                  TEXT PRIMARY KEY,

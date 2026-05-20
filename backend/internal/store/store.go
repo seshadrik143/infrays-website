@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"errors"
+	"time"
 )
 
 // ErrNotFound is returned when a lookup misses. Callers should check
@@ -38,6 +39,13 @@ type Store interface {
 	GetSubscription(ctx context.Context, id string) (*Subscription, error)
 	GetSubscriptionByStripeID(ctx context.Context, stripeID string) (*Subscription, error)
 	ListSubscriptionsByCustomer(ctx context.Context, customerID string) ([]*Subscription, error)
+	// ListSubscriptionsWithTrialEndIn returns subscriptions whose
+	// TrialEnd is non-zero and falls in (start, end]. Caller passes
+	// both bounds explicitly so the scheduler's injected clock can
+	// flow through (the in-memory store can't see the scheduler's
+	// Now() function otherwise). Drives the trial-expiring email
+	// scheduler.
+	ListSubscriptionsWithTrialEndIn(ctx context.Context, start, end time.Time) ([]*Subscription, error)
 	UpdateSubscription(ctx context.Context, s *Subscription) error
 
 	// ── Deployments ────────────────────────────────────────────
