@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/seshadrik143/infrays-website/backend/internal/audit"
+	"github.com/seshadrik143/infrays-website/backend/internal/email"
 	"github.com/seshadrik143/infrays-website/backend/internal/store"
 
 	stripe "github.com/stripe/stripe-go/v82"
@@ -76,6 +77,15 @@ func (h *Handler) handleCustomerCreated(ctx context.Context, event *stripe.Event
 		Actor:      "stripe",
 		Payload:    map[string]any{"stripe_customer_id": sc.ID, "email": sc.Email},
 	})
+	// Welcome email — best-effort.
+	msg, err := email.RenderWelcome(c.Email, email.WelcomeData{
+		CustomerName: orFallback(c.Name, "there"),
+		AppURL:       h.cfg.AppURL,
+		DocsURL:      h.cfg.AppURL + "/docs",
+	})
+	if err == nil {
+		h.sendEmail(ctx, msg)
+	}
 	return nil
 }
 
@@ -189,6 +199,20 @@ func (h *Handler) handleSubscriptionEvent(ctx context.Context, event *stripe.Eve
 		if existing.CanceledAt.IsZero() {
 			existing.CanceledAt = now
 		}
+		// Customer email — best-effort. The license stays valid until
+		// CurrentPeriodEnd; the email tells them when access ends.
+		accessEnds := existing.CurrentPeriodEnd
+		if accessEnds.IsZero() {
+			accessEnds = now
+		}
+		if msg, err := email.RenderSubscriptionCanceled(customer.Email, email.SubscriptionCanceledData{
+			CustomerName: orFallback(customer.Name, "there"),
+			AccessEndsOn: accessEnds.Format("January 2, 2006"),
+			AppURL:       h.cfg.AppURL,
+			ContactURL:   h.cfg.AppURL + "/contact",
+		}); err == nil {
+			h.sendEmail(ctx, msg)
+		}
 	}
 	if err := h.store.UpdateSubscription(ctx, existing); err != nil {
 		return fmt.Errorf("update subscription: %w", err)
@@ -248,6 +272,23 @@ func (h *Handler) handleInvoicePaymentFailed(ctx context.Context, event *stripe.
 			"stripe_customer":    inv.Customer,
 		},
 	})
+	// Customer email — only on first attempt to avoid the noise of
+	// every dunning retry. Stripe sets attempt_count >= 1; we filter
+	// to == 1 to send exactly once per failed invoice.
+	if inv.AttemptCount == 1 && inv.Customer != nil {
+		customer, err := h.findCustomerByStripe(ctx, inv.Customer)
+		if err == nil {
+			amount := fmt.Sprintf("$%.2f", float64(inv.AmountDue)/100)
+			if msg, mErr := email.RenderPaymentFailed(customer.Email, email.PaymentFailedData{
+				CustomerName:  orFallback(customer.Name, "there"),
+				AmountDueUSD:  amount,
+				AppURL:        h.cfg.AppURL,
+				UpdateCardURL: h.cfg.AppURL + "/billing",
+			}); mErr == nil {
+				h.sendEmail(ctx, msg)
+			}
+		}
+	}
 	// We deliberately do NOT cancel the subscription here. Stripe's
 	// own dunning logic will eventually mark the subscription as
 	// past_due → canceled, which arrives via subscription.updated /
@@ -303,4 +344,13 @@ func newID(prefix string) string {
 	b := make([]byte, 16)
 	_, _ = rand.Read(b)
 	return prefix + "_" + hex.EncodeToString(b)
+}
+
+// orFallback returns s if non-empty, else fb. Used to give email
+// templates a sensible salutation when CustomerName isn't set.
+func orFallback(s, fb string) string {
+	if s == "" {
+		return fb
+	}
+	return s
 }

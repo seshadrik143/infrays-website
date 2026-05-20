@@ -2,6 +2,7 @@ package issuer
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"time"
 
 	"github.com/seshadrik143/infrays-website/backend/internal/audit"
+	"github.com/seshadrik143/infrays-website/backend/internal/email"
 	"github.com/seshadrik143/infrays-website/backend/internal/store"
 )
 
@@ -208,12 +210,45 @@ func (s *Server) handleAdminCreateEnrollmentToken(w http.ResponseWriter, r *http
 			"expires_at": tok.ExpiresAt.Format(time.RFC3339),
 		},
 	})
+
+	// Send the enrollment token to the customer's email so they can
+	// paste it into their NodePulse server config. Best-effort; admin
+	// gets the same plaintext in the response either way (for sales
+	// flows where the admin hands the token off through a different
+	// channel).
+	if s.cfg.Email != nil {
+		if cust, cErr := s.cfg.Store.GetCustomer(r.Context(), req.CustomerID); cErr == nil {
+			ttlDesc := fmt.Sprintf("%d hour", req.TTLHours)
+			if req.TTLHours != 1 {
+				ttlDesc += "s"
+			}
+			msg, mErr := email.RenderEnrollmentTokenCreated(cust.Email, email.EnrollmentTokenCreatedData{
+				CustomerName:    customerNameOr(cust.Name, "there"),
+				EnrollmentToken: plaintext,
+				Label:           req.Label,
+				ExpiresIn:       ttlDesc,
+				DocsURL:         s.cfg.AppURL + "/docs/enroll",
+			})
+			if mErr == nil {
+				_ = s.cfg.Email.Send(r.Context(), msg)
+			}
+		}
+	}
+
 	writeJSON(w, http.StatusCreated, adminCreateEnrollmentTokenResp{
 		TokenID:   tok.ID,
 		Plaintext: plaintext,
 		Label:     tok.Label,
 		ExpiresAt: tok.ExpiresAt,
 	})
+}
+
+// customerNameOr returns name if non-empty else fallback.
+func customerNameOr(name, fallback string) string {
+	if name == "" {
+		return fallback
+	}
+	return name
 }
 
 // ── /internal/admin/licenses/revoke ────────────────────────────────

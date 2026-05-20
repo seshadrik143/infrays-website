@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/seshadrik143/infrays-website/backend/internal/audit"
+	"github.com/seshadrik143/infrays-website/backend/internal/email"
 	"github.com/seshadrik143/infrays-website/backend/internal/store"
 )
 
@@ -37,20 +38,31 @@ func signStripeEvent(t *testing.T, body []byte, ts time.Time) string {
 
 func newTestHandler(t *testing.T) (*Handler, store.Store, audit.Log) {
 	t.Helper()
+	h, st, al, _ := newTestHandlerWithEmail(t)
+	return h, st, al
+}
+
+// newTestHandlerWithEmail also returns the CaptureSender so tests
+// can assert on the emails the handler would have sent.
+func newTestHandlerWithEmail(t *testing.T) (*Handler, store.Store, audit.Log, *email.CaptureSender) {
+	t.Helper()
 	st := store.NewMemory()
 	al := audit.NewMemory()
+	cap := email.NewCaptureSender()
 	pm := NewTierMapping(map[string]TierConfig{
-		"price_test_pro":  {Tier: "professional", EntitlementSetID: "professional-v1"},
-		"price_test_ent":  {Tier: "enterprise", EntitlementSetID: "enterprise-v1"},
+		"price_test_pro": {Tier: "professional", EntitlementSetID: "professional-v1"},
+		"price_test_ent": {Tier: "enterprise", EntitlementSetID: "enterprise-v1"},
 	})
 	h, err := NewHandler(Config{
 		WebhookSecret: testWebhookSecret,
 		PriceMap:      pm,
+		Email:         cap,
+		AppURL:        "https://app.test",
 	}, st, al)
 	if err != nil {
 		t.Fatal(err)
 	}
-	return h, st, al
+	return h, st, al, cap
 }
 
 // expectedStripeAPIVersion must match what the linked stripe-go SDK
@@ -366,6 +378,116 @@ func TestHandler_RejectsEmptyWebhookSecret(t *testing.T) {
 	if err == nil {
 		t.Error("expected error for empty webhook secret")
 	}
+}
+
+// ── email-trigger tests ────────────────────────────────────────────
+
+func TestEmail_CustomerCreatedSendsWelcome(t *testing.T) {
+	h, _, _, cap := newTestHandlerWithEmail(t)
+	customer := map[string]any{
+		"id":    "cus_new_e2e",
+		"email": "newcust@test.com",
+		"name":  "New Customer",
+	}
+	w := postEvent(t, h, "evt_email_001", "customer.created", customer)
+	if w.Code != http.StatusOK {
+		t.Fatalf("status: %d body=%s", w.Code, w.Body.String())
+	}
+	sent := cap.MessagesOfType("welcome")
+	if len(sent) != 1 {
+		t.Fatalf("welcome emails: got %d, want 1", len(sent))
+	}
+	if sent[0].To != "newcust@test.com" {
+		t.Errorf("welcome To: got %q", sent[0].To)
+	}
+	if !contains(sent[0].HTMLBody, "New Customer") {
+		t.Errorf("welcome body missing name")
+	}
+}
+
+func TestEmail_SubscriptionDeletedSendsCancelNotification(t *testing.T) {
+	h, st, _, cap := newTestHandlerWithEmail(t)
+	now := time.Now().UTC()
+	_ = st.CreateCustomer(context.Background(), &store.Customer{
+		ID: "cust_cancel", Email: "canceler@test.com", Name: "Canceler",
+		StripeCustomerID: "cus_cancel", Status: "active",
+		CreatedAt: now, UpdatedAt: now,
+	})
+
+	sub := map[string]any{
+		"id":          "sub_cancel",
+		"customer":    map[string]any{"id": "cus_cancel", "email": "canceler@test.com"},
+		"status":      "active",
+		"canceled_at": now.Unix(),
+		"items": map[string]any{
+			"data": []map[string]any{
+				{
+					"price":                map[string]any{"id": "price_test_pro"},
+					"current_period_start": now.Unix(),
+					"current_period_end":   now.Add(30 * 24 * time.Hour).Unix(),
+				},
+			},
+		},
+	}
+	// First create the subscription
+	postEvent(t, h, "evt_cancel_001", "customer.subscription.created", sub)
+	cap.Reset() // ignore any welcome / creation emails
+
+	// Now delete it
+	w := postEvent(t, h, "evt_cancel_002", "customer.subscription.deleted", sub)
+	if w.Code != http.StatusOK {
+		t.Fatalf("status: %d body=%s", w.Code, w.Body.String())
+	}
+	sent := cap.MessagesOfType("subscription_canceled")
+	if len(sent) != 1 {
+		t.Fatalf("cancel emails: got %d, want 1", len(sent))
+	}
+	if sent[0].To != "canceler@test.com" {
+		t.Errorf("cancel To: got %q", sent[0].To)
+	}
+}
+
+func TestEmail_PaymentFailedFirstAttemptOnly(t *testing.T) {
+	h, st, _, cap := newTestHandlerWithEmail(t)
+	now := time.Now().UTC()
+	_ = st.CreateCustomer(context.Background(), &store.Customer{
+		ID: "cust_pf", Email: "payfail@test.com", Name: "Pay Fail",
+		StripeCustomerID: "cus_pf", Status: "active",
+		CreatedAt: now, UpdatedAt: now,
+	})
+
+	// First failed attempt → email
+	invoice1 := map[string]any{
+		"id":             "in_001",
+		"amount_due":     4900,
+		"attempt_count":  1,
+		"customer":       map[string]any{"id": "cus_pf", "email": "payfail@test.com"},
+	}
+	w := postEvent(t, h, "evt_pf_001", "invoice.payment_failed", invoice1)
+	if w.Code != http.StatusOK {
+		t.Fatalf("status: %d body=%s", w.Code, w.Body.String())
+	}
+	if got := cap.MessagesOfType("payment_failed"); len(got) != 1 {
+		t.Fatalf("first attempt: got %d emails, want 1", len(got))
+	}
+
+	// Second + third attempts (dunning retries) → no email
+	invoice2 := map[string]any{
+		"id":             "in_001",
+		"amount_due":     4900,
+		"attempt_count":  2,
+		"customer":       map[string]any{"id": "cus_pf", "email": "payfail@test.com"},
+	}
+	cap.Reset()
+	postEvent(t, h, "evt_pf_002", "invoice.payment_failed", invoice2)
+	if got := cap.MessagesOfType("payment_failed"); len(got) != 0 {
+		t.Errorf("second attempt: got %d emails, want 0", len(got))
+	}
+}
+
+// contains is a local helper because strings.Contains isn't imported.
+func contains(s, sub string) bool {
+	return bytes.Contains([]byte(s), []byte(sub))
 }
 
 func TestCheckoutHandler_RejectsEmptyAPIKey(t *testing.T) {

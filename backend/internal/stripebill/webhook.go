@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/seshadrik143/infrays-website/backend/internal/audit"
+	"github.com/seshadrik143/infrays-website/backend/internal/email"
 	"github.com/seshadrik143/infrays-website/backend/internal/store"
 
 	stripe "github.com/stripe/stripe-go/v82"
@@ -32,6 +33,15 @@ type Config struct {
 	// a timestamp; older events are rejected even if the signature
 	// is valid. Default 5 minutes (Stripe's recommendation).
 	MaxEventAge time.Duration
+
+	// Email is the transactional sender. Nil = no emails. Failures
+	// are logged + audited but never block webhook processing.
+	Email email.Sender
+
+	// AppURL is the customer-facing portal base URL, used to build
+	// links inside email templates ("Update payment method", etc.).
+	// Default "https://app.infrays.org".
+	AppURL string
 }
 
 // Handler wires the Stripe webhook into the issuer's store + audit.
@@ -54,7 +64,32 @@ func NewHandler(cfg Config, st store.Store, al audit.Log) (*Handler, error) {
 	if cfg.PriceMap == nil {
 		cfg.PriceMap = NewTierMapping(nil)
 	}
+	if cfg.AppURL == "" {
+		cfg.AppURL = "https://app.infrays.org"
+	}
 	return &Handler{cfg: cfg, store: st, audit: al}, nil
+}
+
+// sendEmail is the best-effort dispatcher all sync.go handlers use.
+// Never blocks the webhook response on email — logs + audits
+// failure but returns nil. Skips silently when email isn't
+// configured (NewSenderFromEnv returns NoopSender, which also
+// silently no-ops; this guard just avoids the wire call).
+func (h *Handler) sendEmail(ctx context.Context, msg email.Message) {
+	if h.cfg.Email == nil {
+		return
+	}
+	if err := h.cfg.Email.Send(ctx, msg); err != nil {
+		_, _ = h.audit.Append(ctx, audit.Entry{
+			EventType: "email.send_failed",
+			Actor:     "system",
+			Payload: map[string]any{
+				"type":  msg.MessageType,
+				"to":    msg.To,
+				"error": err.Error(),
+			},
+		})
+	}
 }
 
 // ServeHTTP handles POST /v1/webhooks/stripe.

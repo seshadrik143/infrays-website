@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/seshadrik143/infrays-website/backend/internal/audit"
+	"github.com/seshadrik143/infrays-website/backend/internal/email"
 	"github.com/seshadrik143/infrays-website/backend/internal/signing"
 	"github.com/seshadrik143/infrays-website/backend/internal/store"
 )
@@ -46,6 +47,16 @@ type Config struct {
 	// during pre-launch dev.
 	StripeWebhook  StripeBillHandler
 	StripeCheckout StripeBillHandler
+
+	// Phase 51.5: transactional email sender. Optional — when nil,
+	// admin endpoints that would send email (e.g. enrollment-token
+	// creation) skip the send. Stripe handlers carry their own
+	// email sender (in their own Config) and aren't affected.
+	Email email.Sender
+
+	// AppURL used inside outbound email templates for "Manage your
+	// subscription" links. Default "https://app.infrays.org".
+	AppURL string
 }
 
 // Server is the HTTP handler container. Keep it concise — handlers
@@ -66,6 +77,9 @@ func NewServer(cfg Config) *Server {
 	}
 	if cfg.RefreshIntervalHours == 0 {
 		cfg.RefreshIntervalHours = 24
+	}
+	if cfg.AppURL == "" {
+		cfg.AppURL = "https://app.infrays.org"
 	}
 	return &Server{cfg: cfg}
 }

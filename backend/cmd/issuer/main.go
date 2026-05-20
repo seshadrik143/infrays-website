@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/seshadrik143/infrays-website/backend/internal/audit"
+	"github.com/seshadrik143/infrays-website/backend/internal/email"
 	"github.com/seshadrik143/infrays-website/backend/internal/issuer"
 	"github.com/seshadrik143/infrays-website/backend/internal/signing"
 	"github.com/seshadrik143/infrays-website/backend/internal/store"
@@ -110,6 +111,15 @@ func main() {
 		log.Println("⚠  NP_ISSUER_ADMIN_SECRET is not set — admin endpoints will reject all requests")
 	}
 
+	// ── Phase 51.5: email sender ───────────────────────────────────
+	// Noop sender when NP_POSTMARK_SERVER_TOKEN is unset — logs the
+	// would-have-been-sent so trigger paths are still observable.
+	mailer := email.NewSenderFromEnv()
+	appURL := os.Getenv("NP_APP_URL")
+	if appURL == "" {
+		appURL = "https://app.infrays.org"
+	}
+
 	// ── Phase 51: Stripe wiring ────────────────────────────────────
 	// All three env vars optional — issuer runs without Stripe
 	// before sales is set up. Webhooks + checkout routes only
@@ -123,6 +133,8 @@ func main() {
 		wh, err := stripebill.NewHandler(stripebill.Config{
 			WebhookSecret: whSecret,
 			PriceMap:      priceMap,
+			Email:         mailer,
+			AppURL:        appURL,
 		}, st, auditLog)
 		if err != nil {
 			log.Fatalf("stripe webhook: %v", err)
@@ -131,7 +143,7 @@ func main() {
 		log.Println("stripe: webhook handler registered")
 	}
 	if apiKey := os.Getenv("NP_STRIPE_SECRET_KEY"); apiKey != "" {
-		ch, err := stripebill.NewCheckoutHandler(apiKey, os.Getenv("NP_APP_URL"), priceMap)
+		ch, err := stripebill.NewCheckoutHandler(apiKey, appURL, priceMap)
 		if err != nil {
 			log.Fatalf("stripe checkout: %v", err)
 		}
@@ -148,6 +160,8 @@ func main() {
 		RefreshIntervalHours: *refreshHours,
 		StripeWebhook:        stripeWebhook,
 		StripeCheckout:       stripeCheckout,
+		Email:                mailer,
+		AppURL:               appURL,
 	})
 
 	httpSrv := &http.Server{
