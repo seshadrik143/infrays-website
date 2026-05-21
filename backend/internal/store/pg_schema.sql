@@ -131,10 +131,31 @@ CREATE TABLE IF NOT EXISTS admin_users (
     email           CITEXT UNIQUE NOT NULL,
     password_hash   TEXT NOT NULL,
     role            TEXT NOT NULL,
-    mfa_secret      TEXT NOT NULL,
+    mfa_secret      TEXT NOT NULL DEFAULT '',
+    mfa_enrolled    BOOLEAN NOT NULL DEFAULT FALSE,
     last_login      TIMESTAMPTZ,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+-- Idempotent for pre-Phase-52.5 deploys.
+ALTER TABLE admin_users ALTER COLUMN mfa_secret DROP NOT NULL;
+ALTER TABLE admin_users ALTER COLUMN mfa_secret SET DEFAULT '';
+ALTER TABLE admin_users ALTER COLUMN mfa_secret SET NOT NULL;
+ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS mfa_enrolled BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- Admin sessions (Phase 52.5). Separate from portal_sessions because
+-- admin tokens have stricter TTL semantics + MFAVerified bit.
+CREATE TABLE IF NOT EXISTS admin_sessions (
+    id            TEXT PRIMARY KEY,
+    admin_user_id TEXT NOT NULL REFERENCES admin_users(id) ON DELETE CASCADE,
+    ip            TEXT NOT NULL DEFAULT '',
+    user_agent    TEXT NOT NULL DEFAULT '',
+    mfa_verified  BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_seen     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at    TIMESTAMPTZ NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_admin_sessions_user    ON admin_sessions(admin_user_id);
+CREATE INDEX IF NOT EXISTS idx_admin_sessions_expires ON admin_sessions(expires_at);
 
 -- Portal sessions (Phase 52). Cookie value is the id. Goroutine-safe
 -- cleanup of expired rows is handled at the Go layer; for now a

@@ -671,11 +671,13 @@ func (s *PG) GetEntitlementSet(ctx context.Context, id string) (*EntitlementSet,
 
 // ── Admin users ────────────────────────────────────────────────
 
+const sqlSelectAdminUser = `SELECT id,email,password_hash,role,mfa_secret,mfa_enrolled,last_login,created_at FROM admin_users`
+
 func (s *PG) CreateAdminUser(ctx context.Context, a *AdminUser) error {
 	_, err := s.pool.Exec(ctx, `
-		INSERT INTO admin_users (id,email,password_hash,role,mfa_secret,last_login,created_at)
-		VALUES ($1,$2,$3,$4,$5,$6,$7)
-	`, a.ID, a.Email, a.PasswordHash, a.Role, a.MFASecret, nullTime(a.LastLogin), a.CreatedAt)
+		INSERT INTO admin_users (id,email,password_hash,role,mfa_secret,mfa_enrolled,last_login,created_at)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+	`, a.ID, a.Email, a.PasswordHash, a.Role, a.MFASecret, a.MFAEnrolled, nullTime(a.LastLogin), a.CreatedAt)
 	if err != nil {
 		if isUniqueViolation(err) {
 			return ErrAlreadyExists
@@ -686,10 +688,17 @@ func (s *PG) CreateAdminUser(ctx context.Context, a *AdminUser) error {
 }
 
 func (s *PG) GetAdminUserByEmail(ctx context.Context, email string) (*AdminUser, error) {
+	return s.scanAdminUser(s.pool.QueryRow(ctx, sqlSelectAdminUser+` WHERE email=$1`, email))
+}
+
+func (s *PG) GetAdminUser(ctx context.Context, id string) (*AdminUser, error) {
+	return s.scanAdminUser(s.pool.QueryRow(ctx, sqlSelectAdminUser+` WHERE id=$1`, id))
+}
+
+func (s *PG) scanAdminUser(row pgx.Row) (*AdminUser, error) {
 	var a AdminUser
 	var lastLogin *time.Time
-	err := s.pool.QueryRow(ctx, `SELECT id,email,password_hash,role,mfa_secret,last_login,created_at FROM admin_users WHERE email=$1`, email).
-		Scan(&a.ID, &a.Email, &a.PasswordHash, &a.Role, &a.MFASecret, &lastLogin, &a.CreatedAt)
+	err := row.Scan(&a.ID, &a.Email, &a.PasswordHash, &a.Role, &a.MFASecret, &a.MFAEnrolled, &lastLogin, &a.CreatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrNotFound
 	}
@@ -698,6 +707,166 @@ func (s *PG) GetAdminUserByEmail(ctx context.Context, email string) (*AdminUser,
 	}
 	a.LastLogin = (&optTime{lastLogin}).Time()
 	return &a, nil
+}
+
+func (s *PG) UpdateAdminUser(ctx context.Context, a *AdminUser) error {
+	tag, err := s.pool.Exec(ctx, `
+		UPDATE admin_users SET email=$2, password_hash=$3, role=$4, mfa_secret=$5, mfa_enrolled=$6, last_login=$7
+		WHERE id=$1
+	`, a.ID, a.Email, a.PasswordHash, a.Role, a.MFASecret, a.MFAEnrolled, nullTime(a.LastLogin))
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (s *PG) ListAdminUsers(ctx context.Context) ([]*AdminUser, error) {
+	rows, err := s.pool.Query(ctx, sqlSelectAdminUser+` ORDER BY created_at ASC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []*AdminUser
+	for rows.Next() {
+		a, err := s.scanAdminUser(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, a)
+	}
+	return out, rows.Err()
+}
+
+// ── Customers / Subscriptions: admin queries ───────────────────
+
+func (s *PG) ListCustomers(ctx context.Context, filter string, limit int) ([]*Customer, error) {
+	if limit <= 0 || limit > 1000 {
+		limit = 200
+	}
+	var rows pgx.Rows
+	var err error
+	if filter == "" {
+		rows, err = s.pool.Query(ctx, sqlSelectCustomer+` ORDER BY created_at DESC LIMIT $1`, limit)
+	} else {
+		pat := "%" + filter + "%"
+		rows, err = s.pool.Query(ctx, sqlSelectCustomer+
+			` WHERE email ILIKE $1 OR company ILIKE $1 ORDER BY created_at DESC LIMIT $2`, pat, limit)
+	}
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []*Customer
+	for rows.Next() {
+		c, err := s.scanCustomer(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, c)
+	}
+	return out, rows.Err()
+}
+
+func (s *PG) ListAllSubscriptions(ctx context.Context, limit int) ([]*Subscription, error) {
+	if limit <= 0 || limit > 1000 {
+		limit = 200
+	}
+	rows, err := s.pool.Query(ctx, sqlSelectSubscription+` ORDER BY created_at DESC LIMIT $1`, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []*Subscription
+	for rows.Next() {
+		sub, err := s.scanSubscription(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, sub)
+	}
+	return out, rows.Err()
+}
+
+func (s *PG) UpdateDeployment(ctx context.Context, d *Deployment) error {
+	tag, err := s.pool.Exec(ctx, `
+		UPDATE deployments
+		SET deployment_name=$2, last_seen_at=$3, last_version=$4, flagged_for_review=$5, flag_reason=$6
+		WHERE deployment_id=$1
+	`, d.DeploymentID, nullStr(d.DeploymentName), d.LastSeenAt, nullStr(d.LastVersion), d.FlaggedForReview, nullStr(d.FlagReason))
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+// ── Admin sessions ─────────────────────────────────────────────
+
+func (s *PG) CreateAdminSession(ctx context.Context, sess *AdminSession) error {
+	_, err := s.pool.Exec(ctx, `
+		INSERT INTO admin_sessions (id, admin_user_id, ip, user_agent, mfa_verified, created_at, last_seen, expires_at)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+	`, sess.ID, sess.AdminUserID, sess.IP, sess.UserAgent, sess.MFAVerified, sess.CreatedAt, sess.LastSeen, sess.ExpiresAt)
+	if err != nil {
+		if isUniqueViolation(err) {
+			return ErrAlreadyExists
+		}
+		return err
+	}
+	return nil
+}
+
+func (s *PG) GetAdminSession(ctx context.Context, id string) (*AdminSession, error) {
+	row := s.pool.QueryRow(ctx, `
+		SELECT id, admin_user_id, ip, user_agent, mfa_verified, created_at, last_seen, expires_at
+		FROM admin_sessions WHERE id=$1
+	`, id)
+	var sess AdminSession
+	if err := row.Scan(&sess.ID, &sess.AdminUserID, &sess.IP, &sess.UserAgent, &sess.MFAVerified,
+		&sess.CreatedAt, &sess.LastSeen, &sess.ExpiresAt); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &sess, nil
+}
+
+func (s *PG) TouchAdminSession(ctx context.Context, id string, lastSeen, expiresAt time.Time) error {
+	tag, err := s.pool.Exec(ctx, `UPDATE admin_sessions SET last_seen=$2, expires_at=$3 WHERE id=$1`, id, lastSeen, expiresAt)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (s *PG) DeleteAdminSession(ctx context.Context, id string) error {
+	_, err := s.pool.Exec(ctx, `DELETE FROM admin_sessions WHERE id=$1`, id)
+	return err
+}
+
+func (s *PG) DeleteAdminSessionsForUser(ctx context.Context, userID string) error {
+	_, err := s.pool.Exec(ctx, `DELETE FROM admin_sessions WHERE admin_user_id=$1`, userID)
+	return err
+}
+
+func (s *PG) MarkAdminSessionMFAVerified(ctx context.Context, id string) error {
+	tag, err := s.pool.Exec(ctx, `UPDATE admin_sessions SET mfa_verified=TRUE WHERE id=$1`, id)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
 }
 
 // ── Webhook events ─────────────────────────────────────────────

@@ -26,6 +26,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/seshadrik143/infrays-website/backend/internal/adminportal"
 	"github.com/seshadrik143/infrays-website/backend/internal/audit"
 	"github.com/seshadrik143/infrays-website/backend/internal/email"
 	"github.com/seshadrik143/infrays-website/backend/internal/issuer"
@@ -189,8 +190,21 @@ func main() {
 		Secure:        strings.HasPrefix(appURL, "https://"),
 	})
 
+	// ── Phase 52.5: admin portal ───────────────────────────────────
+	// Bootstrap an admin user via env if none exist yet — lets a fresh
+	// deploy mint the first admin without manual DB poking.
+	bootstrapAdmin(context.Background(), st)
+	adminSrv := adminportal.NewServer(adminportal.Config{
+		Store:      st,
+		Audit:      auditLog,
+		IssuerURL:  *issuerURL,
+		Secure:     strings.HasPrefix(appURL, "https://"),
+		TOTPIssuer: "infraYS",
+	})
+
 	rootMux := http.NewServeMux()
 	rootMux.Handle("/api/portal/", portalSrv.Routes())
+	rootMux.Handle("/api/admin/", adminSrv.Routes())
 	// Issuer API routes (specific paths under /v1, /healthz, /internal).
 	issuerMux := srv.Routes()
 	for _, p := range []string{"/v1/", "/healthz", "/internal/", "/.well-known/"} {
@@ -247,6 +261,47 @@ func main() {
 		log.Printf("shutdown: %v", err)
 	}
 	log.Println("issuer stopped")
+}
+
+// bootstrapAdmin creates the first admin user from environment vars
+// if no admin exists yet. Idempotent — does nothing if any admin row
+// is already present, so operators can rotate the bootstrap env
+// safely. Vars (both required):
+//
+//	NP_ADMIN_BOOTSTRAP_EMAIL    e.g. "admin@infrays.org"
+//	NP_ADMIN_BOOTSTRAP_PASSWORD long random string; admin must change
+//	                            it on first login + enroll MFA
+//
+// Without these the admin portal still works, but you'll need to
+// seed at least one row another way before logging in.
+func bootstrapAdmin(ctx context.Context, st store.Store) {
+	existing, err := st.ListAdminUsers(ctx)
+	if err == nil && len(existing) > 0 {
+		return
+	}
+	email := os.Getenv("NP_ADMIN_BOOTSTRAP_EMAIL")
+	password := os.Getenv("NP_ADMIN_BOOTSTRAP_PASSWORD")
+	if email == "" || password == "" {
+		log.Println("⚠  admin portal: no admin users present; set NP_ADMIN_BOOTSTRAP_EMAIL + NP_ADMIN_BOOTSTRAP_PASSWORD to seed the first one")
+		return
+	}
+	hash, err := adminportal.HashPassword(password)
+	if err != nil {
+		log.Printf("admin bootstrap: hash: %v", err)
+		return
+	}
+	a := &store.AdminUser{
+		ID:           adminportal.NewAdminID(),
+		Email:        email,
+		PasswordHash: hash,
+		Role:         "admin",
+		CreatedAt:    time.Now().UTC(),
+	}
+	if err := st.CreateAdminUser(ctx, a); err != nil {
+		log.Printf("admin bootstrap: create: %v", err)
+		return
+	}
+	log.Printf("admin portal: bootstrapped %s — enroll MFA on first login", email)
 }
 
 // seedEntitlements creates the three baseline entitlement sets so an

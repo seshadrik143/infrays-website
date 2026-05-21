@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 )
@@ -23,6 +24,8 @@ type Memory struct {
 	licensesByLicID   map[string][]string         // license_id → []jti (newest last)
 	entitlementSets   map[string]*EntitlementSet  // by ID
 	adminUsers        map[string]*AdminUser       // by email
+	adminUsersByID    map[string]*AdminUser       // by ID
+	adminSessions     map[string]*AdminSession    // by session ID
 	webhookEvents     map[string]*WebhookEvent    // by provider event ID
 	portalSessions    map[string]*PortalSession   // by session ID
 }
@@ -40,6 +43,8 @@ func NewMemory() *Memory {
 		licensesByLicID:  map[string][]string{},
 		entitlementSets:  map[string]*EntitlementSet{},
 		adminUsers:       map[string]*AdminUser{},
+		adminUsersByID:   map[string]*AdminUser{},
+		adminSessions:    map[string]*AdminSession{},
 		webhookEvents:    map[string]*WebhookEvent{},
 		portalSessions:   map[string]*PortalSession{},
 	}
@@ -61,6 +66,8 @@ func (m *Memory) Close() error {
 	m.licensesByLicID = map[string][]string{}
 	m.entitlementSets = map[string]*EntitlementSet{}
 	m.adminUsers = map[string]*AdminUser{}
+	m.adminUsersByID = map[string]*AdminUser{}
+	m.adminSessions = map[string]*AdminSession{}
 	m.webhookEvents = map[string]*WebhookEvent{}
 	m.portalSessions = map[string]*PortalSession{}
 	return nil
@@ -538,6 +545,7 @@ func (m *Memory) CreateAdminUser(_ context.Context, a *AdminUser) error {
 	}
 	cp := *a
 	m.adminUsers[a.Email] = &cp
+	m.adminUsersByID[a.ID] = &cp
 	return nil
 }
 
@@ -550,6 +558,163 @@ func (m *Memory) GetAdminUserByEmail(_ context.Context, email string) (*AdminUse
 	}
 	cp := *a
 	return &cp, nil
+}
+
+func (m *Memory) GetAdminUser(_ context.Context, id string) (*AdminUser, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	a, ok := m.adminUsersByID[id]
+	if !ok {
+		return nil, ErrNotFound
+	}
+	cp := *a
+	return &cp, nil
+}
+
+func (m *Memory) UpdateAdminUser(_ context.Context, a *AdminUser) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	existing, ok := m.adminUsersByID[a.ID]
+	if !ok {
+		return ErrNotFound
+	}
+	cp := *a
+	m.adminUsers[existing.Email] = &cp
+	m.adminUsersByID[a.ID] = &cp
+	return nil
+}
+
+func (m *Memory) ListAdminUsers(_ context.Context) ([]*AdminUser, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	out := make([]*AdminUser, 0, len(m.adminUsers))
+	for _, a := range m.adminUsers {
+		cp := *a
+		out = append(out, &cp)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].CreatedAt.Before(out[j].CreatedAt) })
+	return out, nil
+}
+
+// ── Customers / Subscriptions: admin queries ───────────────────
+
+func (m *Memory) ListCustomers(_ context.Context, filter string, limit int) ([]*Customer, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	flt := strings.ToLower(filter)
+	out := make([]*Customer, 0, len(m.customers))
+	for _, c := range m.customers {
+		if flt != "" {
+			if !strings.Contains(strings.ToLower(c.Email), flt) &&
+				!strings.Contains(strings.ToLower(c.Company), flt) {
+				continue
+			}
+		}
+		cp := *c
+		out = append(out, &cp)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].CreatedAt.After(out[j].CreatedAt) })
+	if limit > 0 && len(out) > limit {
+		out = out[:limit]
+	}
+	return out, nil
+}
+
+func (m *Memory) ListAllSubscriptions(_ context.Context, limit int) ([]*Subscription, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	out := make([]*Subscription, 0, len(m.subscriptions))
+	for _, s := range m.subscriptions {
+		cp := *s
+		out = append(out, &cp)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].CreatedAt.After(out[j].CreatedAt) })
+	if limit > 0 && len(out) > limit {
+		out = out[:limit]
+	}
+	return out, nil
+}
+
+func (m *Memory) UpdateDeployment(_ context.Context, d *Deployment) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	existing, ok := m.deployments[d.DeploymentID]
+	if !ok {
+		return ErrNotFound
+	}
+	cp := *d
+	cp.CreatedAt = existing.CreatedAt
+	m.deployments[d.DeploymentID] = &cp
+	return nil
+}
+
+// ── Admin sessions ─────────────────────────────────────────────
+
+func (m *Memory) CreateAdminSession(_ context.Context, s *AdminSession) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if _, exists := m.adminSessions[s.ID]; exists {
+		return ErrAlreadyExists
+	}
+	cp := *s
+	m.adminSessions[s.ID] = &cp
+	return nil
+}
+
+func (m *Memory) GetAdminSession(_ context.Context, id string) (*AdminSession, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	s, ok := m.adminSessions[id]
+	if !ok {
+		return nil, ErrNotFound
+	}
+	cp := *s
+	return &cp, nil
+}
+
+func (m *Memory) TouchAdminSession(_ context.Context, id string, lastSeen, expiresAt time.Time) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	s, ok := m.adminSessions[id]
+	if !ok {
+		return ErrNotFound
+	}
+	s.LastSeen = lastSeen
+	s.ExpiresAt = expiresAt
+	return nil
+}
+
+func (m *Memory) DeleteAdminSession(_ context.Context, id string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	delete(m.adminSessions, id)
+	return nil
+}
+
+func (m *Memory) DeleteAdminSessionsForUser(_ context.Context, userID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for id, s := range m.adminSessions {
+		if s.AdminUserID == userID {
+			delete(m.adminSessions, id)
+		}
+	}
+	return nil
+}
+
+// MarkAdminSessionMFAVerified is a memory-only helper used by tests.
+// The interface uses Update via the session row directly; the
+// adminportal middleware does Get → mutate → call this — kept as a
+// distinct method for clarity. Other stores may inline it.
+func (m *Memory) MarkAdminSessionMFAVerified(_ context.Context, id string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	s, ok := m.adminSessions[id]
+	if !ok {
+		return ErrNotFound
+	}
+	s.MFAVerified = true
+	return nil
 }
 
 // Compile-time check that Memory implements Store.

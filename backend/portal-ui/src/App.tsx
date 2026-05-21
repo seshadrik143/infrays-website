@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./lib/auth";
+import { AdminAuthProvider, useAdminAuth } from "./lib/adminAuth";
 import Layout from "./components/Layout";
 import LoginPage from "./pages/Login";
 import SignupPage from "./pages/Signup";
@@ -11,6 +12,12 @@ import DeploymentsPage from "./pages/Deployments";
 import EnrollmentTokensPage from "./pages/EnrollmentTokens";
 import LicensesPage from "./pages/Licenses";
 import AccountPage from "./pages/Account";
+import AdminLoginPage from "./pages/admin/AdminLogin";
+import AdminLayout from "./pages/admin/AdminLayout";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminCustomerList from "./pages/admin/AdminCustomerList";
+import AdminCustomerDetail from "./pages/admin/AdminCustomerDetail";
+import AdminAudit from "./pages/admin/AdminAudit";
 
 function RequireAuth({ children }: { children: JSX.Element }) {
   const { me, loading } = useAuth();
@@ -43,7 +50,31 @@ export default function App() {
         <Route path="/account" element={<AccountPage />} />
       </Route>
 
+      <Route path="/admin/*" element={<AdminAuthProvider><AdminRoutes /></AdminAuthProvider>} />
+
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
+    </Routes>
+  );
+}
+
+function RequireAdmin({ children }: { children: JSX.Element }) {
+  const { me, loading } = useAdminAuth();
+  if (loading) return <div className="p-12 text-center text-gray-400">Loading…</div>;
+  if (!me || !me.mfa_verified) return <Navigate to="/admin/login" replace />;
+  return children;
+}
+
+function AdminRoutes() {
+  return (
+    <Routes>
+      <Route path="login" element={<AdminLoginPage />} />
+      <Route element={<RequireAdmin><AdminLayout /></RequireAdmin>}>
+        <Route path="dashboard" element={<AdminDashboard />} />
+        <Route path="customers" element={<AdminCustomerList />} />
+        <Route path="customers/:id" element={<AdminCustomerDetail />} />
+        <Route path="audit" element={<AdminAudit />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
     </Routes>
   );
 }

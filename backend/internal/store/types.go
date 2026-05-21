@@ -181,9 +181,29 @@ type AdminUser struct {
 	Email        string
 	PasswordHash string
 	Role         string // admin | support | sales | engineer
-	MFASecret    string // TOTP base32; required
+	MFASecret    string // TOTP base32; empty until setup completes
+	MFAEnrolled  bool   // true once admin has verified a TOTP code
 	LastLogin    time.Time
 	CreatedAt    time.Time
+}
+
+// AdminSession is one active browser session for an admin user.
+// Cookie value is the session ID; separate from PortalSession so
+// admin and customer cookies don't conflict on the same browser.
+//
+// Phase 52.5: 30-minute idle TTL, 8-hour absolute lifetime (anchored
+// at CreatedAt; middleware enforces both windows). MFAVerified gates
+// the data routes — login hands out a session that has only the
+// MFA-challenge route until TOTP is verified.
+type AdminSession struct {
+	ID          string
+	AdminUserID string
+	IP          string
+	UserAgent   string
+	MFAVerified bool      // false until TOTP is verified
+	CreatedAt   time.Time // absolute lifetime anchor
+	LastSeen    time.Time
+	ExpiresAt   time.Time // rolling idle expiry
 }
 
 // WebhookEvent records every Stripe (or future provider) webhook for

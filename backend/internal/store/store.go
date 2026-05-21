@@ -92,6 +92,33 @@ type Store interface {
 	// ── Admin users ────────────────────────────────────────────
 	CreateAdminUser(ctx context.Context, a *AdminUser) error
 	GetAdminUserByEmail(ctx context.Context, email string) (*AdminUser, error)
+	GetAdminUser(ctx context.Context, id string) (*AdminUser, error)
+	UpdateAdminUser(ctx context.Context, a *AdminUser) error
+	ListAdminUsers(ctx context.Context) ([]*AdminUser, error)
+
+	// ── Customers / Subscriptions: admin queries ───────────────
+	// ListCustomers returns customers ordered by created_at DESC.
+	// Filter is applied as a substring match against email + company
+	// when non-empty. Limit caps page size.
+	ListCustomers(ctx context.Context, filter string, limit int) ([]*Customer, error)
+	// ListAllSubscriptions returns all subscription rows for the admin
+	// "subscriptions overview" page. No filter for v1.
+	ListAllSubscriptions(ctx context.Context, limit int) ([]*Subscription, error)
+	// UpdateDeployment writes back FlaggedForReview + FlagReason for
+	// the admin "flag deployment" action.
+	UpdateDeployment(ctx context.Context, d *Deployment) error
+
+	// ── Admin sessions ─────────────────────────────────────────
+	// Separate cookie domain from portal sessions. 30-min idle TTL,
+	// 8-hour absolute max (enforced in middleware).
+	CreateAdminSession(ctx context.Context, s *AdminSession) error
+	GetAdminSession(ctx context.Context, id string) (*AdminSession, error)
+	TouchAdminSession(ctx context.Context, id string, lastSeen, expiresAt time.Time) error
+	DeleteAdminSession(ctx context.Context, id string) error
+	DeleteAdminSessionsForUser(ctx context.Context, adminUserID string) error
+	// MarkAdminSessionMFAVerified flips MFAVerified to true on the
+	// row. Called after the TOTP code is verified on the MFA challenge.
+	MarkAdminSessionMFAVerified(ctx context.Context, id string) error
 
 	// ── Portal sessions ────────────────────────────────────────
 	// Cookie-backed sessions for the customer portal at
