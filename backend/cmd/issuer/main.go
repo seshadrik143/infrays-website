@@ -29,6 +29,7 @@ import (
 	"github.com/seshadrik143/infrays-website/backend/internal/audit"
 	"github.com/seshadrik143/infrays-website/backend/internal/email"
 	"github.com/seshadrik143/infrays-website/backend/internal/issuer"
+	"github.com/seshadrik143/infrays-website/backend/internal/portal"
 	"github.com/seshadrik143/infrays-website/backend/internal/signing"
 	"github.com/seshadrik143/infrays-website/backend/internal/store"
 	"github.com/seshadrik143/infrays-website/backend/internal/stripebill"
@@ -165,9 +166,43 @@ func main() {
 		AppURL:               appURL,
 	})
 
+	// ── Phase 52: customer portal at app.infrays.org ─────────────
+	// Mounted on the same Go binary as the issuer. The mux below
+	// dispatches /api/portal/* to the portal Server and everything
+	// else to the issuer Server. Future task #91 will embed the
+	// React SPA and add a fallback handler for /.
+	var billingPortal portal.BillingPortalCreator
+	if apiKey := os.Getenv("NP_STRIPE_SECRET_KEY"); apiKey != "" {
+		bp, err := stripebill.NewPortalSessionCreator(apiKey, appURL)
+		if err != nil {
+			log.Fatalf("stripe billing portal: %v", err)
+		}
+		billingPortal = bp
+		log.Println("stripe: billing portal session creator registered")
+	}
+	portalSrv := portal.NewServer(portal.Config{
+		Store:         st,
+		Audit:         auditLog,
+		Email:         mailer,
+		BillingPortal: billingPortal,
+		AppURL:        appURL,
+		Secure:        strings.HasPrefix(appURL, "https://"),
+	})
+
+	rootMux := http.NewServeMux()
+	rootMux.Handle("/api/portal/", portalSrv.Routes())
+	// Issuer API routes (specific paths under /v1, /healthz, /internal).
+	issuerMux := srv.Routes()
+	for _, p := range []string{"/v1/", "/healthz", "/internal/", "/.well-known/"} {
+		rootMux.Handle(p, issuerMux)
+	}
+	// Everything else falls through to the embedded portal SPA — index.html
+	// at "/" plus React Router's client-side routes (/login, /dashboard, ...).
+	rootMux.Handle("/", portal.SPAHandler())
+
 	httpSrv := &http.Server{
 		Addr:         *addr,
-		Handler:      srv.Routes(),
+		Handler:      rootMux,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,

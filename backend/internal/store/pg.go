@@ -92,9 +92,13 @@ func (o *optTime) Time() time.Time {
 
 func (s *PG) CreateCustomer(ctx context.Context, c *Customer) error {
 	_, err := s.pool.Exec(ctx, `
-		INSERT INTO customers (id, email, name, company, stripe_customer_id, status, created_at, updated_at)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-	`, c.ID, c.Email, nullStr(c.Name), nullStr(c.Company), nullStr(c.StripeCustomerID), c.Status, c.CreatedAt, c.UpdatedAt)
+		INSERT INTO customers (id, email, name, company, stripe_customer_id, status,
+			password_hash, email_verified_at, token_hash, token_expires, token_purpose,
+			created_at, updated_at)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)
+	`, c.ID, c.Email, nullStr(c.Name), nullStr(c.Company), nullStr(c.StripeCustomerID), c.Status,
+		c.PasswordHash, nullTime(c.EmailVerifiedAt), c.TokenHash, nullTime(c.TokenExpires), c.TokenPurpose,
+		c.CreatedAt, c.UpdatedAt)
 	if err != nil {
 		if isUniqueViolation(err) {
 			return ErrAlreadyExists
@@ -104,18 +108,35 @@ func (s *PG) CreateCustomer(ctx context.Context, c *Customer) error {
 	return nil
 }
 
+const sqlSelectCustomer = `
+	SELECT id, email, name, company, stripe_customer_id, status,
+		password_hash, email_verified_at, token_hash, token_expires, token_purpose,
+		created_at, updated_at
+	FROM customers
+`
+
 func (s *PG) GetCustomer(ctx context.Context, id string) (*Customer, error) {
-	return s.scanCustomer(s.pool.QueryRow(ctx, `SELECT id,email,name,company,stripe_customer_id,status,created_at,updated_at FROM customers WHERE id=$1`, id))
+	return s.scanCustomer(s.pool.QueryRow(ctx, sqlSelectCustomer+` WHERE id=$1`, id))
 }
 
 func (s *PG) GetCustomerByEmail(ctx context.Context, email string) (*Customer, error) {
-	return s.scanCustomer(s.pool.QueryRow(ctx, `SELECT id,email,name,company,stripe_customer_id,status,created_at,updated_at FROM customers WHERE email=$1`, email))
+	return s.scanCustomer(s.pool.QueryRow(ctx, sqlSelectCustomer+` WHERE email=$1`, email))
+}
+
+func (s *PG) GetCustomerByTokenHash(ctx context.Context, tokenHash string) (*Customer, error) {
+	if tokenHash == "" {
+		return nil, ErrNotFound
+	}
+	return s.scanCustomer(s.pool.QueryRow(ctx, sqlSelectCustomer+` WHERE token_hash=$1`, tokenHash))
 }
 
 func (s *PG) scanCustomer(row pgx.Row) (*Customer, error) {
 	var c Customer
 	var name, company, stripeID *string
-	err := row.Scan(&c.ID, &c.Email, &name, &company, &stripeID, &c.Status, &c.CreatedAt, &c.UpdatedAt)
+	var emailVerifiedAt, tokenExpires *time.Time
+	err := row.Scan(&c.ID, &c.Email, &name, &company, &stripeID, &c.Status,
+		&c.PasswordHash, &emailVerifiedAt, &c.TokenHash, &tokenExpires, &c.TokenPurpose,
+		&c.CreatedAt, &c.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrNotFound
 	}
@@ -125,14 +146,20 @@ func (s *PG) scanCustomer(row pgx.Row) (*Customer, error) {
 	c.Name = (&optStr{name}).String()
 	c.Company = (&optStr{company}).String()
 	c.StripeCustomerID = (&optStr{stripeID}).String()
+	c.EmailVerifiedAt = (&optTime{emailVerifiedAt}).Time()
+	c.TokenExpires = (&optTime{tokenExpires}).Time()
 	return &c, nil
 }
 
 func (s *PG) UpdateCustomer(ctx context.Context, c *Customer) error {
 	tag, err := s.pool.Exec(ctx, `
-		UPDATE customers SET email=$2,name=$3,company=$4,stripe_customer_id=$5,status=$6,updated_at=$7
+		UPDATE customers SET email=$2,name=$3,company=$4,stripe_customer_id=$5,status=$6,
+			password_hash=$7, email_verified_at=$8, token_hash=$9, token_expires=$10, token_purpose=$11,
+			updated_at=$12
 		WHERE id=$1
-	`, c.ID, c.Email, nullStr(c.Name), nullStr(c.Company), nullStr(c.StripeCustomerID), c.Status, c.UpdatedAt)
+	`, c.ID, c.Email, nullStr(c.Name), nullStr(c.Company), nullStr(c.StripeCustomerID), c.Status,
+		c.PasswordHash, nullTime(c.EmailVerifiedAt), c.TokenHash, nullTime(c.TokenExpires), c.TokenPurpose,
+		c.UpdatedAt)
 	if err != nil {
 		return err
 	}
@@ -413,6 +440,37 @@ func (s *PG) GetEnrollmentTokenByHash(ctx context.Context, tokenHash string) (*E
 	return &t, nil
 }
 
+func (s *PG) ListEnrollmentTokensByCustomer(ctx context.Context, customerID string) ([]*EnrollmentToken, error) {
+	rows, err := s.pool.Query(ctx, `
+		SELECT id,customer_id,subscription_id,token_hash,label,created_at,expires_at,consumed_at,consumed_by_deployment,consumed_response_jws
+		FROM enrollment_tokens WHERE customer_id=$1 ORDER BY created_at DESC
+	`, customerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []*EnrollmentToken
+	for rows.Next() {
+		var t EnrollmentToken
+		var label, consumedBy, response *string
+		var consumedAt *time.Time
+		if err := rows.Scan(&t.ID, &t.CustomerID, &t.SubscriptionID, &t.TokenHash, &label, &t.CreatedAt, &t.ExpiresAt, &consumedAt, &consumedBy, &response); err != nil {
+			return nil, err
+		}
+		t.Label = (&optStr{label}).String()
+		t.ConsumedByDeployment = (&optStr{consumedBy}).String()
+		t.ConsumedResponseJWS = (&optStr{response}).String()
+		t.ConsumedAt = (&optTime{consumedAt}).Time()
+		out = append(out, &t)
+	}
+	return out, rows.Err()
+}
+
+func (s *PG) RevokeEnrollmentToken(ctx context.Context, id string) error {
+	_, err := s.pool.Exec(ctx, `UPDATE enrollment_tokens SET expires_at=NOW() WHERE id=$1 AND expires_at > NOW()`, id)
+	return err
+}
+
 // ConsumeEnrollmentToken serialises consume-or-cached-replay via a
 // SELECT FOR UPDATE on the token row inside a transaction. Idempotent
 // for the same deployment_id; returns ErrConsumed for a different one.
@@ -476,6 +534,23 @@ func (s *PG) GetLicenseByJTI(ctx context.Context, jti string) (*License, error) 
 
 func (s *PG) GetLatestLicenseForLicenseID(ctx context.Context, licenseID string) (*License, error) {
 	return s.scanLicense(s.pool.QueryRow(ctx, sqlSelectLicense+` WHERE license_id=$1 ORDER BY created_at DESC LIMIT 1`, licenseID))
+}
+
+func (s *PG) ListLicensesByCustomer(ctx context.Context, customerID string) ([]*License, error) {
+	rows, err := s.pool.Query(ctx, sqlSelectLicense+` WHERE customer_id=$1 ORDER BY created_at DESC`, customerID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []*License
+	for rows.Next() {
+		l, err := s.scanLicense(rows)
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, l)
+	}
+	return out, rows.Err()
 }
 
 func (s *PG) RevokeLicenseByJTI(ctx context.Context, jti, reason string) error {
@@ -671,6 +746,60 @@ func (s *PG) MarkWebhookProcessed(ctx context.Context, id, status, lastError str
 		return ErrNotFound
 	}
 	return nil
+}
+
+// ── Portal sessions ────────────────────────────────────────────
+
+func (p *PG) CreatePortalSession(ctx context.Context, s *PortalSession) error {
+	_, err := p.pool.Exec(ctx, `
+		INSERT INTO portal_sessions (id, customer_id, ip, user_agent, created_at, last_seen, expires_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+	`, s.ID, s.CustomerID, s.IP, s.UserAgent, s.CreatedAt, s.LastSeen, s.ExpiresAt)
+	if err != nil {
+		if isUniqueViolation(err) {
+			return ErrAlreadyExists
+		}
+		return err
+	}
+	return nil
+}
+
+func (p *PG) GetPortalSession(ctx context.Context, id string) (*PortalSession, error) {
+	row := p.pool.QueryRow(ctx, `
+		SELECT id, customer_id, ip, user_agent, created_at, last_seen, expires_at
+		FROM portal_sessions WHERE id=$1
+	`, id)
+	var s PortalSession
+	if err := row.Scan(&s.ID, &s.CustomerID, &s.IP, &s.UserAgent, &s.CreatedAt, &s.LastSeen, &s.ExpiresAt); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return &s, nil
+}
+
+func (p *PG) TouchPortalSession(ctx context.Context, id string, lastSeen, expiresAt time.Time) error {
+	tag, err := p.pool.Exec(ctx, `
+		UPDATE portal_sessions SET last_seen=$2, expires_at=$3 WHERE id=$1
+	`, id, lastSeen, expiresAt)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (p *PG) DeletePortalSession(ctx context.Context, id string) error {
+	_, err := p.pool.Exec(ctx, `DELETE FROM portal_sessions WHERE id=$1`, id)
+	return err
+}
+
+func (p *PG) DeletePortalSessionsForCustomer(ctx context.Context, customerID string) error {
+	_, err := p.pool.Exec(ctx, `DELETE FROM portal_sessions WHERE customer_id=$1`, customerID)
+	return err
 }
 
 // isUniqueViolation matches pgx's exposure of Postgres SQLSTATE 23505

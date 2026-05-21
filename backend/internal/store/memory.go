@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"errors"
+	"sort"
 	"sync"
 	"time"
 )
@@ -23,6 +24,7 @@ type Memory struct {
 	entitlementSets   map[string]*EntitlementSet  // by ID
 	adminUsers        map[string]*AdminUser       // by email
 	webhookEvents     map[string]*WebhookEvent    // by provider event ID
+	portalSessions    map[string]*PortalSession   // by session ID
 }
 
 // NewMemory returns a fresh in-memory Store.
@@ -39,6 +41,7 @@ func NewMemory() *Memory {
 		entitlementSets:  map[string]*EntitlementSet{},
 		adminUsers:       map[string]*AdminUser{},
 		webhookEvents:    map[string]*WebhookEvent{},
+		portalSessions:   map[string]*PortalSession{},
 	}
 }
 
@@ -59,6 +62,61 @@ func (m *Memory) Close() error {
 	m.entitlementSets = map[string]*EntitlementSet{}
 	m.adminUsers = map[string]*AdminUser{}
 	m.webhookEvents = map[string]*WebhookEvent{}
+	m.portalSessions = map[string]*PortalSession{}
+	return nil
+}
+
+// ── Portal sessions ────────────────────────────────────────────
+
+func (m *Memory) CreatePortalSession(_ context.Context, s *PortalSession) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if _, exists := m.portalSessions[s.ID]; exists {
+		return ErrAlreadyExists
+	}
+	cp := *s
+	m.portalSessions[s.ID] = &cp
+	return nil
+}
+
+func (m *Memory) GetPortalSession(_ context.Context, id string) (*PortalSession, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	s, ok := m.portalSessions[id]
+	if !ok {
+		return nil, ErrNotFound
+	}
+	cp := *s
+	return &cp, nil
+}
+
+func (m *Memory) TouchPortalSession(_ context.Context, id string, lastSeen, expiresAt time.Time) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	s, ok := m.portalSessions[id]
+	if !ok {
+		return ErrNotFound
+	}
+	s.LastSeen = lastSeen
+	s.ExpiresAt = expiresAt
+	return nil
+}
+
+func (m *Memory) DeletePortalSession(_ context.Context, id string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	delete(m.portalSessions, id)
+	return nil
+}
+
+func (m *Memory) DeletePortalSessionsForCustomer(_ context.Context, customerID string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for id, s := range m.portalSessions {
+		if s.CustomerID == customerID {
+			delete(m.portalSessions, id)
+		}
+	}
 	return nil
 }
 
@@ -134,6 +192,21 @@ func (m *Memory) GetCustomerByEmail(_ context.Context, email string) (*Customer,
 	c := m.customers[id]
 	cp := *c
 	return &cp, nil
+}
+
+func (m *Memory) GetCustomerByTokenHash(_ context.Context, tokenHash string) (*Customer, error) {
+	if tokenHash == "" {
+		return nil, ErrNotFound
+	}
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	for _, c := range m.customers {
+		if c.TokenHash == tokenHash {
+			cp := *c
+			return &cp, nil
+		}
+	}
+	return nil, ErrNotFound
 }
 
 func (m *Memory) UpdateCustomer(_ context.Context, c *Customer) error {
@@ -309,6 +382,32 @@ func (m *Memory) GetEnrollmentTokenByHash(_ context.Context, tokenHash string) (
 	return &cp, nil
 }
 
+func (m *Memory) ListEnrollmentTokensByCustomer(_ context.Context, customerID string) ([]*EnrollmentToken, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var out []*EnrollmentToken
+	for _, t := range m.enrollmentTokens {
+		if t.CustomerID == customerID {
+			cp := *t
+			out = append(out, &cp)
+		}
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].CreatedAt.After(out[j].CreatedAt) })
+	return out, nil
+}
+
+func (m *Memory) RevokeEnrollmentToken(_ context.Context, id string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	for _, t := range m.enrollmentTokens {
+		if t.ID == id {
+			t.ExpiresAt = time.Now().UTC()
+			return nil
+		}
+	}
+	return ErrNotFound
+}
+
 func (m *Memory) ConsumeEnrollmentToken(_ context.Context, tokenHash, deploymentID, responseJWS string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -366,6 +465,20 @@ func (m *Memory) GetLatestLicenseForLicenseID(_ context.Context, licenseID strin
 	latest := m.licenses[jtis[len(jtis)-1]]
 	cp := *latest
 	return &cp, nil
+}
+
+func (m *Memory) ListLicensesByCustomer(_ context.Context, customerID string) ([]*License, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	var out []*License
+	for _, l := range m.licenses {
+		if l.CustomerID == customerID {
+			cp := *l
+			out = append(out, &cp)
+		}
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].CreatedAt.After(out[j].CreatedAt) })
+	return out, nil
 }
 
 func (m *Memory) RevokeLicenseByJTI(_ context.Context, jti, reason string) error {

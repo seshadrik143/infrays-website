@@ -21,9 +21,22 @@ CREATE TABLE IF NOT EXISTS customers (
     company             TEXT,
     stripe_customer_id  TEXT UNIQUE,
     status              TEXT NOT NULL DEFAULT 'active',
+    password_hash       TEXT NOT NULL DEFAULT '',         -- Phase 52 portal
+    email_verified_at   TIMESTAMPTZ,                       -- Phase 52
+    token_hash          TEXT NOT NULL DEFAULT '',          -- Phase 52: verify_email | reset_password token
+    token_expires       TIMESTAMPTZ,                       -- Phase 52
+    token_purpose       TEXT NOT NULL DEFAULT '',          -- Phase 52
     created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+-- Idempotent ALTERs for Phase 52 columns (pre-existing deploys).
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS password_hash     TEXT NOT NULL DEFAULT '';
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS email_verified_at TIMESTAMPTZ;
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS token_hash        TEXT NOT NULL DEFAULT '';
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS token_expires     TIMESTAMPTZ;
+ALTER TABLE customers ADD COLUMN IF NOT EXISTS token_purpose     TEXT NOT NULL DEFAULT '';
+-- Fast lookup of a token (verify-email / reset-password redemption).
+CREATE INDEX IF NOT EXISTS idx_customers_token_hash ON customers(token_hash) WHERE token_hash <> '';
 
 CREATE TABLE IF NOT EXISTS subscriptions (
     id                      TEXT PRIMARY KEY,
@@ -122,6 +135,21 @@ CREATE TABLE IF NOT EXISTS admin_users (
     last_login      TIMESTAMPTZ,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- Portal sessions (Phase 52). Cookie value is the id. Goroutine-safe
+-- cleanup of expired rows is handled at the Go layer; for now a
+-- DELETE WHERE expires_at < NOW() periodic job is sufficient.
+CREATE TABLE IF NOT EXISTS portal_sessions (
+    id           TEXT PRIMARY KEY,
+    customer_id  TEXT NOT NULL REFERENCES customers(id) ON DELETE CASCADE,
+    ip           TEXT NOT NULL DEFAULT '',
+    user_agent   TEXT NOT NULL DEFAULT '',
+    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_seen    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at   TIMESTAMPTZ NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_portal_sessions_customer ON portal_sessions(customer_id);
+CREATE INDEX IF NOT EXISTS idx_portal_sessions_expires  ON portal_sessions(expires_at);
 
 -- Webhook idempotency. Stripe (and any future provider) retries
 -- events on 5xx responses; the unique primary key prevents double-
