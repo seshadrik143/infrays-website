@@ -210,12 +210,14 @@ func main() {
 	})
 
 	rootMux := http.NewServeMux()
-	rootMux.Handle("/api/portal/", obs.HTTPMiddleware("portal.api", portalSrv.Routes()))
-	rootMux.Handle("/api/admin/", obs.HTTPMiddleware("admin.api", adminSrv.Routes()))
-	// Issuer API routes (specific paths under /v1, /healthz, /internal).
+	// JSON404 wraps each sub-mux so unmatched routes return JSON
+	// "{\"error\":\"not found\"}" instead of stdlib's plain-text fallback.
+	rootMux.Handle("/api/portal/", obs.HTTPMiddleware("portal.api", obs.JSON404(portalSrv.Routes())))
+	rootMux.Handle("/api/admin/", obs.HTTPMiddleware("admin.api", obs.JSON404(adminSrv.Routes())))
 	issuerMux := srv.Routes()
+	wrappedIssuer := obs.HTTPMiddleware("issuer.api", obs.JSON404(issuerMux))
 	for _, p := range []string{"/v1/", "/healthz", "/internal/", "/.well-known/"} {
-		rootMux.Handle(p, obs.HTTPMiddleware("issuer.api", issuerMux))
+		rootMux.Handle(p, wrappedIssuer)
 	}
 	// /metrics — opt-in via NP_METRICS_USER + NP_METRICS_PASSWORD.
 	// When either is empty, the handler returns 404, never exposing
@@ -230,8 +232,13 @@ func main() {
 	rootMux.Handle("/", obs.HTTPMiddleware("spa", portal.SPAHandler()))
 
 	httpSrv := &http.Server{
-		Addr:         *addr,
-		Handler:      rootMux,
+		Addr: *addr,
+		// Chain (outermost first):
+		//   SecurityHeaders — defense-in-depth response headers on
+		//     every response, including 404/405 fallbacks.
+		//   BodyLimit — cap request bodies before handlers see them.
+		//   rootMux — actual routing.
+		Handler:      obs.SecurityHeaders(obs.DenyCrossOrigin(obs.BodyLimit(0, obs.TrailingSlash(rootMux)))),
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
