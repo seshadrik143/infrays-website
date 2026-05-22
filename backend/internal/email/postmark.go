@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"time"
 )
@@ -74,13 +75,20 @@ func (p *PostmarkSender) Send(ctx context.Context, msg Message) error {
 
 	resp, err := p.client.Do(req)
 	if err != nil {
+		slog.Error("postmark send transport failure",
+			"message_type", msg.MessageType, "to", msg.To, "err", err)
 		return fmt.Errorf("email: postmark %s: %w", msg.MessageType, err)
 	}
 	defer resp.Body.Close()
 
 	respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		slog.Error("postmark send rejected",
+			"message_type", msg.MessageType, "to", msg.To,
+			"status", resp.StatusCode, "body", string(respBody))
 		return fmt.Errorf("email: postmark status=%d body=%s", resp.StatusCode, string(respBody))
 	}
+	slog.Info("postmark send ok",
+		"message_type", msg.MessageType, "to", msg.To, "status", resp.StatusCode)
 	return nil
 }
