@@ -132,7 +132,7 @@ func init() {
 func MetricsHandler(user, password string) http.Handler {
 	if user == "" || password == "" {
 		return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-			http.Error(w, "not found", http.StatusNotFound)
+			JSONStatus(w, http.StatusNotFound, "not found")
 		})
 	}
 	inner := promhttp.Handler()
