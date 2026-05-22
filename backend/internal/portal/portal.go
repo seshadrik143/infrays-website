@@ -21,6 +21,7 @@ import (
 
 	"github.com/seshadrik143/infrays-website/backend/internal/audit"
 	"github.com/seshadrik143/infrays-website/backend/internal/email"
+	"github.com/seshadrik143/infrays-website/backend/internal/ratelimit"
 	"github.com/seshadrik143/infrays-website/backend/internal/store"
 )
 
@@ -52,7 +53,23 @@ type Config struct {
 // Server is the portal HTTP handler container.
 type Server struct {
 	cfg Config
+
+	// Per-IP rate limiters for auth-adjacent endpoints. Tight on login
+	// + reset; looser on signup (legit traffic isn't bursty there
+	// either, but we want to avoid annoying false-positives if a
+	// shared NAT bursts a few new signups).
+	loginIPRL  *Limiter
+	signupRL   *Limiter
+	resetRL    *Limiter
+	verifyRL   *Limiter
+	// Per-account lockout for customer logins: 5 fails within 15min
+	// → reject for 15min from the most recent miss.
+	loginAccountRL *Limiter
 }
+
+// Limiter is a thin alias so handler code doesn't import ratelimit
+// directly — keeps the dependency surface small.
+type Limiter = ratelimit.Limiter
 
 func NewServer(cfg Config) *Server {
 	if cfg.Now == nil {
@@ -61,7 +78,27 @@ func NewServer(cfg Config) *Server {
 	if cfg.AppURL == "" {
 		cfg.AppURL = "https://app.infrays.org"
 	}
-	return &Server{cfg: cfg}
+	return &Server{
+		cfg: cfg,
+		// Customer-facing endpoints. Bursts allowed because legitimate
+		// users sometimes mistype passwords; cliff-edge after the
+		// budget is exhausted.
+		loginIPRL:      ratelimit.New(ratelimit.Config{Max: 10, Window: 5 * time.Minute, Now: cfg.Now}),
+		signupRL:       ratelimit.New(ratelimit.Config{Max: 5, Window: 10 * time.Minute, Now: cfg.Now}),
+		resetRL:        ratelimit.New(ratelimit.Config{Max: 5, Window: 15 * time.Minute, Now: cfg.Now}),
+		verifyRL:       ratelimit.New(ratelimit.Config{Max: 10, Window: 5 * time.Minute, Now: cfg.Now}),
+		loginAccountRL: ratelimit.New(ratelimit.Config{Max: 5, Window: 15 * time.Minute, Now: cfg.Now}),
+	}
+}
+
+// Close stops the rate-limiter cleanup goroutines. Tests should call
+// it; in production the process exits and goroutines die anyway.
+func (s *Server) Close() {
+	s.loginIPRL.Close()
+	s.signupRL.Close()
+	s.resetRL.Close()
+	s.verifyRL.Close()
+	s.loginAccountRL.Close()
 }
 
 // Routes returns the portal mux. All routes mounted under /api/portal
@@ -84,11 +121,14 @@ func NewServer(cfg Config) *Server {
 func (s *Server) Routes() *http.ServeMux {
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("POST /api/portal/auth/signup", s.handleSignup)
-	mux.HandleFunc("POST /api/portal/auth/login", s.handleLogin)
-	mux.HandleFunc("POST /api/portal/auth/verify-email", s.handleVerifyEmail)
-	mux.HandleFunc("POST /api/portal/auth/request-password-reset", s.handleRequestPasswordReset)
-	mux.HandleFunc("POST /api/portal/auth/reset-password", s.handleResetPassword)
+	mux.HandleFunc("POST /api/portal/auth/signup", s.withRateLimit(s.signupRL, "portal.signup", s.handleSignup))
+	// Login uses per-IP limit at the wrapper plus per-account lockout
+	// inside the handler (handler also resets the account counter on
+	// success).
+	mux.HandleFunc("POST /api/portal/auth/login", s.withRateLimit(s.loginIPRL, "portal.login.ip", s.handleLogin))
+	mux.HandleFunc("POST /api/portal/auth/verify-email", s.withRateLimit(s.verifyRL, "portal.verify", s.handleVerifyEmail))
+	mux.HandleFunc("POST /api/portal/auth/request-password-reset", s.withRateLimit(s.resetRL, "portal.reset.request", s.handleRequestPasswordReset))
+	mux.HandleFunc("POST /api/portal/auth/reset-password", s.withRateLimit(s.resetRL, "portal.reset.confirm", s.handleResetPassword))
 
 	mux.HandleFunc("POST /api/portal/auth/logout", s.requireSession(s.handleLogout))
 	mux.HandleFunc("GET /api/portal/auth/me", s.requireSession(s.handleMe))

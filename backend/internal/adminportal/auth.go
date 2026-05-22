@@ -24,12 +24,23 @@ type loginRequest struct {
 }
 
 func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
+	// Per-IP gate.
+	if !s.ratelimitOrAbort(w, s.loginIPRL, "admin.login.ip:"+rateLimitClientIP(r)) {
+		obs.AdminLoginsTotal.WithLabelValues("stage1", "rate_limited").Inc()
+		return
+	}
 	var req loginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid json")
 		return
 	}
 	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
+	// Per-account lockout.
+	accountKey := "admin.login.account:" + req.Email
+	if !s.ratelimitOrAbort(w, s.loginAccountRL, accountKey) {
+		obs.AdminLoginsTotal.WithLabelValues("stage1", "locked_out").Inc()
+		return
+	}
 	admin, err := s.cfg.Store.GetAdminUserByEmail(r.Context(), req.Email)
 	if err != nil {
 		_ = bcrypt.CompareHashAndPassword([]byte("$2a$12$dummy.hash.to.equalize.timing.aaaaaaaaaaaaaaaaaaaaaaaaaaaaa"), []byte(req.Password))
@@ -42,6 +53,8 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusUnauthorized, "invalid credentials")
 		return
 	}
+	// Success — clear the account counter.
+	s.loginAccountRL.Reset(accountKey)
 
 	now := s.cfg.Now()
 	sid, err := newSessionID()
@@ -182,6 +195,12 @@ func (s *Server) handleMFAChallenge(w http.ResponseWriter, r *http.Request) {
 	sess := sessionFromContext(r.Context())
 	if sess.MFAVerified {
 		writeJSON(w, http.StatusOK, map[string]any{"status": "ok"})
+		return
+	}
+	// Per-IP rate limit on MFA attempts. Burst higher than login since
+	// legit users can fumble the 6-digit code.
+	if !s.ratelimitOrAbort(w, s.mfaIPRL, "admin.mfa.ip:"+rateLimitClientIP(r)) {
+		obs.AdminLoginsTotal.WithLabelValues("mfa", "rate_limited").Inc()
 		return
 	}
 	if !admin.MFAEnrolled {

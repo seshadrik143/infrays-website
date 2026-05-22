@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/seshadrik143/infrays-website/backend/internal/audit"
+	"github.com/seshadrik143/infrays-website/backend/internal/ratelimit"
 	"github.com/seshadrik143/infrays-website/backend/internal/store"
 )
 
@@ -49,7 +50,18 @@ type Config struct {
 // Server is the admin portal HTTP handler container.
 type Server struct {
 	cfg Config
+
+	// Aggressive rate limits for admin auth — privileged surface so
+	// budgets are tight. Per-IP for login + MFA challenge; per-account
+	// lockout (keyed by email) for login.
+	loginIPRL      *Limiter
+	mfaIPRL        *Limiter
+	loginAccountRL *Limiter
 }
+
+// Limiter is a thin alias to ratelimit.Limiter so handler files don't
+// import the ratelimit package directly.
+type Limiter = ratelimit.Limiter
 
 func NewServer(cfg Config) *Server {
 	if cfg.Now == nil {
@@ -58,7 +70,21 @@ func NewServer(cfg Config) *Server {
 	if cfg.TOTPIssuer == "" {
 		cfg.TOTPIssuer = "infraYS"
 	}
-	return &Server{cfg: cfg}
+	return &Server{
+		cfg: cfg,
+		// 10 attempts / 5 min per IP; account-locked after 5 / 15 min
+		// (returns 429 even with correct password during lockout).
+		loginIPRL:      ratelimit.New(ratelimit.Config{Max: 10, Window: 5 * time.Minute, Now: cfg.Now}),
+		mfaIPRL:        ratelimit.New(ratelimit.Config{Max: 15, Window: 5 * time.Minute, Now: cfg.Now}),
+		loginAccountRL: ratelimit.New(ratelimit.Config{Max: 5, Window: 15 * time.Minute, Now: cfg.Now}),
+	}
+}
+
+// Close stops the rate-limiter cleanup goroutines.
+func (s *Server) Close() {
+	s.loginIPRL.Close()
+	s.mfaIPRL.Close()
+	s.loginAccountRL.Close()
 }
 
 // Routes returns the admin mux. Routes:

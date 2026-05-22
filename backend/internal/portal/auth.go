@@ -144,6 +144,15 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	req.Email = strings.TrimSpace(strings.ToLower(req.Email))
 
+	// Per-account lockout. Recording an event here counts BOTH valid
+	// and invalid attempts so a credential-stuffing run against many
+	// passwords still gets locked. We reset the counter on success.
+	accountKey := "portal.login.account:" + req.Email
+	if !s.ratelimitOrAbort(w, s.loginAccountRL, accountKey) {
+		obs.PortalLoginsTotal.WithLabelValues("locked_out").Inc()
+		return
+	}
+
 	cust, err := s.cfg.Store.GetCustomerByEmail(r.Context(), req.Email)
 	if err != nil || cust.PasswordHash == "" {
 		// Run a dummy bcrypt to keep timing consistent.
@@ -162,6 +171,9 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusForbidden, "account "+cust.Status)
 		return
 	}
+	// Success — clear the account lockout counter so legitimate users
+	// don't accumulate state from earlier typos.
+	s.loginAccountRL.Reset(accountKey)
 
 	now := s.cfg.Now()
 	sid, err := newSessionID()
