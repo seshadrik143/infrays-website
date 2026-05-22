@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>infraYS Licensing — Architecture & Test Guide</title>
+<style>
+  :root {
+    --bg: #0b0f17;
+    --bg-card: #111727;
+    --bg-code: #060912;
+    --border: #1a2236;
+    --accent: #7c5cff;
+    --accent-light: #9d83ff;
+    --text: #e6e8ef;
+    --text-dim: #9aa3b2;
+    --text-muted: #6b7385;
+    --good: #4ade80;
+    --warn: #fbbf24;
+    --bad: #f87171;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    font-size: 16px;
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 2rem 1.5rem 5rem; }
+  header {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 2rem;
+    margin-bottom: 2rem;
+  }
+  h1 {
+    margin: 0;
+    font-size: 2rem;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  h2 {
+    font-size: 1.4rem;
+    color: var(--text);
+    margin-top: 3rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: .5rem;
+  }
+  h3 {
+    font-size: 1.1rem;
+    color: var(--accent-light);
+    margin-top: 2rem;
+  }
+  h4 {
+    font-size: .98rem;
+    color: var(--text);
+    margin-top: 1.5rem;
+  }
+  p { color: var(--text-dim); }
+  strong { color: var(--text); }
+  code {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: .85em;
+    color: var(--accent-light);
+  }
+  pre {
+    background: var(--bg-code);
+    border: 1px solid var(--border);
+    padding: 1rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: .82rem;
+    line-height: 1.5;
+  }
+  pre code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--text);
+    font-size: inherit;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: .9rem;
+  }
+  th, td {
+    text-align: left;
+    padding: .6rem .8rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  th {
+    background: var(--bg-card);
+    color: var(--text);
+    font-weight: 600;
+    font-size: .85rem;
+  }
+  td { color: var(--text-dim); }
+  td code { font-size: .8em; }
+
+  ul, ol { color: var(--text-dim); padding-left: 1.5rem; }
+  li { margin: .3rem 0; }
+
+  a { color: var(--accent-light); text-decoration: none; border-bottom: 1px dotted var(--accent); }
+  a:hover { color: var(--accent); }
+
+  .toc {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 1.25rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+  }
+  .toc h3 { margin-top: 0; color: var(--text); font-size: .9rem; text-transform: uppercase; letter-spacing: .05em; }
+  .toc ol { columns: 2; column-gap: 2rem; margin: 0; }
+  .toc li { margin: .15rem 0; }
+  .toc a { border: none; color: var(--text-dim); }
+  .toc a:hover { color: var(--accent-light); }
+
+  .meta {
+    color: var(--text-muted);
+    font-size: .85rem;
+    margin-top: .25rem;
+  }
+
+  .callout {
+    background: var(--bg-card);
+    border-left: 3px solid var(--accent);
+    padding: 1rem 1.25rem;
+    margin: 1.5rem 0;
+    border-radius: 4px;
+  }
+  .callout.warn { border-left-color: var(--warn); }
+  .callout.danger { border-left-color: var(--bad); }
+  .callout p { margin: .25rem 0; }
+  .callout strong:first-child { color: var(--accent-light); }
+  .callout.warn strong:first-child { color: var(--warn); }
+  .callout.danger strong:first-child { color: var(--bad); }
+
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 1rem 1.25rem;
+    border-radius: 8px;
+  }
+  .card h4 { margin: 0 0 .5rem; color: var(--accent-light); }
+  .card p { margin: 0; font-size: .9rem; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: .75rem;
+    font-weight: 500;
+    margin-right: .3rem;
+  }
+  .badge-good { background: rgba(74, 222, 128, .15); color: var(--good); }
+  .badge-warn { background: rgba(251, 191, 36, .15); color: var(--warn); }
+  .badge-bad  { background: rgba(248, 113, 113, .15); color: var(--bad); }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2.5rem 0;
+  }
+
+  .step {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.25rem;
+    margin: .75rem 0;
+  }
+  .step-num {
+    display: inline-block;
+    background: var(--accent);
+    color: white;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 24px;
+    font-size: .85rem;
+    font-weight: 600;
+    margin-right: .5rem;
+  }
+  .step strong { color: var(--text); }
+
+  @media print {
+    body { background: white; color: black; }
+    .wrap { max-width: 100%; }
+    pre, .card, .toc, .callout, .step {
+      background: #f5f5f5; color: black; border: 1px solid #ccc;
+    }
+    h1, h2, h3, h4 { color: black; -webkit-text-fill-color: black; }
+    a { color: #555; }
+    code { color: #c7254e; background: #f5f5f5; }
+  }
+
+  @media (max-width: 700px) {
+    .toc ol { columns: 1; }
+    .grid-3, .grid-2 { grid-template-columns: 1fr; }
+    pre { font-size: .72rem; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>infraYS Licensing — Architecture & Test Guide</h1>
+  <div class="meta">
+    Single-binary license issuer at <code>license.infrays.org</code> · Fly.io · Updated 2026-05-22
+  </div>
+</header>
+
+<div class="toc">
+  <h3>Contents</h3>
+  <ol>
+    <li><a href="#what">What this service is</a></li>
+    <li><a href="#overview">Visual overview</a></li>
+    <li><a href="#actors">The 4 actors</a></li>
+    <li><a href="#dataflow">End-to-end data flow</a></li>
+    <li><a href="#datamodel">Data model</a></li>
+    <li><a href="#adminpages">Admin pages walk-through</a></li>
+    <li><a href="#nodepulse">How NodePulse connects</a></li>
+    <li><a href="#testplan">Manual test plan</a></li>
+    <li><a href="#hookup">The actual code hook-up</a></li>
+    <li><a href="#endpoints">Endpoint reference</a></li>
+  </ol>
+</div>
+
+<!-- ─── 1 ─────────────────────────────────────────────────────────── -->
+<h2 id="what">1. What this service is</h2>
+
+<p>It's a <strong>license issuer</strong> that lives at <code>license.infrays.org</code> on a Fly.io machine. One Go binary serves three different audiences over HTTP.</p>
+
+<table>
+  <thead>
+    <tr><th>Audience</th><th>URL prefix</th><th>What they do</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>Your customers</strong><br><span class="meta">People buying NodePulse</span></td>
+      <td><code>/login</code>, <code>/signup</code>,<br><code>/api/portal/*</code></td>
+      <td>Sign up, see their subscriptions / deployments, copy enrollment tokens</td>
+    </tr>
+    <tr>
+      <td><strong>Your staff</strong><br><span class="meta">You, sales, support</span></td>
+      <td><code>/admin/login</code>,<br><code>/api/admin/*</code></td>
+      <td>Onboard customers, issue tokens, revoke licenses, view audit log</td>
+    </tr>
+    <tr>
+      <td><strong>The NodePulse server software</strong><br><span class="meta">Running on the customer's own infrastructure</span></td>
+      <td><code>/v1/enroll</code>,<br><code>/v1/refresh</code>,<br><code>/v1/.well-known/keys</code></td>
+      <td>Exchange a token for a signed license, refresh it daily</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <p><strong>What it is NOT:</strong></p>
+  <p>It does NOT host NodePulse itself. NodePulse runs on the customer's own servers. This service only mints + verifies the licenses they need.</p>
+</div>
+
+<!-- ─── 2 ─────────────────────────────────────────────────────────── -->
+<h2 id="overview">2. Visual overview</h2>
+
+<pre><code>                  ┌─────────────────────────────────────────────────────────┐
+                  │              license.infrays.org (Fly.io)               │
+                  │                                                          │
+                  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
+                  │  │  Customer    │  │    Admin     │  │   Issuer     │ │
+                  │  │  Portal SPA  │  │  Portal SPA  │  │    API       │ │
+                  │  │  /login      │  │  /admin/*    │  │  /v1/*       │ │
+                  │  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘ │
+                  │         │                  │                  │         │
+                  │         └──────────┬───────┴──────────────────┘         │
+                  │                    ▼                                     │
+                  │      ┌─────────────────────────────────┐                │
+                  │      │  Store (in-memory today;         │                │
+                  │      │  Postgres tomorrow)              │                │
+                  │      │   customers, subscriptions,      │                │
+                  │      │   deployments, enrollment_tokens │                │
+                  │      │   licenses, admin_users,         │                │
+                  │      │   sessions, audit_log            │                │
+                  │      └─────────────────────────────────┘                │
+                  │                                                          │
+                  │   Postmark API ──► email send                            │
+                  │   Stripe API   ──► billing (when wired)                  │
+                  └─────────────────────────────────────────────────────────┘
+                                       │
+                  signed JWS (Ed25519) │
+                                       ▼
+                  ┌──────────────────────────────────────────────────────┐
+                  │  Customer's NodePulse server (their infrastructure)  │
+                  │                                                       │
+                  │  1. Holds the JWS in config                          │
+                  │  2. Verifies signature with public key from JWKS     │
+                  │  3. Reads tier + limits from JWS payload             │
+                  │  4. Calls /v1/refresh every 24h for a fresh JWS      │
+                  │  5. Enters grace mode if license expires             │
+                  └──────────────────────────────────────────────────────┘</code></pre>
+
+<!-- ─── 3 ─────────────────────────────────────────────────────────── -->
+<h2 id="actors">3. The 4 actors</h2>
+
+<h3>Actor 1 — Customer (a paying NodePulse user)</h3>
+<p>A person who runs NodePulse on their own servers. They never touch the NodePulse source. They just need a license.</p>
+<p><strong>What they do:</strong></p>
+<ul>
+  <li>Sign up at <code>license.infrays.org/signup</code></li>
+  <li>Verify their email</li>
+  <li>Log into <code>license.infrays.org/login</code> (customer portal)</li>
+  <li>See their subscription tier, deployments, enrollment tokens, licenses</li>
+  <li>Copy an enrollment token (one-time shown) and paste it into their NodePulse server config</li>
+</ul>
+
+<h3>Actor 2 — Admin (you, sales, support staff)</h3>
+<p>Someone with infraYS-internal access. Manages customers and licenses.</p>
+<p><strong>What they do:</strong></p>
+<ul>
+  <li>Log in at <code>license.infrays.org/admin/login</code> with email + password + TOTP MFA code</li>
+  <li>Create customers, or wait for self-serve via Stripe (when wired)</li>
+  <li>Create offline subscriptions for sales-issued deals</li>
+  <li>Issue enrollment tokens and share them via Slack / password manager</li>
+  <li>Revoke licenses (churn, abuse, etc.)</li>
+  <li>Bulk suspend customers, bulk flag deployments</li>
+  <li>Invite other admins (one-time temp password shown)</li>
+  <li>View audit log (every action is hash-chained)</li>
+</ul>
+
+<h3>Actor 3 — NodePulse server software</h3>
+<p>A running Go binary on the customer's infrastructure. <em>No human at the keyboard</em>.</p>
+<p><strong>What it does:</strong></p>
+<ul>
+  <li>Reads <code>license.enrollment_token: NP-ENROLL-XXXX</code> from its config on first start</li>
+  <li>POSTs to <code>license.infrays.org/v1/enroll</code> with the token + a self-generated deployment ID</li>
+  <li>Receives a signed JWS license back, stores it locally</li>
+  <li>Fetches <code>/v1/.well-known/keys</code> to get the public key for verification</li>
+  <li>Every 24h, POSTs to <code>/v1/refresh</code> to get a fresh JWS</li>
+  <li>Reads tier + entitlement limits from the JWS payload</li>
+  <li>Enforces those limits locally</li>
+  <li>Enters "grace" mode if refresh fails for &gt;90 days</li>
+</ul>
+
+<h3>Actor 4 — The NodePulse dashboard user</h3>
+<p>A person inside the customer's organization using NodePulse's own web UI to see metrics, alerts, dashboards.</p>
+<p><strong>What they see (regarding licensing):</strong></p>
+<ul>
+  <li>A banner at the top showing license status (active / trial / past-due / expired)</li>
+  <li>An option to enter or update an enrollment token in admin settings</li>
+  <li>Tier-gated features that show or hide based on entitlements in the JWS</li>
+</ul>
+<p>They do <strong>NOT</strong> log into <code>license.infrays.org</code> — that's the customer-portal user (Actor 1), who could be the same person or someone different (procurement, IT lead).</p>
+
+<!-- ─── 4 ─────────────────────────────────────────────────────────── -->
+<h2 id="dataflow">4. End-to-end data flow</h2>
+
+<p>This is the <strong>one journey</strong> that makes the whole system click.</p>
+
+<div class="step">
+  <span class="step-num">1</span>
+  <strong>Customer signup</strong>
+  <p>Customer visits <code>license.infrays.org/signup</code></p>
+  <ul>
+    <li>POST <code>/api/portal/auth/signup</code> with <code>{ email, password, name }</code></li>
+    <li>Row created in <code>customers</code> table (with bcrypt password hash)</li>
+    <li>Verification token generated, SHA-256 stored as <code>TokenHash</code></li>
+    <li>Email sent via Postmark with link <code>/verify-email?token=...</code></li>
+  </ul>
+</div>
+
+<div class="step">
+  <span class="step-num">2</span>
+  <strong>Customer email verify</strong>
+  <p>Customer clicks link in email</p>
+  <ul>
+    <li>POST <code>/api/portal/auth/verify-email</code> with <code>{ token }</code></li>
+    <li>SHA-256(token) matched against <code>TokenHash</code></li>
+    <li><code>customers.email_verified_at = now()</code></li>
+  </ul>
+</div>
+
+<div class="step">
+  <span class="step-num">3</span>
+  <strong>Customer login</strong>
+  <p>Customer visits <code>/login</code></p>
+  <ul>
+    <li>POST <code>/api/portal/auth/login</code> with <code>{ email, password }</code></li>
+    <li>bcrypt check; account lockout after 5 wrong attempts</li>
+    <li>Session row created in <code>portal_sessions</code> table</li>
+    <li><code>np_portal_session</code> cookie set (HttpOnly, SameSite=Lax, 7-day TTL)</li>
+  </ul>
+</div>
+
+<div class="step">
+  <span class="step-num">4</span>
+  <strong>Admin issues subscription + enrollment token</strong>
+  <p>Admin logs in at <code>/admin/login</code>, finds the customer in <code>/admin/customers</code>, clicks into them.</p>
+  <p><strong>Create subscription:</strong></p>
+  <ul>
+    <li>POST <code>/api/admin/customers/{id}/subscriptions</code> with <code>{ tier: "professional", current_period_end: &lt;future&gt; }</code></li>
+    <li>Row in <code>subscriptions</code> table (<code>manual_offline=true</code>, no Stripe ID)</li>
+  </ul>
+  <p><strong>Issue token on that subscription:</strong></p>
+  <ul>
+    <li>POST <code>/api/admin/customers/{id}/enrollment-tokens</code> with <code>{ subscription_id, label, ttl_hours }</code></li>
+    <li>Row in <code>enrollment_tokens</code> table (SHA-256 of token stored)</li>
+    <li>Plaintext <code>NP-ENROLL-XXX...</code> shown <strong>ONCE</strong> in the admin UI</li>
+    <li>Admin copies it, shares via Slack / password manager</li>
+  </ul>
+</div>
+
+<div class="step">
+  <span class="step-num">5</span>
+  <strong>Customer pastes token into NodePulse server config</strong>
+  <pre><code>license:
+  server_url: https://license.infrays.org
+  enrollment_token: NP-ENROLL-XXXXXXXXXXXX</code></pre>
+  <p>Customer restarts NodePulse server.</p>
+</div>
+
+<div class="step">
+  <span class="step-num">6</span>
+  <strong>NodePulse calls /v1/enroll</strong>
+  <ul>
+    <li>POST <code>https://license.infrays.org/v1/enroll</code> with <code>{ enrollment_token, deployment_id, deployment_name, version }</code></li>
+    <li>Issuer hashes the token, looks up <code>enrollment_tokens</code> row</li>
+    <li>Validates: not expired, not consumed by different deployment</li>
+    <li>Mints a JWS license payload, signed with Ed25519 key</li>
+    <li>Stores <code>licenses</code> row + marks token <code>consumed_at</code> + writes audit log</li>
+    <li>Returns: <code>{ license_jws, refresh_at, ... }</code></li>
+  </ul>
+</div>
+
+<div class="step">
+  <span class="step-num">7</span>
+  <strong>NodePulse verifies + stores license</strong>
+  <ul>
+    <li>Calls GET <code>/v1/.well-known/keys</code> (cacheable for ~1 hr)</li>
+    <li>Verifies JWS signature with Ed25519 public key</li>
+    <li>Reads payload: <code>{ customer_id, tier, exp, max_agents, ... }</code></li>
+    <li>Persists the JWS + parsed claims locally</li>
+    <li>Enforces tier limits on all subsequent operations</li>
+  </ul>
+</div>
+
+<div class="step">
+  <span class="step-num">8</span>
+  <strong>Daily refresh</strong>
+  <p>Every 24h NodePulse calls:</p>
+  <ul>
+    <li>POST <code>/v1/refresh</code> with <code>{ license_id, deployment_id, version }</code></li>
+    <li>Issuer mints a NEW JWS (same <code>license_id</code>, new <code>jti</code>)</li>
+    <li>NodePulse rotates its stored JWS</li>
+  </ul>
+  <p><strong>If refresh fails:</strong></p>
+  <ul>
+    <li>NodePulse keeps using the cached JWS until <code>expires_at</code></li>
+    <li>After <code>expires_at</code>, enters <code>grace_until</code> (90 days by default)</li>
+    <li>During grace: read-only mode (no new agents/alerts)</li>
+    <li>After grace: license is fully expired, features lock down</li>
+  </ul>
+</div>
+
+<!-- ─── 5 ─────────────────────────────────────────────────────────── -->
+<h2 id="datamodel">5. Data model in plain English</h2>
+
+<table>
+  <thead>
+    <tr><th>Table</th><th>What it holds</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>customers</code></td><td>One row per paying organization. Email, password hash, status (active / suspended / deleted).</td></tr>
+    <tr><td><code>subscriptions</code></td><td>One row per "what tier are they on, when does the period end". Linked to a customer. Stripe subscription ID when self-serve, empty when offline/admin-issued.</td></tr>
+    <tr><td><code>enrollment_tokens</code></td><td>One-shot tokens (NP-ENROLL-XXX). Single-use, expire after 24h by default. SHA-256 stored, plaintext shown once.</td></tr>
+    <tr><td><code>deployments</code></td><td>One row per running NodePulse install. Created when first enrolls. Carries last-seen-at, last-version, flagged-for-review flag.</td></tr>
+    <tr><td><code>licenses</code></td><td>The actual JWS records. New row on every refresh (so we audit-trail every license ever issued). Carries <code>jti</code> (unique per issuance), <code>license_id</code> (stable), customer_id, tier, exp, payload_jws.</td></tr>
+    <tr><td><code>entitlement_sets</code></td><td>The "what does this tier allow" manifest. <code>free-v1</code>, <code>professional-v1</code>, <code>enterprise-v1</code>. Versioned — when you change tier limits you publish a new version.</td></tr>
+    <tr><td><code>admin_users</code></td><td>infraYS staff. Email, bcrypt hash, role (admin / support / sales / engineer), MFA secret, must_change_password.</td></tr>
+    <tr><td><code>portal_sessions</code> / <code>admin_sessions</code></td><td>Cookie session rows. Looked up on every authenticated request.</td></tr>
+    <tr><td><code>audit_log</code></td><td>Hash-chained. Every action by an admin or the system writes an entry. Tamper-evident.</td></tr>
+    <tr><td><code>webhook_events</code></td><td>Stripe webhook events seen, for idempotent processing.</td></tr>
+  </tbody>
+</table>
+
+<!-- ─── 6 ─────────────────────────────────────────────────────────── -->
+<h2 id="adminpages">6. Admin pages walk-through</h2>
+
+<p>After you log in at <code>/admin/login</code> and complete the MFA flow:</p>
+
+<h3><code>/admin/dashboard</code></h3>
+<ul>
+  <li>Recent customer count tile</li>
+  <li>Recent customers list (5 most recent)</li>
+  <li>Recent audit events (last 15)</li>
+  <li>Quick links to other pages</li>
+</ul>
+
+<h3><code>/admin/customers</code></h3>
+<ul>
+  <li>Searchable table of all customers (by email or company)</li>
+  <li>Each row: email, company, status, created date</li>
+  <li>Checkboxes for bulk selection → sticky bar appears with <strong>Suspend / Reactivate</strong> buttons</li>
+  <li>Click any row to drill into customer detail</li>
+</ul>
+
+<h3><code>/admin/customers/{id}</code> — Customer detail</h3>
+<p>Top: email, name, company, status.</p>
+<p>"Account actions" card with <strong>Suspend / Reactivate</strong> buttons.</p>
+<p><strong>Subscriptions section</strong> — every subscription this customer has, with "Issue token" button per subscription.</p>
+<p><strong>Deployments section</strong> — every NodePulse install enrolled by this customer.</p>
+<ul>
+  <li>Per-row Flag / Unflag button + checkbox for bulk flag</li>
+  <li>Bulk action bar appears when ≥1 selected</li>
+</ul>
+<p><strong>Enrollment tokens section</strong> — every token issued, with Used / Expired / active status.</p>
+<p><strong>Licenses section</strong> — every JWS ever issued, with Download JWS + Revoke per-row.</p>
+<div class="callout">
+  <p><strong>One-time secret reveal:</strong> When you click "Issue token", a one-time plaintext token (<code>NP-ENROLL-XXX...</code>) appears in a card at the top. <strong>Copy it now — it will not be shown again.</strong></p>
+</div>
+
+<h3><code>/admin/users</code> <span class="badge badge-warn">admin role only</span></h3>
+<ul>
+  <li>Table of every staff admin user (email, role, status, MFA enrollment, last login)</li>
+  <li><strong>Invite admin</strong> button — modal with email + role picker → returns a one-time temp password</li>
+  <li>Per-row actions: change role, reset password (new temp shown once), disable, reactivate, delete</li>
+</ul>
+<p>Suspending an admin immediately invalidates their active sessions.</p>
+
+<h3><code>/admin/audit</code></h3>
+<ul>
+  <li>Most recent N audit entries (selectable 50 / 100 / 250 / 500)</li>
+  <li>Each row: sequence number, timestamp, event type, actor, customer ID, hash prefix</li>
+  <li>Hash chain is tamper-evident — can be verified via the issuer's audit-verify endpoint</li>
+</ul>
+
+<!-- ─── 7 ─────────────────────────────────────────────────────────── -->
+<h2 id="nodepulse">7. How NodePulse connects</h2>
+
+<p>The NodePulse dashboard (running on the customer's own server) talks to <code>license.infrays.org</code> only at 3 specific endpoints.</p>
+
+<table>
+  <thead>
+    <tr><th>Endpoint</th><th>When</th><th>What it does</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>POST /v1/enroll</code></td>
+      <td>First start, when customer pastes a fresh token</td>
+      <td>Exchanges token → JWS license</td>
+    </tr>
+    <tr>
+      <td><code>POST /v1/refresh</code></td>
+      <td>Every 24 hours via a background goroutine</td>
+      <td>Returns new JWS for the same <code>license_id</code></td>
+    </tr>
+    <tr>
+      <td><code>GET /v1/.well-known/keys</code></td>
+      <td>On boot + periodically (every ~1 hr)</td>
+      <td>Public-key set for verifying JWS signatures</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>There is no constant connection — these are HTTP calls every so often. The NodePulse server is otherwise totally independent.</p>
+
+<p><strong>What the NodePulse dashboard UI shows about licensing:</strong></p>
+<ol>
+  <li>A banner at the top: <em>"Trial expires in N days"</em> / <em>"License active"</em> / <em>"License past due"</em> / <em>"Grace period ends in N days"</em></li>
+  <li>In Settings → Licensing: paste an enrollment token, see current tier, see refresh status, see deployment ID</li>
+  <li>Tier-gated features in the sidebar: features the license doesn't include are visible-but-disabled with an upgrade CTA</li>
+</ol>
+
+<div class="callout">
+  <p><strong>The NodePulse dashboard does NOT:</strong></p>
+  <ul>
+    <li>Talk to <code>/api/portal/*</code> (those are for customers managing their account on the licensing service)</li>
+    <li>Talk to <code>/api/admin/*</code> (those are for infraYS staff)</li>
+    <li>Have any connection to <code>license.infrays.org</code> beyond the 3 endpoints above</li>
+  </ul>
+</div>
+
+<!-- ─── 8 ─────────────────────────────────────────────────────────── -->
+<h2 id="testplan">8. Manual end-to-end test plan</h2>
+
+<p>Once you've done the 3 operator setup steps (Postgres, admin bootstrap, Postmark approval), here's the manual walkthrough for a tester.</p>
+
+<h3>Phase A — Admin onboarding (5 min)</h3>
+<div class="step">
+  <ol>
+    <li>Open <code>https://license.infrays.org/admin/login</code></li>
+    <li>Enter the bootstrap admin email + password</li>
+    <li><strong>Expected:</strong> MFA enrollment screen with QR + secret</li>
+    <li>Scan QR with Google Authenticator (or 1Password / Authy)</li>
+    <li>Enter the 6-digit code → click "Enable MFA"</li>
+    <li><strong>Expected:</strong> Land on <code>/admin/dashboard</code> with stats tiles (0 customers initially)</li>
+  </ol>
+</div>
+
+<h3>Phase B — Customer signup (5 min)</h3>
+<div class="step">
+  <ol>
+    <li>Open a fresh incognito window</li>
+    <li>Go to <code>https://license.infrays.org/signup</code></li>
+    <li>Enter email (must be <code>@infrays.org</code> until Postmark approves external sends), password ≥8 chars, name, company</li>
+    <li><strong>Expected:</strong> "Check your email" screen</li>
+    <li>Open the inbox in Zoho</li>
+    <li>Click the <strong>"Verify your infraYS account"</strong> link</li>
+    <li><strong>Expected:</strong> "Email verified" page, then click "Sign in"</li>
+    <li>Log in with the credentials</li>
+    <li><strong>Expected:</strong> Customer dashboard with 0 subscriptions, 0 deployments</li>
+  </ol>
+</div>
+
+<h3>Phase C — Admin issues subscription + token (5 min)</h3>
+<div class="step">
+  <ol>
+    <li>Back to the admin tab</li>
+    <li>Refresh <code>/admin/customers</code> — your new test customer should be there</li>
+    <li>Click on the email to drill into customer detail</li>
+    <li>Scroll to <strong>Subscriptions</strong> section — empty</li>
+    <li>Currently the "Create subscription" button is API-only. From terminal:
+<pre><code>curl -X POST -b "&lt;your admin cookie&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{"tier":"professional","current_period_end":"2027-05-22T00:00:00Z"}' \
+  https://license.infrays.org/api/admin/customers/&lt;CUSTOMER_ID&gt;/subscriptions</code></pre>
+    </li>
+    <li>Refresh the customer detail page — subscription appears</li>
+    <li>Click <strong>"Issue token"</strong> on that subscription</li>
+    <li>Modal asks for label + TTL</li>
+    <li><strong>Expected:</strong> A one-time card appears with <code>NP-ENROLL-XXXXXXXX</code> — copy it</li>
+  </ol>
+</div>
+
+<h3>Phase D — NodePulse enrollment (10 min)</h3>
+<div class="step">
+  <ol>
+    <li>On a NodePulse-running server, edit <code>config.yaml</code>:
+<pre><code>license:
+  server_url: https://license.infrays.org
+  enrollment_token: NP-ENROLL-XXXX...   # from C.9</code></pre>
+    </li>
+    <li>Restart NodePulse server: <code>systemctl restart nodepulse-server</code></li>
+    <li>Check NodePulse logs for <code>license: enrolled successfully, kid=np-fly-2026-01, exp=...</code></li>
+    <li>Open the NodePulse dashboard (its own UI, not <code>license.infrays.org</code>)</li>
+    <li>Settings → Licensing should show: tier=professional, expires=2027-05-22</li>
+  </ol>
+</div>
+
+<h3>Phase E — Verify in admin portal (2 min)</h3>
+<div class="step">
+  <ol>
+    <li>Back in <code>/admin/customers/&lt;id&gt;</code></li>
+    <li><strong>Deployments</strong> section — should now have one row</li>
+    <li><strong>Enrollment tokens</strong> — token shows "Used" with the deployment ID</li>
+    <li><strong>Licenses</strong> — one row showing the issued license, tier=professional</li>
+  </ol>
+</div>
+
+<h3>Phase F — Verify refresh (1 hr later, or simulate)</h3>
+<div class="step">
+  <ol>
+    <li>After 24h of NodePulse runtime, NodePulse calls <code>/v1/refresh</code> automatically</li>
+    <li>Back in <code>/admin/customers/&lt;id&gt;</code> → Licenses: a new row appears (same <code>license_id</code>, new <code>jti</code>)</li>
+    <li>Audit log at <code>/admin/audit</code> shows <code>license.refreshed</code> event</li>
+  </ol>
+</div>
+
+<h3>Phase G — Revocation flow (2 min)</h3>
+<div class="step">
+  <ol>
+    <li>In <code>/admin/customers/&lt;id&gt;</code> → Licenses</li>
+    <li>Click <strong>Revoke</strong> on the active license, enter a reason</li>
+    <li><strong>Expected:</strong> badge changes to "Revoked"</li>
+    <li>Within 24h NodePulse's next refresh receives <code>403 revoked</code> and enters grace mode</li>
+    <li>NodePulse dashboard banner changes to: "License revoked — contact support"</li>
+  </ol>
+</div>
+
+<h3>Phase H — Bulk operations (2 min)</h3>
+<div class="step">
+  <ol>
+    <li><code>/admin/customers</code> — select 2+ customers via checkboxes</li>
+    <li>Click <strong>Suspend</strong> in the sticky bar → confirm</li>
+    <li><strong>Expected:</strong> Status changes to "suspended" on both rows</li>
+    <li>Try to log in as one of those customers in incognito — should get "account suspended"</li>
+  </ol>
+</div>
+
+<h3>Phase I — Admin user invite (2 min)</h3>
+<div class="step">
+  <ol>
+    <li><code>/admin/users</code> → <strong>Invite admin</strong> → enter email + pick role=support</li>
+    <li><strong>Expected:</strong> Card appears with the temp password — copy it</li>
+    <li>In incognito, log in at <code>/admin/login</code> with that email + temp password</li>
+    <li><strong>Expected:</strong> Forced to change password before anything else</li>
+    <li>After change-password, forced to enroll MFA</li>
+    <li>After MFA enrollment → land on dashboard with reduced capabilities (no "Admin Users" tab, etc.)</li>
+  </ol>
+</div>
+
+<!-- ─── 9 ─────────────────────────────────────────────────────────── -->
+<h2 id="hookup">9. The actual code hook-up to NodePulse</h2>
+
+<p>The <strong>only code in NodePulse</strong> that talks to <code>license.infrays.org</code> is the license client in <code>nodepulse/server/license/client.go</code>. It:</p>
+
+<ol>
+  <li>Reads <code>license.enrollment_token</code> and <code>license.server_url</code> from <code>config.yaml</code></li>
+  <li>On first start (when no JWS is stored locally), calls <code>POST /v1/enroll</code></li>
+  <li>Stores the returned JWS in <code>/var/lib/nodepulse/license.jws</code> (or similar)</li>
+  <li>Periodically (every 24h) calls <code>POST /v1/refresh</code></li>
+  <li>Pulls and caches <code>GET /v1/.well-known/keys</code> for signature verification</li>
+  <li>The verified payload populates <code>nodepulse/server/featuregate/Gate</code> which the rest of NodePulse uses to gate features</li>
+</ol>
+
+<p><strong>End-to-end inside NodePulse:</strong></p>
+<pre><code>nodepulse server starts
+  → reads config.yaml (enrollment_token)
+  → license client calls license.infrays.org/v1/enroll
+  → gets JWS, stores locally
+  → loads JWS into featuregate.Gate
+  → featuregate.Gate.HasFeature("audit_log") returns true/false per tier
+  → API handlers check featuregate.Gate before serving feature endpoints
+  → dashboard UI checks gate via /api/v1/billing/features to show/hide UI</code></pre>
+
+<p>The NodePulse dashboard at <code>app.customer-domain.com/nodepulse/dashboard</code> has no idea <code>license.infrays.org</code> exists — it just asks its own NodePulse server "what tier am I?" and the NodePulse server has the JWS payload to answer.</p>
+
+<!-- ─── 10 ─────────────────────────────────────────────────────────── -->
+<h2 id="endpoints">10. Endpoint reference (quick lookup)</h2>
+
+<h3>Customer portal API <span class="meta">(cookie session, np_portal_session)</span></h3>
+<table>
+  <tr><th>Method</th><th>Path</th><th>Auth</th><th>Purpose</th></tr>
+  <tr><td>POST</td><td><code>/api/portal/auth/signup</code></td><td>public</td><td>Create account, send verification email</td></tr>
+  <tr><td>POST</td><td><code>/api/portal/auth/verify-email</code></td><td>public</td><td>Redeem verification token</td></tr>
+  <tr><td>POST</td><td><code>/api/portal/auth/login</code></td><td>public</td><td>Email + password → session cookie</td></tr>
+  <tr><td>POST</td><td><code>/api/portal/auth/request-password-reset</code></td><td>public</td><td>Send reset email (no-leak)</td></tr>
+  <tr><td>POST</td><td><code>/api/portal/auth/reset-password</code></td><td>public</td><td>Redeem reset token</td></tr>
+  <tr><td>POST</td><td><code>/api/portal/auth/logout</code></td><td>session</td><td>Drop current session</td></tr>
+  <tr><td>GET</td><td><code>/api/portal/auth/me</code></td><td>session</td><td>Current customer profile</td></tr>
+  <tr><td>POST</td><td><code>/api/portal/auth/change-password</code></td><td>session</td><td>Rotate password; drops other sessions</td></tr>
+  <tr><td>POST</td><td><code>/api/portal/auth/resend-verification</code></td><td>session</td><td>Re-send verification email</td></tr>
+  <tr><td>GET</td><td><code>/api/portal/subscriptions</code></td><td>session</td><td>List customer's subscriptions</td></tr>
+  <tr><td>GET</td><td><code>/api/portal/deployments</code></td><td>session</td><td>List customer's NodePulse installs</td></tr>
+  <tr><td>GET / POST</td><td><code>/api/portal/enrollment-tokens</code></td><td>session</td><td>List / create</td></tr>
+  <tr><td>POST</td><td><code>/api/portal/enrollment-tokens/revoke</code></td><td>session</td><td>Revoke a token</td></tr>
+  <tr><td>GET</td><td><code>/api/portal/licenses</code></td><td>session</td><td>List issued licenses</td></tr>
+  <tr><td>GET</td><td><code>/api/portal/offline-license</code></td><td>session</td><td>Download cached JWS for re-install</td></tr>
+  <tr><td>PATCH</td><td><code>/api/portal/account</code></td><td>session</td><td>Update name / company</td></tr>
+  <tr><td>POST</td><td><code>/api/portal/billing-portal-url</code></td><td>session</td><td>Stripe billing portal redirect (when wired)</td></tr>
+</table>
+
+<h3>Admin portal API <span class="meta">(cookie session + MFA, np_admin_session)</span></h3>
+<table>
+  <tr><th>Method</th><th>Path</th><th>Auth</th><th>Purpose</th></tr>
+  <tr><td>POST</td><td><code>/api/admin/auth/login</code></td><td>public</td><td>Stage 1 — email + password</td></tr>
+  <tr><td>POST</td><td><code>/api/admin/auth/mfa-challenge</code></td><td>stage 1</td><td>Verify TOTP code → stage 2</td></tr>
+  <tr><td>POST</td><td><code>/api/admin/auth/mfa-setup</code></td><td>stage 1</td><td>Generate TOTP secret + QR URI (enrollment)</td></tr>
+  <tr><td>POST</td><td><code>/api/admin/auth/mfa-setup-verify</code></td><td>stage 1</td><td>Confirm enrollment with code</td></tr>
+  <tr><td>POST</td><td><code>/api/admin/auth/logout</code></td><td>stage 1</td><td>Drop session</td></tr>
+  <tr><td>GET</td><td><code>/api/admin/auth/me</code></td><td>stage 1</td><td>Current admin profile</td></tr>
+  <tr><td>POST</td><td><code>/api/admin/auth/change-password</code></td><td>stage 2</td><td>Rotate password</td></tr>
+  <tr><td>GET / POST</td><td><code>/api/admin/admins</code></td><td>stage 2 + role=admin</td><td>List / invite admins</td></tr>
+  <tr><td>PATCH</td><td><code>/api/admin/admins/{id}</code></td><td>stage 2 + role=admin</td><td>Change role</td></tr>
+  <tr><td>POST</td><td><code>/api/admin/admins/{id}/status</code></td><td>stage 2 + role=admin</td><td>Disable / reactivate</td></tr>
+  <tr><td>POST</td><td><code>/api/admin/admins/{id}/reset-password</code></td><td>stage 2 + role=admin</td><td>New temp password</td></tr>
+  <tr><td>DELETE</td><td><code>/api/admin/admins/{id}</code></td><td>stage 2 + role=admin</td><td>Hard delete</td></tr>
+  <tr><td>GET</td><td><code>/api/admin/customers</code></td><td>stage 2</td><td>List customers (with search filter)</td></tr>
+  <tr><td>GET</td><td><code>/api/admin/customers/{id}</code></td><td>stage 2</td><td>Customer detail (subs, deployments, tokens, licenses)</td></tr>
+  <tr><td>PATCH</td><td><code>/api/admin/customers/{id}</code></td><td>stage 2</td><td>Update status / name / company</td></tr>
+  <tr><td>POST</td><td><code>/api/admin/customers/{id}/subscriptions</code></td><td>stage 2</td><td>Create offline subscription</td></tr>
+  <tr><td>POST</td><td><code>/api/admin/customers/{id}/enrollment-tokens</code></td><td>stage 2</td><td>Issue token (returns temp once)</td></tr>
+  <tr><td>POST</td><td><code>/api/admin/deployments/{id}/flag</code></td><td>stage 2</td><td>Flag / unflag deployment</td></tr>
+  <tr><td>POST</td><td><code>/api/admin/licenses/{jti}/revoke</code></td><td>stage 2</td><td>Revoke a license</td></tr>
+  <tr><td>GET</td><td><code>/api/admin/audit</code></td><td>stage 2</td><td>Paginated audit log</td></tr>
+  <tr><td>POST</td><td><code>/api/admin/customers/bulk-status</code></td><td>stage 2 + role=admin</td><td>Bulk suspend / reactivate</td></tr>
+  <tr><td>POST</td><td><code>/api/admin/deployments/bulk-flag</code></td><td>stage 2 + role=admin</td><td>Bulk flag / unflag</td></tr>
+</table>
+
+<h3>NodePulse-facing issuer API <span class="meta">(no session — token / signature based)</span></h3>
+<table>
+  <tr><th>Method</th><th>Path</th><th>Auth</th><th>Purpose</th></tr>
+  <tr><td>POST</td><td><code>/v1/enroll</code></td><td>enrollment token</td><td>Exchange token → JWS license</td></tr>
+  <tr><td>POST</td><td><code>/v1/refresh</code></td><td>license_id + deployment_id</td><td>Renew JWS</td></tr>
+  <tr><td>GET</td><td><code>/v1/.well-known/keys</code></td><td>public</td><td>JWKS — public keys for signature verification</td></tr>
+  <tr><td>GET</td><td><code>/v1/entitlements/{id}.json</code></td><td>public</td><td>Tier manifest (features + limits)</td></tr>
+  <tr><td>POST</td><td><code>/v1/webhooks/stripe</code></td><td>HMAC sig</td><td>Stripe webhook (when wired)</td></tr>
+  <tr><td>POST</td><td><code>/v1/checkout/create-session</code></td><td>public</td><td>Stripe Checkout session (when wired)</td></tr>
+</table>
+
+<h3>Operational</h3>
+<table>
+  <tr><th>Method</th><th>Path</th><th>Auth</th><th>Purpose</th></tr>
+  <tr><td>GET</td><td><code>/healthz</code></td><td>public</td><td>Liveness check</td></tr>
+  <tr><td>GET</td><td><code>/metrics</code></td><td>HTTP Basic <span class="meta">(NP_METRICS_USER + NP_METRICS_PASSWORD)</span></td><td>Prometheus metrics; 404 when unconfigured</td></tr>
+</table>
+
+<hr>
+
+<p class="meta" style="text-align: center;">
+  Document version 1 · Save / print as needed · Generated 2026-05-22
+</p>
+
+</div>
+</body>
+</html>
