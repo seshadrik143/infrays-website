@@ -42,14 +42,23 @@ func SPAHandler() http.Handler {
 	fileServer := http.FileServer(http.FS(sub))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		path := strings.TrimPrefix(r.URL.Path, "/")
-		// Try to serve the asset directly. If it doesn't exist in the
-		// embedded FS, serve index.html so the React router can take it.
 		if path == "" {
 			serveIndex(w, indexBytes)
 			return
 		}
 		f, err := sub.Open(path)
 		if err != nil {
+			// Files with an explicit extension (.svg, .css, .ico, .js,
+			// .json, .png, .map, .txt) that don't exist in the
+			// embedded FS should return 404 — otherwise the browser
+			// gets an HTML body for a SVG/CSS request which is both
+			// wasteful and a MIME-type mess. SPA routes don't have
+			// extensions (/login, /admin/users) so this distinction
+			// is reliable in practice.
+			if hasStaticExt(path) {
+				http.NotFound(w, r)
+				return
+			}
 			serveIndex(w, indexBytes)
 			return
 		}
@@ -62,6 +71,19 @@ func SPAHandler() http.Handler {
 		}
 		fileServer.ServeHTTP(w, r)
 	})
+}
+
+// hasStaticExt returns true if path ends in an extension that should
+// never fall through to index.html. Keep this list narrow — anything
+// not listed here is treated as a SPA route.
+func hasStaticExt(path string) bool {
+	for _, ext := range []string{".svg", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico",
+		".css", ".js", ".mjs", ".map", ".json", ".txt", ".xml", ".woff", ".woff2", ".ttf"} {
+		if strings.HasSuffix(path, ext) {
+			return true
+		}
+	}
+	return false
 }
 
 func serveIndex(w http.ResponseWriter, b []byte) {
