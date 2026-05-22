@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/seshadrik143/infrays-website/backend/internal/audit"
+	"github.com/seshadrik143/infrays-website/backend/internal/obs"
 	"github.com/seshadrik143/infrays-website/backend/internal/signing"
 	"github.com/seshadrik143/infrays-website/backend/internal/store"
 )
@@ -47,6 +48,7 @@ func (s *Server) handleRefresh(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	prev, err := s.cfg.Store.GetLatestLicenseForLicenseID(ctx, req.LicenseID)
 	if err != nil {
+		obs.RefreshesTotal.WithLabelValues("unknown_license").Inc()
 		writeErr(w, http.StatusForbidden, "unknown_license", "license not recognized")
 		return
 	}
@@ -69,6 +71,7 @@ func (s *Server) handleRefresh(w http.ResponseWriter, r *http.Request) {
 		// Anomaly review happens out-of-band via the admin UI / cron.
 	}
 	if prev.Revoked {
+		obs.RefreshesTotal.WithLabelValues("revoked").Inc()
 		writeErr(w, http.StatusForbidden, "revoked", "license revoked: "+prev.RevokedReason)
 		return
 	}
@@ -87,6 +90,7 @@ func (s *Server) handleRefresh(w http.ResponseWriter, r *http.Request) {
 	// dunning, and the customer's local grace state machine handles
 	// the read-only / disabled transitions.
 	if sub.Status == "canceled" && !sub.CurrentPeriodEnd.IsZero() && now.After(sub.CurrentPeriodEnd) {
+		obs.RefreshesTotal.WithLabelValues("subscription_canceled").Inc()
 		graceUntil := sub.CurrentPeriodEnd.Add(time.Duration(s.cfg.DefaultGraceDays) * 24 * time.Hour)
 		writeJSON(w, http.StatusGone, map[string]any{
 			"error":       "subscription_canceled",
@@ -143,11 +147,15 @@ func (s *Server) handleRefresh(w http.ResponseWriter, r *http.Request) {
 		payload.RetentionDays = es.Limits.RetentionDays
 	}
 
+	signStart := time.Now()
 	jws, err := signing.Sign(ctx, s.cfg.Signer, payload)
+	obs.JWSSignDuration.Observe(time.Since(signStart).Seconds())
 	if err != nil {
+		obs.RefreshesTotal.WithLabelValues("sign_failed").Inc()
 		writeErr(w, http.StatusInternalServerError, "sign_failed", "issuer could not sign license")
 		return
 	}
+	obs.LicensesIssued.WithLabelValues(sub.Tier).Inc()
 
 	_ = s.cfg.Store.CreateLicense(ctx, &store.License{
 		ID:               newOpaqueID("licrow"),
@@ -190,6 +198,7 @@ func (s *Server) handleRefresh(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 
+	obs.RefreshesTotal.WithLabelValues("success").Inc()
 	writeJSON(w, http.StatusOK, refreshResponse{
 		LicenseJWS:         jws,
 		EntitlementSetID:   entitlementSetID,

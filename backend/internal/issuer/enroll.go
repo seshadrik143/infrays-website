@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/seshadrik143/infrays-website/backend/internal/audit"
+	"github.com/seshadrik143/infrays-website/backend/internal/obs"
 	"github.com/seshadrik143/infrays-website/backend/internal/signing"
 	"github.com/seshadrik143/infrays-website/backend/internal/store"
 )
@@ -55,11 +56,13 @@ func (s *Server) handleEnroll(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// Same error shape for unknown token and expired token —
 		// don't help an attacker probe which tokens exist.
+		obs.EnrollmentsTotal.WithLabelValues("invalid_token").Inc()
 		writeErr(w, http.StatusForbidden, "invalid_token", "enrollment token not recognized")
 		return
 	}
 	now := s.cfg.Now()
 	if !tok.ExpiresAt.IsZero() && now.After(tok.ExpiresAt) {
+		obs.EnrollmentsTotal.WithLabelValues("expired").Inc()
 		writeErr(w, http.StatusForbidden, "expired", "enrollment token expired; regenerate from the customer portal")
 		return
 	}
@@ -67,10 +70,12 @@ func (s *Server) handleEnroll(w http.ResponseWriter, r *http.Request) {
 	// Idempotent re-redeem: if the same deployment is re-presenting
 	// this token, return the cached response.
 	if !tok.ConsumedAt.IsZero() && tok.ConsumedByDeployment == req.DeploymentID && tok.ConsumedResponseJWS != "" {
+		obs.EnrollmentsTotal.WithLabelValues("idempotent_replay").Inc()
 		writeJSON(w, http.StatusOK, decodeCachedEnroll(tok.ConsumedResponseJWS, s.cfg))
 		return
 	}
 	if !tok.ConsumedAt.IsZero() && tok.ConsumedByDeployment != req.DeploymentID {
+		obs.EnrollmentsTotal.WithLabelValues("consumed_by_other").Inc()
 		writeErr(w, http.StatusForbidden, "consumed_by_other", "this token was redeemed by a different deployment")
 		return
 	}
@@ -124,11 +129,15 @@ func (s *Server) handleEnroll(w http.ResponseWriter, r *http.Request) {
 		payload.RetentionDays = es.Limits.RetentionDays
 	}
 
+	signStart := time.Now()
 	jws, err := signing.Sign(ctx, s.cfg.Signer, payload)
+	obs.JWSSignDuration.Observe(time.Since(signStart).Seconds())
 	if err != nil {
+		obs.EnrollmentsTotal.WithLabelValues("sign_failed").Inc()
 		writeErr(w, http.StatusInternalServerError, "sign_failed", "issuer could not sign license")
 		return
 	}
+	obs.LicensesIssued.WithLabelValues(sub.Tier).Inc()
 
 	// Persist deployment + license + audit BEFORE marking token consumed,
 	// so a crash mid-handler can replay without violating idempotency.
@@ -199,6 +208,7 @@ func (s *Server) handleEnroll(w http.ResponseWriter, r *http.Request) {
 			Payload:   map[string]any{"error": err.Error()},
 		})
 	}
+	obs.EnrollmentsTotal.WithLabelValues("success").Inc()
 	writeJSON(w, http.StatusOK, resp)
 }
 

@@ -13,6 +13,7 @@ import (
 
 	"github.com/seshadrik143/infrays-website/backend/internal/audit"
 	"github.com/seshadrik143/infrays-website/backend/internal/email"
+	"github.com/seshadrik143/infrays-website/backend/internal/obs"
 	"github.com/seshadrik143/infrays-website/backend/internal/store"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -85,6 +86,7 @@ func (s *Server) handleSignup(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		s.sendVerificationEmail(existing, tokenPlain)
+		obs.PortalSignupsTotal.WithLabelValues("claimed").Inc()
 		s.appendAudit("portal.signup_claimed", existing, nil)
 		writeJSON(w, http.StatusOK, map[string]any{"status": "verification_sent"})
 		return
@@ -122,6 +124,7 @@ func (s *Server) handleSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.sendVerificationEmail(cust, tokenPlain)
+	obs.PortalSignupsTotal.WithLabelValues("created").Inc()
 	s.appendAudit("portal.signup_created", cust, nil)
 	writeJSON(w, http.StatusOK, map[string]any{"status": "verification_sent"})
 }
@@ -145,14 +148,17 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	if err != nil || cust.PasswordHash == "" {
 		// Run a dummy bcrypt to keep timing consistent.
 		_ = bcrypt.CompareHashAndPassword([]byte("$2a$12$dummy.hash.to.equalize.timing.aaaaaaaaaaaaaaaaaaaaaaaaaaaaa"), []byte(req.Password))
+		obs.PortalLoginsTotal.WithLabelValues("invalid_credentials").Inc()
 		writeError(w, http.StatusUnauthorized, "invalid credentials")
 		return
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(cust.PasswordHash), []byte(req.Password)); err != nil {
+		obs.PortalLoginsTotal.WithLabelValues("invalid_credentials").Inc()
 		writeError(w, http.StatusUnauthorized, "invalid credentials")
 		return
 	}
 	if cust.Status != "active" {
+		obs.PortalLoginsTotal.WithLabelValues("suspended").Inc()
 		writeError(w, http.StatusForbidden, "account "+cust.Status)
 		return
 	}
@@ -177,6 +183,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.setSessionCookie(w, sid, sess.ExpiresAt)
+	obs.PortalLoginsTotal.WithLabelValues("success").Inc()
 	s.appendAudit("portal.login", cust, nil)
 	writeJSON(w, http.StatusOK, customerProfile(cust))
 }
@@ -257,6 +264,7 @@ func (s *Server) handleVerifyEmail(w http.ResponseWriter, r *http.Request) {
 	}
 	cust, err := s.findByToken(r.Context(), req.Token, "verify_email")
 	if err != nil {
+		obs.PortalVerificationsTotal.WithLabelValues("invalid_token").Inc()
 		writeError(w, http.StatusBadRequest, "invalid or expired token")
 		return
 	}
@@ -270,6 +278,7 @@ func (s *Server) handleVerifyEmail(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "update")
 		return
 	}
+	obs.PortalVerificationsTotal.WithLabelValues("success").Inc()
 	s.appendAudit("portal.email_verified", cust, nil)
 	writeJSON(w, http.StatusOK, map[string]any{"status": "ok"})
 }
@@ -331,6 +340,7 @@ func (s *Server) handleRequestPasswordReset(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	s.sendPasswordResetEmail(cust, tokenPlain)
+	obs.PortalPasswordResetsTotal.WithLabelValues("requested", "success").Inc()
 	s.appendAudit("portal.password_reset_requested", cust, nil)
 }
 
@@ -351,6 +361,7 @@ func (s *Server) handleResetPassword(w http.ResponseWriter, r *http.Request) {
 	}
 	cust, err := s.findByToken(r.Context(), req.Token, "reset_password")
 	if err != nil {
+		obs.PortalPasswordResetsTotal.WithLabelValues("completed", "invalid").Inc()
 		writeError(w, http.StatusBadRequest, "invalid or expired token")
 		return
 	}
@@ -371,6 +382,7 @@ func (s *Server) handleResetPassword(w http.ResponseWriter, r *http.Request) {
 	}
 	// Invalidate any active sessions — force re-login.
 	_ = s.cfg.Store.DeletePortalSessionsForCustomer(r.Context(), cust.ID)
+	obs.PortalPasswordResetsTotal.WithLabelValues("completed", "success").Inc()
 	s.appendAudit("portal.password_reset", cust, nil)
 	writeJSON(w, http.StatusOK, map[string]any{"status": "ok"})
 }

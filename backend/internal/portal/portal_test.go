@@ -73,7 +73,9 @@ func newHarness(t *testing.T) *harness {
 		auditLog: auditLog,
 		email:    em,
 		billing:  bp,
-		clock:    time.Date(2026, 5, 22, 12, 0, 0, 0, time.UTC),
+		// Anchor to real wall time so cookies the server sets aren't
+		// retroactively expired by cookiejar's real-clock comparison.
+		clock: time.Now().UTC().Truncate(time.Second),
 	}
 	srv := portal.NewServer(portal.Config{
 		Store:         st,

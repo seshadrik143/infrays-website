@@ -32,9 +32,13 @@ func newHarness(t *testing.T) *harness {
 	t.Helper()
 	st := store.NewMemory()
 	auditLog := audit.NewMemory()
+	// Anchor the harness clock to real time so cookies the server
+	// sets are not retroactively expired by the cookiejar's real-clock
+	// comparison. h.advance() shifts forward from this base for tests
+	// that exercise expiry windows.
 	h := &harness{
 		t: t, store: st, auditLog: auditLog,
-		clock: time.Date(2026, 5, 22, 12, 0, 0, 0, time.UTC),
+		clock: time.Now().UTC().Truncate(time.Second),
 	}
 	srv := adminportal.NewServer(adminportal.Config{
 		Store: st, Audit: auditLog,

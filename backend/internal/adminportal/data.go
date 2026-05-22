@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/seshadrik143/infrays-website/backend/internal/audit"
+	"github.com/seshadrik143/infrays-website/backend/internal/obs"
 	"github.com/seshadrik143/infrays-website/backend/internal/store"
 )
 
@@ -297,6 +298,8 @@ func (s *Server) handleRevokeLicense(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "revoke")
 		return
 	}
+	obs.LicensesRevoked.Inc()
+	obs.AdminActionsTotal.WithLabelValues("revoke_license").Inc()
 	s.appendAudit("admin.license_revoked", adminFromContext(r.Context()), map[string]any{
 		"jti": jti, "reason": req.Reason,
 	})

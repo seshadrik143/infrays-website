@@ -11,6 +11,7 @@ import (
 
 	"github.com/pquerna/otp/totp"
 	"github.com/seshadrik143/infrays-website/backend/internal/audit"
+	"github.com/seshadrik143/infrays-website/backend/internal/obs"
 	"github.com/seshadrik143/infrays-website/backend/internal/store"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -32,10 +33,12 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	admin, err := s.cfg.Store.GetAdminUserByEmail(r.Context(), req.Email)
 	if err != nil {
 		_ = bcrypt.CompareHashAndPassword([]byte("$2a$12$dummy.hash.to.equalize.timing.aaaaaaaaaaaaaaaaaaaaaaaaaaaaa"), []byte(req.Password))
+		obs.AdminLoginsTotal.WithLabelValues("stage1", "invalid_credentials").Inc()
 		writeError(w, http.StatusUnauthorized, "invalid credentials")
 		return
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(admin.PasswordHash), []byte(req.Password)); err != nil {
+		obs.AdminLoginsTotal.WithLabelValues("stage1", "invalid_credentials").Inc()
 		writeError(w, http.StatusUnauthorized, "invalid credentials")
 		return
 	}
@@ -61,6 +64,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.setSessionCookie(w, sid, sess.ExpiresAt)
+	obs.AdminLoginsTotal.WithLabelValues("stage1", "success").Inc()
 	s.appendAudit("admin.login_stage1", admin, nil)
 	writeJSON(w, http.StatusOK, map[string]any{
 		"id":           admin.ID,
@@ -190,12 +194,14 @@ func (s *Server) handleMFAChallenge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if !s.validateTOTP(req.Code, admin.MFASecret) {
+		obs.AdminLoginsTotal.WithLabelValues("mfa", "invalid_code").Inc()
 		writeError(w, http.StatusUnauthorized, "invalid code")
 		return
 	}
 	_ = s.cfg.Store.MarkAdminSessionMFAVerified(r.Context(), sess.ID)
 	admin.LastLogin = s.cfg.Now()
 	_ = s.cfg.Store.UpdateAdminUser(r.Context(), admin)
+	obs.AdminLoginsTotal.WithLabelValues("mfa", "success").Inc()
 	s.appendAudit("admin.login_mfa_verified", admin, nil)
 	writeJSON(w, http.StatusOK, map[string]any{"status": "ok"})
 }

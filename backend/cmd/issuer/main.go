@@ -30,6 +30,7 @@ import (
 	"github.com/seshadrik143/infrays-website/backend/internal/audit"
 	"github.com/seshadrik143/infrays-website/backend/internal/email"
 	"github.com/seshadrik143/infrays-website/backend/internal/issuer"
+	"github.com/seshadrik143/infrays-website/backend/internal/obs"
 	"github.com/seshadrik143/infrays-website/backend/internal/portal"
 	"github.com/seshadrik143/infrays-website/backend/internal/signing"
 	"github.com/seshadrik143/infrays-website/backend/internal/store"
@@ -38,6 +39,12 @@ import (
 )
 
 func main() {
+	// Initialize structured JSON logger first so all subsequent boot
+	// messages land in the same downstream stream. Level via env so
+	// operators can crank to debug without a redeploy by `fly secrets
+	// set NP_LOG_LEVEL=debug` + a single machine restart.
+	obs.SetDefault(obs.NewLogger(os.Getenv("NP_LOG_LEVEL")))
+
 	addr := flag.String("addr", ":8080", "Listen address")
 	issuerURL := flag.String("issuer-url", "license.infrays.org", "Hostname embedded in JWS 'iss' claim")
 	graceDays := flag.Int("grace-days", 90, "Default grace period after license expiry (days)")
@@ -91,10 +98,10 @@ func main() {
 			log.Fatalf("pg: %v", err)
 		}
 		st = pg
-		log.Printf("store: PostgreSQL")
+		obs.Default().Info("store backend selected", "backend", "postgres")
 	} else {
 		st = store.NewMemory()
-		log.Println("⚠  store: in-memory (state lost on restart; set --pg-url for production)")
+		obs.Default().Warn("in-memory store — state lost on restart", "remediation", "set --pg-url or PG_URL for production")
 	}
 	defer st.Close()
 
@@ -111,7 +118,7 @@ func main() {
 
 	// Build server + warn if admin secret is unset.
 	if os.Getenv("NP_ISSUER_ADMIN_SECRET") == "" {
-		log.Println("⚠  NP_ISSUER_ADMIN_SECRET is not set — admin endpoints will reject all requests")
+		obs.Default().Warn("NP_ISSUER_ADMIN_SECRET unset — admin endpoints will reject all requests")
 	}
 
 	// ── Phase 51.5: email sender ───────────────────────────────────
@@ -143,7 +150,7 @@ func main() {
 			log.Fatalf("stripe webhook: %v", err)
 		}
 		stripeWebhook = wh
-		log.Println("stripe: webhook handler registered")
+		obs.Default().Info("stripe webhook handler registered")
 	}
 	if apiKey := os.Getenv("NP_STRIPE_SECRET_KEY"); apiKey != "" {
 		ch, err := stripebill.NewCheckoutHandler(apiKey, appURL, priceMap)
@@ -151,7 +158,7 @@ func main() {
 			log.Fatalf("stripe checkout: %v", err)
 		}
 		stripeCheckout = ch
-		log.Println("stripe: checkout handler registered")
+		obs.Default().Info("stripe checkout handler registered")
 	}
 
 	srv := issuer.NewServer(issuer.Config{
@@ -179,7 +186,7 @@ func main() {
 			log.Fatalf("stripe billing portal: %v", err)
 		}
 		billingPortal = bp
-		log.Println("stripe: billing portal session creator registered")
+		obs.Default().Info("stripe billing portal session creator registered")
 	}
 	portalSrv := portal.NewServer(portal.Config{
 		Store:         st,
@@ -203,16 +210,24 @@ func main() {
 	})
 
 	rootMux := http.NewServeMux()
-	rootMux.Handle("/api/portal/", portalSrv.Routes())
-	rootMux.Handle("/api/admin/", adminSrv.Routes())
+	rootMux.Handle("/api/portal/", obs.HTTPMiddleware("portal.api", portalSrv.Routes()))
+	rootMux.Handle("/api/admin/", obs.HTTPMiddleware("admin.api", adminSrv.Routes()))
 	// Issuer API routes (specific paths under /v1, /healthz, /internal).
 	issuerMux := srv.Routes()
 	for _, p := range []string{"/v1/", "/healthz", "/internal/", "/.well-known/"} {
-		rootMux.Handle(p, issuerMux)
+		rootMux.Handle(p, obs.HTTPMiddleware("issuer.api", issuerMux))
 	}
+	// /metrics — opt-in via NP_METRICS_USER + NP_METRICS_PASSWORD.
+	// When either is empty, the handler returns 404, never exposing
+	// metrics unauthenticated. NOT wrapped in HTTPMiddleware to avoid
+	// recursive instrumentation (scraping noise).
+	rootMux.Handle("/metrics", obs.MetricsHandler(
+		os.Getenv("NP_METRICS_USER"),
+		os.Getenv("NP_METRICS_PASSWORD"),
+	))
 	// Everything else falls through to the embedded portal SPA — index.html
 	// at "/" plus React Router's client-side routes (/login, /dashboard, ...).
-	rootMux.Handle("/", portal.SPAHandler())
+	rootMux.Handle("/", obs.HTTPMiddleware("spa", portal.SPAHandler()))
 
 	httpSrv := &http.Server{
 		Addr:         *addr,
@@ -240,10 +255,10 @@ func main() {
 	}
 	trialCtx, trialCancel := context.WithCancel(context.Background())
 	trialSched.Start(trialCtx)
-	log.Println("trialscheduler: started (thresholds 30/7/1 days, tick=1h)")
+	obs.Default().Info("trialscheduler started", "thresholds_days", []int{30, 7, 1}, "tick", "1h")
 
 	go func() {
-		log.Printf("issuer listening on %s (signer=%s kid=%s)", *addr, *signerSource, signer.KID())
+		obs.Default().Info("issuer listening", "addr", *addr, "signer", *signerSource, "kid", signer.KID())
 		if err := httpSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("server: %v", err)
 		}
@@ -252,15 +267,15 @@ func main() {
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
 	<-sigCh
-	log.Println("issuer shutting down")
+	obs.Default().Info("issuer shutting down")
 	trialCancel()
 	trialSched.Stop()
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := httpSrv.Shutdown(shutdownCtx); err != nil {
-		log.Printf("shutdown: %v", err)
+		obs.Default().Warn("http shutdown error", "err", err)
 	}
-	log.Println("issuer stopped")
+	obs.Default().Info("issuer stopped")
 }
 
 // bootstrapAdmin creates the first admin user from environment vars
@@ -282,12 +297,12 @@ func bootstrapAdmin(ctx context.Context, st store.Store) {
 	email := os.Getenv("NP_ADMIN_BOOTSTRAP_EMAIL")
 	password := os.Getenv("NP_ADMIN_BOOTSTRAP_PASSWORD")
 	if email == "" || password == "" {
-		log.Println("⚠  admin portal: no admin users present; set NP_ADMIN_BOOTSTRAP_EMAIL + NP_ADMIN_BOOTSTRAP_PASSWORD to seed the first one")
+		obs.Default().Warn("admin portal: no admin users present", "remediation", "set NP_ADMIN_BOOTSTRAP_EMAIL + NP_ADMIN_BOOTSTRAP_PASSWORD to seed the first one")
 		return
 	}
 	hash, err := adminportal.HashPassword(password)
 	if err != nil {
-		log.Printf("admin bootstrap: hash: %v", err)
+		obs.Default().Error("admin bootstrap hash failed", "err", err)
 		return
 	}
 	a := &store.AdminUser{
@@ -298,10 +313,10 @@ func bootstrapAdmin(ctx context.Context, st store.Store) {
 		CreatedAt:    time.Now().UTC(),
 	}
 	if err := st.CreateAdminUser(ctx, a); err != nil {
-		log.Printf("admin bootstrap: create: %v", err)
+		obs.Default().Error("admin bootstrap create failed", "err", err)
 		return
 	}
-	log.Printf("admin portal: bootstrapped %s — enroll MFA on first login", email)
+	obs.Default().Info("admin portal bootstrapped", "email", email, "next_step", "enroll MFA on first login")
 }
 
 // seedEntitlements creates the three baseline entitlement sets so an
@@ -339,7 +354,7 @@ func seedEntitlements(st store.Store) {
 	}
 	for _, s := range sets {
 		if err := st.CreateEntitlementSet(ctx, &s); err != nil && !strings.Contains(err.Error(), "already exists") {
-			log.Printf("seed entitlement %s: %v", s.ID, err)
+			obs.Default().Warn("seed entitlement failed", "id", s.ID, "err", err)
 		}
 	}
 	_ = fmt.Sprintf
