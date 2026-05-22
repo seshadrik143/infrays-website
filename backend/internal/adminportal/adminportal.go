@@ -121,6 +121,15 @@ func (s *Server) Routes() *http.ServeMux {
 	mux.HandleFunc("POST /api/admin/auth/mfa-setup-verify", s.requireStage1(s.handleMFASetupVerify))
 
 	mux.HandleFunc("POST /api/admin/auth/change-password", s.requireStage2(s.handleChangePassword))
+
+	// Admin user management — role=admin only (enforced in handler).
+	mux.HandleFunc("GET /api/admin/admins", s.requireStage2(s.handleListAdmins))
+	mux.HandleFunc("POST /api/admin/admins", s.requireStage2(s.handleCreateAdmin))
+	mux.HandleFunc("PATCH /api/admin/admins/{id}", s.requireStage2(s.handleUpdateAdmin))
+	mux.HandleFunc("POST /api/admin/admins/{id}/status", s.requireStage2(s.handleSetAdminStatus))
+	mux.HandleFunc("POST /api/admin/admins/{id}/reset-password", s.requireStage2(s.handleResetAdminPassword))
+	mux.HandleFunc("DELETE /api/admin/admins/{id}", s.requireStage2(s.handleDeleteAdmin))
+
 	mux.HandleFunc("GET /api/admin/customers", s.requireStage2(s.handleListCustomers))
 	mux.HandleFunc("GET /api/admin/customers/{id}", s.requireStage2(s.handleGetCustomer))
 	mux.HandleFunc("PATCH /api/admin/customers/{id}", s.requireStage2(s.handleUpdateCustomer))

@@ -18,6 +18,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminCustomerList from "./pages/admin/AdminCustomerList";
 import AdminCustomerDetail from "./pages/admin/AdminCustomerDetail";
 import AdminAudit from "./pages/admin/AdminAudit";
+import AdminUsers from "./pages/admin/AdminUsers";
 
 function RequireAuth({ children }: { children: JSX.Element }) {
   const { me, loading } = useAuth();
@@ -73,6 +74,7 @@ function AdminRoutes() {
         <Route path="customers" element={<AdminCustomerList />} />
         <Route path="customers/:id" element={<AdminCustomerDetail />} />
         <Route path="audit" element={<AdminAudit />} />
+        <Route path="users" element={<AdminUsers />} />
       </Route>
       <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
     </Routes>

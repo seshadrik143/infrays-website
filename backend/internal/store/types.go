@@ -177,14 +177,16 @@ type Limits struct {
 // AdminUser is an infraYS staff member who can use the admin
 // portal / CLI. Password-authenticated with required MFA.
 type AdminUser struct {
-	ID           string
-	Email        string
-	PasswordHash string
-	Role         string // admin | support | sales | engineer
-	MFASecret    string // TOTP base32; empty until setup completes
-	MFAEnrolled  bool   // true once admin has verified a TOTP code
-	LastLogin    time.Time
-	CreatedAt    time.Time
+	ID                 string
+	Email              string
+	PasswordHash       string
+	Role               string // admin | support | sales | engineer
+	Status             string // active | disabled — empty treated as "active" for back-compat
+	MFASecret          string // TOTP base32; empty until setup completes
+	MFAEnrolled        bool   // true once admin has verified a TOTP code
+	MustChangePassword bool   // true when password was set by another admin
+	LastLogin          time.Time
+	CreatedAt          time.Time
 }
 
 // AdminSession is one active browser session for an admin user.

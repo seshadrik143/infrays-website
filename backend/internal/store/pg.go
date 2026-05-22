@@ -671,13 +671,17 @@ func (s *PG) GetEntitlementSet(ctx context.Context, id string) (*EntitlementSet,
 
 // ── Admin users ────────────────────────────────────────────────
 
-const sqlSelectAdminUser = `SELECT id,email,password_hash,role,mfa_secret,mfa_enrolled,last_login,created_at FROM admin_users`
+const sqlSelectAdminUser = `SELECT id,email,password_hash,role,status,mfa_secret,mfa_enrolled,must_change_password,last_login,created_at FROM admin_users`
 
 func (s *PG) CreateAdminUser(ctx context.Context, a *AdminUser) error {
+	status := a.Status
+	if status == "" {
+		status = "active"
+	}
 	_, err := s.pool.Exec(ctx, `
-		INSERT INTO admin_users (id,email,password_hash,role,mfa_secret,mfa_enrolled,last_login,created_at)
-		VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-	`, a.ID, a.Email, a.PasswordHash, a.Role, a.MFASecret, a.MFAEnrolled, nullTime(a.LastLogin), a.CreatedAt)
+		INSERT INTO admin_users (id,email,password_hash,role,status,mfa_secret,mfa_enrolled,must_change_password,last_login,created_at)
+		VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)
+	`, a.ID, a.Email, a.PasswordHash, a.Role, status, a.MFASecret, a.MFAEnrolled, a.MustChangePassword, nullTime(a.LastLogin), a.CreatedAt)
 	if err != nil {
 		if isUniqueViolation(err) {
 			return ErrAlreadyExists
@@ -698,7 +702,7 @@ func (s *PG) GetAdminUser(ctx context.Context, id string) (*AdminUser, error) {
 func (s *PG) scanAdminUser(row pgx.Row) (*AdminUser, error) {
 	var a AdminUser
 	var lastLogin *time.Time
-	err := row.Scan(&a.ID, &a.Email, &a.PasswordHash, &a.Role, &a.MFASecret, &a.MFAEnrolled, &lastLogin, &a.CreatedAt)
+	err := row.Scan(&a.ID, &a.Email, &a.PasswordHash, &a.Role, &a.Status, &a.MFASecret, &a.MFAEnrolled, &a.MustChangePassword, &lastLogin, &a.CreatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrNotFound
 	}
@@ -710,10 +714,26 @@ func (s *PG) scanAdminUser(row pgx.Row) (*AdminUser, error) {
 }
 
 func (s *PG) UpdateAdminUser(ctx context.Context, a *AdminUser) error {
+	status := a.Status
+	if status == "" {
+		status = "active"
+	}
 	tag, err := s.pool.Exec(ctx, `
-		UPDATE admin_users SET email=$2, password_hash=$3, role=$4, mfa_secret=$5, mfa_enrolled=$6, last_login=$7
+		UPDATE admin_users
+		SET email=$2, password_hash=$3, role=$4, status=$5, mfa_secret=$6, mfa_enrolled=$7, must_change_password=$8, last_login=$9
 		WHERE id=$1
-	`, a.ID, a.Email, a.PasswordHash, a.Role, a.MFASecret, a.MFAEnrolled, nullTime(a.LastLogin))
+	`, a.ID, a.Email, a.PasswordHash, a.Role, status, a.MFASecret, a.MFAEnrolled, a.MustChangePassword, nullTime(a.LastLogin))
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (s *PG) DeleteAdminUser(ctx context.Context, id string) error {
+	tag, err := s.pool.Exec(ctx, `DELETE FROM admin_users WHERE id=$1`, id)
 	if err != nil {
 		return err
 	}

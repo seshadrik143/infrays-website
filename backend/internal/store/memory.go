@@ -584,6 +584,24 @@ func (m *Memory) UpdateAdminUser(_ context.Context, a *AdminUser) error {
 	return nil
 }
 
+func (m *Memory) DeleteAdminUser(_ context.Context, id string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	a, ok := m.adminUsersByID[id]
+	if !ok {
+		return ErrNotFound
+	}
+	delete(m.adminUsersByID, id)
+	delete(m.adminUsers, a.Email)
+	// Also drop any active sessions for this admin.
+	for sid, s := range m.adminSessions {
+		if s.AdminUserID == id {
+			delete(m.adminSessions, sid)
+		}
+	}
+	return nil
+}
+
 func (m *Memory) ListAdminUsers(_ context.Context) ([]*AdminUser, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()

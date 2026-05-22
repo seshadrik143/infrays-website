@@ -127,20 +127,24 @@ CREATE TABLE IF NOT EXISTS entitlement_sets (
 );
 
 CREATE TABLE IF NOT EXISTS admin_users (
-    id              TEXT PRIMARY KEY,
-    email           CITEXT UNIQUE NOT NULL,
-    password_hash   TEXT NOT NULL,
-    role            TEXT NOT NULL,
-    mfa_secret      TEXT NOT NULL DEFAULT '',
-    mfa_enrolled    BOOLEAN NOT NULL DEFAULT FALSE,
-    last_login      TIMESTAMPTZ,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id                   TEXT PRIMARY KEY,
+    email                CITEXT UNIQUE NOT NULL,
+    password_hash        TEXT NOT NULL,
+    role                 TEXT NOT NULL,
+    status               TEXT NOT NULL DEFAULT 'active',
+    mfa_secret           TEXT NOT NULL DEFAULT '',
+    mfa_enrolled         BOOLEAN NOT NULL DEFAULT FALSE,
+    must_change_password BOOLEAN NOT NULL DEFAULT FALSE,
+    last_login           TIMESTAMPTZ,
+    created_at           TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 -- Idempotent for pre-Phase-52.5 deploys.
 ALTER TABLE admin_users ALTER COLUMN mfa_secret DROP NOT NULL;
 ALTER TABLE admin_users ALTER COLUMN mfa_secret SET DEFAULT '';
 ALTER TABLE admin_users ALTER COLUMN mfa_secret SET NOT NULL;
 ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS mfa_enrolled BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'active';
+ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS must_change_password BOOLEAN NOT NULL DEFAULT FALSE;
 
 -- Admin sessions (Phase 52.5). Separate from portal_sessions because
 -- admin tokens have stricter TTL semantics + MFAVerified bit.

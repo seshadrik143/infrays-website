@@ -5,6 +5,7 @@ import { useAdminAuth } from "../../lib/adminAuth";
 const navItems = [
   { to: "/admin/dashboard", label: "Dashboard" },
   { to: "/admin/customers", label: "Customers" },
+  { to: "/admin/users", label: "Admin Users" },
   { to: "/admin/audit", label: "Audit Log" },
 ];
 

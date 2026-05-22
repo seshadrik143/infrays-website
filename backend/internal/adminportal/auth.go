@@ -53,6 +53,13 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusUnauthorized, "invalid credentials")
 		return
 	}
+	// Disabled admins cannot create new sessions even with a valid
+	// password. Status="" is treated as "active" for back-compat.
+	if admin.Status == "disabled" {
+		obs.AdminLoginsTotal.WithLabelValues("stage1", "disabled").Inc()
+		writeError(w, http.StatusForbidden, "account disabled")
+		return
+	}
 	// Success — clear the account counter.
 	s.loginAccountRL.Reset(accountKey)
 
@@ -97,13 +104,14 @@ func (s *Server) handleLogout(w http.ResponseWriter, r *http.Request) {
 
 // AdminProfile is the safe shape returned to the SPA.
 type AdminProfile struct {
-	ID          string    `json:"id"`
-	Email       string    `json:"email"`
-	Role        string    `json:"role"`
-	MFAEnrolled bool      `json:"mfa_enrolled"`
-	MFAVerified bool      `json:"mfa_verified"`
-	LastLogin   time.Time `json:"last_login,omitempty"`
-	CreatedAt   time.Time `json:"created_at"`
+	ID                 string    `json:"id"`
+	Email              string    `json:"email"`
+	Role               string    `json:"role"`
+	MFAEnrolled        bool      `json:"mfa_enrolled"`
+	MFAVerified        bool      `json:"mfa_verified"`
+	MustChangePassword bool      `json:"must_change_password"`
+	LastLogin          time.Time `json:"last_login,omitempty"`
+	CreatedAt          time.Time `json:"created_at"`
 }
 
 func (s *Server) handleMe(w http.ResponseWriter, r *http.Request) {
@@ -112,7 +120,8 @@ func (s *Server) handleMe(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, AdminProfile{
 		ID: admin.ID, Email: admin.Email, Role: admin.Role,
 		MFAEnrolled: admin.MFAEnrolled, MFAVerified: sess.MFAVerified,
-		LastLogin: admin.LastLogin, CreatedAt: admin.CreatedAt,
+		MustChangePassword: admin.MustChangePassword,
+		LastLogin:          admin.LastLogin, CreatedAt: admin.CreatedAt,
 	})
 }
 
@@ -253,6 +262,7 @@ func (s *Server) handleChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	admin.PasswordHash = string(hash)
+	admin.MustChangePassword = false
 	if err := s.cfg.Store.UpdateAdminUser(r.Context(), admin); err != nil {
 		writeError(w, http.StatusInternalServerError, "update")
 		return

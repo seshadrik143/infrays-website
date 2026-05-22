@@ -95,6 +95,7 @@ type Store interface {
 	GetAdminUser(ctx context.Context, id string) (*AdminUser, error)
 	UpdateAdminUser(ctx context.Context, a *AdminUser) error
 	ListAdminUsers(ctx context.Context) ([]*AdminUser, error)
+	DeleteAdminUser(ctx context.Context, id string) error
 
 	// ── Customers / Subscriptions: admin queries ───────────────
 	// ListCustomers returns customers ordered by created_at DESC.

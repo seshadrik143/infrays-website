@@ -7,6 +7,18 @@ export interface AdminProfile {
   role: string;
   mfa_enrolled: boolean;
   mfa_verified: boolean;
+  must_change_password: boolean;
+  last_login?: string;
+  created_at: string;
+}
+
+export interface AdminUser {
+  id: string;
+  email: string;
+  role: string;
+  status: string;
+  mfa_enrolled: boolean;
+  must_change_password: boolean;
   last_login?: string;
   created_at: string;
 }
@@ -137,4 +149,20 @@ export const adminApi = {
     request<{ status: string }>("POST", `/api/admin/licenses/${encodeURIComponent(jti)}/revoke`, { reason }),
   listAudit: (limit = 100) =>
     request<{ entries: AuditEntry[] }>("GET", `/api/admin/audit?limit=${limit}`),
+
+  // Admin user management
+  listAdmins: () => request<{ admins: AdminUser[] }>("GET", "/api/admin/admins"),
+  createAdmin: (b: { email: string; role: string }) =>
+    request<AdminUser & { temp_password: string }>("POST", "/api/admin/admins", b),
+  updateAdminRole: (id: string, role: string) =>
+    request<AdminUser>("PATCH", `/api/admin/admins/${encodeURIComponent(id)}`, { role }),
+  setAdminStatus: (id: string, status: "active" | "disabled") =>
+    request<AdminUser>("POST", `/api/admin/admins/${encodeURIComponent(id)}/status`, { status }),
+  resetAdminPassword: (id: string) =>
+    request<AdminUser & { temp_password: string }>(
+      "POST",
+      `/api/admin/admins/${encodeURIComponent(id)}/reset-password`
+    ),
+  deleteAdmin: (id: string) =>
+    request<{ status: string }>("DELETE", `/api/admin/admins/${encodeURIComponent(id)}`),
 };
