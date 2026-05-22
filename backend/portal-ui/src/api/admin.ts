@@ -165,4 +165,18 @@ export const adminApi = {
     ),
   deleteAdmin: (id: string) =>
     request<{ status: string }>("DELETE", `/api/admin/admins/${encodeURIComponent(id)}`),
+
+  // Bulk operations
+  bulkCustomerStatus: (b: { ids: string[]; status: "active" | "suspended" | "deleted" }) =>
+    request<{ results: { id: string; ok: boolean; error?: string }[]; success: number; failed: number }>(
+      "POST",
+      "/api/admin/customers/bulk-status",
+      b
+    ),
+  bulkDeploymentFlag: (b: { deployment_ids: string[]; flagged: boolean; reason: string }) =>
+    request<{ results: { id: string; ok: boolean; error?: string }[]; success: number; failed: number }>(
+      "POST",
+      "/api/admin/deployments/bulk-flag",
+      b
+    ),
 };

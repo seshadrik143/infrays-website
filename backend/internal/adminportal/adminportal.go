@@ -130,6 +130,10 @@ func (s *Server) Routes() *http.ServeMux {
 	mux.HandleFunc("POST /api/admin/admins/{id}/reset-password", s.requireStage2(s.handleResetAdminPassword))
 	mux.HandleFunc("DELETE /api/admin/admins/{id}", s.requireStage2(s.handleDeleteAdmin))
 
+	// Bulk operations — role=admin enforced inside handlers.
+	mux.HandleFunc("POST /api/admin/customers/bulk-status", s.requireStage2(s.handleBulkCustomerStatus))
+	mux.HandleFunc("POST /api/admin/deployments/bulk-flag", s.requireStage2(s.handleBulkDeploymentFlag))
+
 	mux.HandleFunc("GET /api/admin/customers", s.requireStage2(s.handleListCustomers))
 	mux.HandleFunc("GET /api/admin/customers/{id}", s.requireStage2(s.handleGetCustomer))
 	mux.HandleFunc("PATCH /api/admin/customers/{id}", s.requireStage2(s.handleUpdateCustomer))

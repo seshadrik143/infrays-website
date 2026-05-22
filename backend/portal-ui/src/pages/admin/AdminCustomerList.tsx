@@ -6,10 +6,15 @@ export default function AdminCustomerList() {
   const [items, setItems] = useState<AdminCustomer[]>([]);
   const [q, setQ] = useState("");
   const [err, setErr] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [busy, setBusy] = useState(false);
 
   const load = (filter: string) => {
     adminApi.listCustomers(filter)
-      .then((r) => setItems(r.customers || []))
+      .then((r) => {
+        setItems(r.customers || []);
+        setSelected(new Set()); // clear after reload
+      })
       .catch((e) => setErr(e.message));
   };
 
@@ -18,6 +23,33 @@ export default function AdminCustomerList() {
   const onSearch = (e: React.FormEvent) => {
     e.preventDefault();
     load(q);
+  };
+
+  const toggle = (id: string) => {
+    const next = new Set(selected);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelected(next);
+  };
+
+  const toggleAll = () => {
+    if (selected.size === items.length) setSelected(new Set());
+    else setSelected(new Set(items.map((c) => c.id)));
+  };
+
+  const bulkStatus = async (status: "suspended" | "active") => {
+    const ids = Array.from(selected);
+    const verb = status === "suspended" ? "Suspend" : "Reactivate";
+    if (!confirm(`${verb} ${ids.length} customer(s)?`)) return;
+    setBusy(true);
+    try {
+      const r = await adminApi.bulkCustomerStatus({ ids, status });
+      alert(`${verb}d ${r.success} customer(s).${r.failed ? ` ${r.failed} failed.` : ""}`);
+      load(q);
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -31,10 +63,32 @@ export default function AdminCustomerList() {
         </form>
       </div>
       {err && <div className="text-red-400 text-sm">{err}</div>}
+
+      {selected.size > 0 && (
+        <div className="card bg-ink-900 border-accent-500 flex items-center justify-between">
+          <div className="text-sm">
+            <span className="font-medium">{selected.size}</span> selected
+          </div>
+          <div className="flex gap-2">
+            <button disabled={busy} onClick={() => bulkStatus("suspended")} className="btn-secondary text-xs text-amber-300">Suspend</button>
+            <button disabled={busy} onClick={() => bulkStatus("active")} className="btn-secondary text-xs text-green-300">Reactivate</button>
+            <button onClick={() => setSelected(new Set())} className="btn-secondary text-xs">Clear</button>
+          </div>
+        </div>
+      )}
+
       <div className="card p-0 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-ink-900">
             <tr className="text-left text-xs text-gray-400">
+              <th className="px-3 py-2 w-8">
+                <input
+                  type="checkbox"
+                  checked={items.length > 0 && selected.size === items.length}
+                  onChange={toggleAll}
+                  aria-label="Select all"
+                />
+              </th>
               <th className="px-4 py-2">Email</th>
               <th className="px-4 py-2">Company</th>
               <th className="px-4 py-2">Status</th>
@@ -44,6 +98,14 @@ export default function AdminCustomerList() {
           <tbody>
             {items.map((c) => (
               <tr key={c.id} className="border-t border-ink-700 hover:bg-ink-700/50">
+                <td className="px-3 py-2">
+                  <input
+                    type="checkbox"
+                    checked={selected.has(c.id)}
+                    onChange={() => toggle(c.id)}
+                    aria-label={`Select ${c.email}`}
+                  />
+                </td>
                 <td className="px-4 py-2">
                   <Link to={`/admin/customers/${c.id}`} className="link">{c.email}</Link>
                 </td>
@@ -55,7 +117,7 @@ export default function AdminCustomerList() {
               </tr>
             ))}
             {items.length === 0 && (
-              <tr><td colSpan={4} className="px-4 py-8 text-center text-gray-400">No customers.</td></tr>
+              <tr><td colSpan={5} className="px-4 py-8 text-center text-gray-400">No customers.</td></tr>
             )}
           </tbody>
         </table>

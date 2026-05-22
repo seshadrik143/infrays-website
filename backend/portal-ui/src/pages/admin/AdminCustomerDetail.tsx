@@ -9,6 +9,7 @@ export default function AdminCustomerDetail() {
   const [err, setErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [newPlain, setNewPlain] = useState<string | null>(null);
+  const [selectedDeps, setSelectedDeps] = useState<Set<string>>(new Set());
 
   const load = () => {
     adminApi.getCustomer(id).then(setData).catch((e) => setErr(e.message));
@@ -40,6 +41,30 @@ export default function AdminCustomerDetail() {
       load();
     } catch (e: any) {
       alert(e.message);
+    }
+  };
+
+  const toggleDep = (depID: string) => {
+    const next = new Set(selectedDeps);
+    if (next.has(depID)) next.delete(depID); else next.add(depID);
+    setSelectedDeps(next);
+  };
+
+  const bulkFlagDeps = async (flagged: boolean) => {
+    const ids = Array.from(selectedDeps);
+    if (ids.length === 0) return;
+    const reason = flagged ? (prompt(`Reason for flagging ${ids.length} deployment(s):`) || "") : "";
+    if (flagged && !reason) return;
+    setBusy(true);
+    try {
+      const r = await adminApi.bulkDeploymentFlag({ deployment_ids: ids, flagged, reason });
+      alert(`${flagged ? "Flagged" : "Unflagged"} ${r.success} deployment(s).${r.failed ? ` ${r.failed} failed.` : ""}`);
+      setSelectedDeps(new Set());
+      load();
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setBusy(false);
     }
   };
 
@@ -118,12 +143,30 @@ export default function AdminCustomerDetail() {
 
       <Section title="Deployments">
         {(data.deployments || []).length === 0 && <Empty>No deployments.</Empty>}
+        {selectedDeps.size > 0 && (
+          <div className="px-3 py-2 bg-ink-900 border-b border-accent-500 flex items-center justify-between text-xs">
+            <span>{selectedDeps.size} selected</span>
+            <div className="flex gap-2">
+              <button disabled={busy} onClick={() => bulkFlagDeps(true)} className="btn-secondary text-xs text-amber-300">Flag</button>
+              <button disabled={busy} onClick={() => bulkFlagDeps(false)} className="btn-secondary text-xs text-green-300">Unflag</button>
+              <button onClick={() => setSelectedDeps(new Set())} className="btn-secondary text-xs">Clear</button>
+            </div>
+          </div>
+        )}
         {(data.deployments || []).map((d) => (
           <div key={d.id} className="flex items-center justify-between p-3 border-b border-ink-700 text-sm last:border-0">
-            <div>
-              <div className="font-medium">{d.deployment_name || d.deployment_id}</div>
-              <div className="text-xs text-gray-500 font-mono">{d.deployment_id}</div>
-              {d.flag_reason && <div className="text-xs text-amber-200 mt-1">{d.flag_reason}</div>}
+            <div className="flex items-center gap-3">
+              <input
+                type="checkbox"
+                checked={selectedDeps.has(d.deployment_id)}
+                onChange={() => toggleDep(d.deployment_id)}
+                aria-label={`Select ${d.deployment_id}`}
+              />
+              <div>
+                <div className="font-medium">{d.deployment_name || d.deployment_id}</div>
+                <div className="text-xs text-gray-500 font-mono">{d.deployment_id}</div>
+                {d.flag_reason && <div className="text-xs text-amber-200 mt-1">{d.flag_reason}</div>}
+              </div>
             </div>
             <div>
               {d.flagged_for_review ? (
