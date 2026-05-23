@@ -54,7 +54,7 @@ export default function Hero() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
                   <span className="relative inline-flex rounded-full w-2 h-2 bg-cyan-400" />
                 </span>
-                v1.0 — Now Available
+                v0.33 — Now Available
               </span>
             </div>
 

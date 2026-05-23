@@ -95,7 +95,7 @@ export default function IntegrationsGrid() {
           </h2>
           <p className="text-lg text-white/40 max-w-2xl mx-auto">
             Native OTLP means every OpenTelemetry-compatible tool works out of the box.
-            67 community collector plugins, cloud secrets managers, IaC providers, and full ITSM integration.
+            50+ community collector plugins, cloud secrets managers, IaC providers, and full ITSM integration.
           </p>
         </div>
 

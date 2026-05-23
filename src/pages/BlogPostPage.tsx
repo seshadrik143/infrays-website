@@ -14,20 +14,20 @@ const posts: Record<string, {
   body: string[]
 }> = {
   'infrays-v1-launch': {
-    title: 'Introducing infraYS v1.0: The Observability Platform Built for Teams That Never Sleep',
+    title: 'Introducing infraYS v0.33: The Observability Platform Built for Teams That Never Sleep',
     category: 'Announcement',
     color: 'cyan',
     date: '2026-04-08',
     readTime: '8 min read',
-    excerpt: 'After 27 development phases, infraYS v1.0 is here.',
+    excerpt: 'After 34 development phases, infraYS v0.33 is here.',
     body: [
-      'After 27 development phases and thousands of lines of Go, TypeScript, and Python, infraYS v1.0 is generally available. This post covers what we built, why we built it the way we did, and what comes next.',
+      'After 34 development phases and thousands of lines of Go, TypeScript, and Python, infraYS v0.33 is generally available. This post covers what we built, why we built it the way we did, and what comes next.',
       '## What is infraYS?',
       'infraYS is a unified observability platform. It replaces the typical monitoring stack — Prometheus + Grafana + Loki + Tempo + an APM tool + an alerting tool + an on-call tool — with a single binary agent and a unified server. You get metrics, logs, traces, continuous profiling, AI-powered anomaly detection, synthetic monitoring, SLO tracking, and cloud cost tracking from one install.',
       '## Why build this?',
       'Modern infrastructure monitoring is fragmented. Most teams run 5–8 separate tools, each with its own agent, its own storage, its own alerting logic, and its own billing. We built infraYS to collapse that into one coherent system — with a 12MB agent, < 30MB memory footprint, and an Apache 2.0 license.',
       '## What shipped in v0.33',
-      'The v0.33 release includes everything from the first heartbeat to enterprise compliance: 34 phases covering metrics collection, structured log ingestion, distributed tracing, continuous profiling with flame graphs, AI anomaly detection, predictive alerting, flap detection, synthetic monitoring, SLO tracking, cloud cost import, OIDC SSO, RBAC, AES-256 encryption, Vault integration, GDPR erasure, SOC2/ISO27001 compliance reports, a 67-plugin ecosystem, Terraform and Pulumi providers, a fully managed SaaS mode with Stripe billing, and a 15-day self-hosted trial with license key enforcement.',
+      'The v0.33 release includes everything from the first heartbeat to enterprise compliance: 34 phases covering metrics collection, structured log ingestion, distributed tracing, continuous profiling with flame graphs, AI anomaly detection, predictive alerting, flap detection, synthetic monitoring, SLO tracking, cloud cost import, OIDC SSO, RBAC, AES-256 encryption, Vault integration, GDPR erasure, SOC2/ISO27001 compliance reports, a 50+ plugin ecosystem, Terraform and Pulumi providers, a fully managed SaaS mode with Stripe billing, and a 15-day self-hosted trial with license key enforcement.',
       '## What\'s next',
       'v0.34 will focus on the hosted cloud offering — streamlining the onboarding flow and expanding global synthetic probe coverage. Community contributions are welcome. The codebase is Apache 2.0 licensed.',
     ],

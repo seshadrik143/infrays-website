@@ -87,8 +87,8 @@ const features = [
     icon: Puzzle,
     color: 'violet',
     title: 'Plugin Ecosystem',
-    desc: '67+ community plugins, custom collector SDK, webhook & dashboard templates, Terraform & Pulumi providers. Integrates with GitHub, Jira, ServiceNow.',
-    tags: ['67 Plugins', 'SDK', 'Terraform'],
+    desc: '50+ community plugins, custom collector SDK, webhook & dashboard templates, Terraform & Pulumi providers. Integrates with GitHub, Jira, ServiceNow.',
+    tags: ['50+ Plugins', 'SDK', 'Terraform'],
   },
   {
     icon: Network,

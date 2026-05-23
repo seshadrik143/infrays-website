@@ -65,8 +65,7 @@ const plugins: Plugin[] = [
   { name: 'Consul Collector', desc: 'Service health, catalog counts, Raft stats from Consul HTTP API', category: 'Service Discovery', type: 'collector', tags: ['consul', 'service-mesh'] },
   { name: 'etcd Collector', desc: 'Raft health, proposals, DB size, WAL fsync latency, peer network bytes', category: 'Service Discovery', type: 'collector', tags: ['etcd', 'k8s', 'distributed'] },
   { name: 'ZooKeeper Collector', desc: 'Connections, znodes, watchers, leader/follower state, latency via mntr command', category: 'Service Discovery', type: 'collector', tags: ['zookeeper', 'distributed'] },
-  { name: 'HashiCorp Vault Collector', desc: 'Token TTL, lease counts, seal status, request rates from Vault API', category: 'Service Discovery', type: 'collector', tags: ['vault', 'secrets'] },
-  { name: 'Vault Collector', desc: 'Seal status, token counts, lease expirations, Raft state via telemetry API', category: 'Service Discovery', type: 'collector', tags: ['vault', 'secrets', 'hashicorp'] },
+  { name: 'HashiCorp Vault Collector', desc: 'Token TTL, lease counts, seal status, request rates, and Raft state via Vault API + telemetry endpoint', category: 'Service Discovery', type: 'collector', tags: ['vault', 'secrets', 'hashicorp'] },
 
   // ── Network & Security ──────────────────────────────────────
   { name: 'SNMP v2c Collector', desc: 'Poll any SNMP v2c device — switches, routers, UPS — with configurable OID list', category: 'Network', type: 'collector', tags: ['snmp', 'network', 'router'] },
