@@ -1,6 +1,17 @@
 import { Link } from 'react-router-dom'
-import { Zap, Twitter, Linkedin, MessageSquare } from 'lucide-react'
+import { Zap } from 'lucide-react'
 
+// Removed Plugin SDK / API Reference from Developers — both pointed at
+// /docs#sdk and /docs#api anchors that don't exist, so clicking did
+// nothing useful. Restore once docs sections are written.
+//
+// Legal: kept as a placeholder pointing at /contact for now. Real
+// /privacy and /terms pages need to be authored before Stripe Live +
+// any compliance review. Tracked separately.
+//
+// Socials removed — we don't have real Twitter / LinkedIn / Discord
+// accounts yet, so href='#' was dead-clickbait. Restore as
+// <a href="..."> entries when accounts exist.
 const footerLinks = {
   Product: [
     { href: '/features', label: 'Features' },
@@ -14,8 +25,6 @@ const footerLinks = {
     { href: '/docs', label: 'Documentation' },
     { href: '/cli', label: 'CLI Reference' },
     { href: '/changelog', label: 'Changelog' },
-    { href: '/docs#sdk', label: 'Plugin SDK' },
-    { href: '/docs#api', label: 'API Reference' },
   ],
   Company: [
     { href: '/blog', label: 'Blog' },
@@ -28,12 +37,6 @@ const footerLinks = {
     { href: '/contact', label: 'GDPR / Data Requests' },
   ],
 }
-
-const socials = [
-  { href: '#', icon: Twitter, label: 'Twitter', external: false },
-  { href: '#', icon: Linkedin, label: 'LinkedIn', external: false },
-  { href: '#', icon: MessageSquare, label: 'Discord', external: false },
-]
 
 export default function Footer() {
   return (
@@ -52,17 +55,6 @@ export default function Footer() {
             <p className="text-sm text-white/40 leading-relaxed mb-6 max-w-xs">
               The unified observability platform for modern infrastructure teams. Open-source core, enterprise ready.
             </p>
-            <div className="flex items-center gap-3">
-              {socials.map((s) => (
-                <a key={s.label} href={s.href}
-                  target={s.external ? '_blank' : undefined}
-                  rel={s.external ? 'noopener noreferrer' : undefined}
-                  aria-label={s.label}
-                  className="w-9 h-9 rounded-lg border border-white/10 flex items-center justify-center text-white/40 hover:text-cyan-400 hover:border-cyan-500/30 transition-all">
-                  <s.icon className="w-4 h-4" />
-                </a>
-              ))}
-            </div>
           </div>
 
           {/* Links */}
@@ -72,7 +64,7 @@ export default function Footer() {
               <ul className="space-y-2.5">
                 {links.map((link) => (
                   <li key={link.label}>
-                    {(link.href.startsWith('http') || link.href.startsWith('mailto') || (link as {external?: boolean}).external) ? (
+                    {(link.href.startsWith('http') || link.href.startsWith('mailto')) ? (
                       <a href={link.href}
                         target={link.href.startsWith('http') ? '_blank' : undefined}
                         rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}

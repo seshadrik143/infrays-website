@@ -103,10 +103,10 @@ export default function DocsPage() {
                 Quick Start
                 <ArrowRight className="w-4 h-4" />
               </Link>
-              <Link to="/docs#api" className="btn-secondary">
+              <a href="/install" className="btn-secondary opacity-60 cursor-not-allowed" title="API reference docs coming soon">
                 <Code2 className="w-4 h-4" />
-                API Reference
-              </Link>
+                API Reference (soon)
+              </a>
             </div>
           </div>
         </section>
@@ -158,18 +158,42 @@ export default function DocsPage() {
                     </div>
                     <h2 className="text-base font-bold text-white mb-4">{section.title}</h2>
                     <ul className="space-y-2">
-                      {section.articles.map((article) => (
-                        <li key={article.title}>
-                          <Link to={article.href}
-                            className="group flex items-center justify-between py-2 border-b border-white/[0.04] last:border-0 hover:border-white/10 transition-colors">
-                            <div>
-                              <div className="text-sm text-white/70 group-hover:text-white transition-colors">{article.title}</div>
-                              <div className="text-xs text-white/30">{article.desc}</div>
+                      {section.articles.map((article) => {
+                        // Real routes start with '/' (no '#'). Everything else
+                        // (hash-only anchors like '#architecture', '/docs#api')
+                        // points at content that doesn't exist yet — render as
+                        // non-interactive placeholders with a "soon" badge so
+                        // visitors don't click into nothing.
+                        const isRealRoute = article.href.startsWith('/') && !article.href.includes('#')
+                        if (isRealRoute) {
+                          return (
+                            <li key={article.title}>
+                              <Link to={article.href}
+                                className="group flex items-center justify-between py-2 border-b border-white/[0.04] last:border-0 hover:border-white/10 transition-colors">
+                                <div>
+                                  <div className="text-sm text-white/70 group-hover:text-white transition-colors">{article.title}</div>
+                                  <div className="text-xs text-white/30">{article.desc}</div>
+                                </div>
+                                <ArrowRight className="w-3.5 h-3.5 text-white/20 group-hover:text-cyan-400 flex-shrink-0 transition-colors" />
+                              </Link>
+                            </li>
+                          )
+                        }
+                        return (
+                          <li key={article.title}>
+                            <div className="flex items-center justify-between py-2 border-b border-white/[0.04] last:border-0 opacity-50 cursor-not-allowed"
+                              title="Coming soon">
+                              <div>
+                                <div className="text-sm text-white/70">{article.title}</div>
+                                <div className="text-xs text-white/30">{article.desc}</div>
+                              </div>
+                              <span className="text-[10px] font-semibold uppercase tracking-wider text-white/30 border border-white/10 rounded px-1.5 py-0.5 flex-shrink-0">
+                                Soon
+                              </span>
                             </div>
-                            <ArrowRight className="w-3.5 h-3.5 text-white/20 group-hover:text-cyan-400 flex-shrink-0 transition-colors" />
-                          </Link>
-                        </li>
-                      ))}
+                          </li>
+                        )
+                      })}
                     </ul>
                   </div>
                 )

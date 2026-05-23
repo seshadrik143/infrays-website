@@ -277,7 +277,7 @@ export default function PluginsPage() {
               </div>
             </div>
             <div className="flex flex-wrap justify-center gap-4">
-              <Link to="/docs#sdk" className="btn-primary">
+              <Link to="/docs" className="btn-primary">
                 Plugin SDK Docs
                 <ArrowRight className="w-4 h-4" />
               </Link>
