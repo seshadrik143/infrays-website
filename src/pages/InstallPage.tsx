@@ -32,8 +32,10 @@ const methods = [
     desc: 'Installs the NodePulse server, agent, and npctl CLI. A valid license key is required to start the server — sign up at license.infrays.org first to get one (15-day free trial included, no credit card). Works on any systemd-based Linux (amd64 / arm64).',
     steps: [
       {
-        label: 'Download and install everything',
-        code: 'curl -fsSL https://infrays.org/install.sh | sudo bash',
+        label: 'Paste your enrollment token + install',
+        code: `# Paste the NP-ENROLL-... token from license.infrays.org (Step 0 above)
+curl -fsSL https://infrays.org/install.sh | sudo bash -s -- \\
+  --enrollment-token NP-ENROLL-XXXXXXXX`,
         lang: 'bash',
       },
       {
@@ -67,8 +69,9 @@ journalctl -u nodepulse-agent  -f`,
     desc: 'Run the NodePulse agent as a sidecar or standalone container. Mounts host /proc for system metrics.',
     steps: [
       {
-        label: 'Pull and run',
-        code: `docker run -d \\
+        label: 'Pull and run (enrollment token required)',
+        code: `# NP_ENROLLMENT_TOKEN from license.infrays.org (Step 0 above) is required
+docker run -d \\
   --name nodepulse-agent \\
   --pid=host \\
   --network=host \\
@@ -77,6 +80,7 @@ journalctl -u nodepulse-agent  -f`,
   -v /var/run/docker.sock:/var/run/docker.sock:ro \\
   -e NODEPULSE_SERVER_URL=http://your-server:8080 \\
   -e NODEPULSE_API_KEY=your-api-key \\
+  -e NP_ENROLLMENT_TOKEN=NP-ENROLL-XXXXXXXX \\
   ghcr.io/nodepulserepo/nodepulse-agent:latest`,
         lang: 'bash',
       },
@@ -95,10 +99,15 @@ journalctl -u nodepulse-agent  -f`,
     desc: 'Spin up the complete NodePulse stack — server, agent, VictoriaMetrics, and dashboard — with a single command.',
     steps: [
       {
-        label: 'Download and start',
+        label: 'Download, paste token in .env, then start',
         code: `curl -fsSL https://infrays.org/docker-compose.yml -o docker-compose.yml
 curl -fsSL https://infrays.org/.env.example -o .env
-# Edit .env with your settings
+
+# REQUIRED: set NP_ENROLLMENT_TOKEN in .env to the value from
+# license.infrays.org (Step 0 above). Server will refuse to start
+# without it.
+#   NP_ENROLLMENT_TOKEN=NP-ENROLL-XXXXXXXX
+
 docker compose up -d`,
         lang: 'bash',
       },
@@ -141,19 +150,62 @@ export default function InstallPage() {
               your setup.
             </p>
 
-            {/* License-required banner */}
-            <div className="inline-flex items-center gap-6 border border-cyan-500/20 rounded-2xl px-6 py-4 text-sm"
-              style={{ background: 'rgba(0,212,255,0.05)' }}>
-              <div className="flex items-center gap-2 text-cyan-400 font-semibold">
-                <Key className="w-4 h-4" />
-                License key required
+            <div className="inline-flex items-center gap-2 text-sm text-white/40">
+              <Key className="w-4 h-4 text-cyan-400" />
+              <span>License key required — none of the commands below work without one.</span>
+            </div>
+          </div>
+        </section>
+
+        {/* Step 0: Sign up — visually first, before any install method.
+            Phase E2 closed-commercial: every command on this page is
+            useless without an enrollment token from license.infrays.org.
+            Make that impossible to miss. */}
+        <section className="section py-16 border-b border-white/[0.06]"
+          style={{ background: 'linear-gradient(135deg, rgba(0,212,255,0.06), rgba(168,85,247,0.04))' }}>
+          <div className="container-md">
+            <div className="flex flex-col md:flex-row items-start gap-8">
+              {/* Step number */}
+              <div className="flex-shrink-0">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-black text-cyan-400"
+                  style={{ background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.3)' }}>
+                  0
+                </div>
               </div>
-              <span className="w-px h-4 bg-white/10" />
-              <span className="text-white/50">15 days free with signup — no credit card</span>
-              <span className="w-px h-4 bg-white/10" />
-              <div className="flex items-center gap-2 text-white/50">
-                <span>Get yours at</span>
-                <a href="https://license.infrays.org/signup" className="text-cyan-400 hover:underline font-medium">license.infrays.org/signup</a>
+              <div className="flex-1">
+                <span className="badge-cyan mb-3">Do this first</span>
+                <h2 className="text-3xl font-black text-white mb-3">Sign up &amp; get your enrollment token</h2>
+                <p className="text-white/55 leading-relaxed mb-5">
+                  NodePulse is commercial software. The server refuses to start without
+                  a valid license. Sign up at the licensing portal — you get a 15-day
+                  free trial token immediately, no credit card. Copy the token, then
+                  pick an install method below.
+                </p>
+                <div className="flex flex-wrap items-center gap-3 mb-5">
+                  <a href="https://license.infrays.org/signup"
+                    className="btn-primary text-base px-6 py-3 inline-flex items-center gap-2">
+                    <Key className="w-4 h-4" />
+                    Sign up — 15 days free
+                    <ArrowRight className="w-4 h-4" />
+                  </a>
+                  <Link to="/pricing" className="text-sm text-white/50 hover:text-white/80 transition-colors">
+                    or view pricing →
+                  </Link>
+                </div>
+                <ul className="text-xs text-white/40 space-y-1.5">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-cyan-500/60 flex-shrink-0" />
+                    Token format: <code className="text-cyan-400/80 ml-1">NP-ENROLL-XXXXXXXX</code>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-cyan-500/60 flex-shrink-0" />
+                    Bound to your account + your install — not shareable across machines
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-cyan-500/60 flex-shrink-0" />
+                    Trial license includes all Pro-tier features for 15 days
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
@@ -322,6 +374,36 @@ sudo systemctl restart nodepulse-server`}</code>
                   <Link key={item.title} to={item.href} className={className} style={style}>{inner}</Link>
                 )
               })}
+            </div>
+          </div>
+        </section>
+
+        {/* End-of-page CTA — last nudge for anyone who scrolled the whole
+            page without signing up yet. Phase E2 closed-commercial: every
+            install path on this page requires an enrollment token, so
+            anyone reading the end without one needs to bounce to the
+            portal. */}
+        <section className="section py-16 border-t border-white/[0.06]"
+          style={{ background: 'linear-gradient(135deg, rgba(0,212,255,0.05), rgba(168,85,247,0.03))' }}>
+          <div className="container-md text-center">
+            <Key className="w-8 h-8 text-cyan-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-black text-white mb-3">
+              Don&apos;t have a token yet?
+            </h2>
+            <p className="text-white/50 mb-6 max-w-md mx-auto">
+              None of the commands above work without one. Sign up takes a minute,
+              the trial is free for 15 days, no credit card.
+            </p>
+            <div className="flex flex-wrap justify-center gap-3">
+              <a href="https://license.infrays.org/signup"
+                className="btn-primary text-base px-7 py-3 inline-flex items-center gap-2">
+                <Key className="w-4 h-4" />
+                Sign up — 15 days free
+                <ArrowRight className="w-4 h-4" />
+              </a>
+              <Link to="/contact" className="btn-secondary text-base px-7 py-3">
+                Talk to sales
+              </Link>
             </div>
           </div>
         </section>
