@@ -107,6 +107,15 @@ export default function Footer() {
             <span className="text-xs text-white/25">v0.33.0 — Apache 2.0</span>
           </div>
         </div>
+
+        {/* Trademark attribution — required by the nominative-fair-use
+            doctrine when we reference third-party trademarks (OpenTelemetry,
+            Prometheus, Stripe, etc.) anywhere on the site. Keep this
+            line as long as any third-party name appears. */}
+        <p className="mt-4 pt-4 border-t border-white/[0.04] text-[11px] text-white/20 leading-relaxed text-center">
+          All third-party trademarks, product names, and logos referenced on this site are the property of their respective owners.
+          Mention of any third-party name does not imply endorsement.
+        </p>
       </div>
     </footer>
   )

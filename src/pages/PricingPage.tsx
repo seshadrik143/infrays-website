@@ -2,7 +2,6 @@
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import PricingSection from '@/components/PricingSection'
-import CostCalculator from '@/components/CostCalculator'
 import CTABanner from '@/components/CTABanner'
 import { Check } from 'lucide-react'
 
@@ -55,10 +54,10 @@ export default function PricingPage() {
 
         <PricingSection />
 
-        {/* Cost calculator — mounted between the tier cards + the
-            full feature comparison table. Gives visitors a concrete
-            "you save $X" anchor right after they've seen the pricing. */}
-        <CostCalculator />
+        {/* CostCalculator removed in Phase C.5 — referenced a named
+            competitor's pricing in claims we couldn't substantiate
+            without legal counsel. Restore when we have counsel +
+            documented testing methodology. */}
 
         {/* Feature comparison */}
         <section className="section py-16 border-t border-white/[0.06]"

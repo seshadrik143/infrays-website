@@ -19,7 +19,6 @@ import GDPRPage from './pages/GDPRPage'
 import SecurityPage from './pages/SecurityPage'
 import AboutPage from './pages/AboutPage'
 import CustomersPage from './pages/CustomersPage'
-import VsDatadogPage from './pages/VsDatadogPage'
 import NotFoundPage from './pages/NotFoundPage'
 import CookieBanner from './components/CookieBanner'
 
@@ -78,7 +77,8 @@ export default function App() {
         <Route path="/security" element={<SecurityPage />} />
         <Route path="/about" element={<AboutPage />} />
         <Route path="/customers" element={<CustomersPage />} />
-        <Route path="/vs/datadog" element={<VsDatadogPage />} />
+        {/* /vs/datadog removed in Phase C.5 — competitor comparison
+            advertising without legal counsel is too much exposure. */}
         {/* Catch-all 404 — must be LAST so any path that doesn't match
             an earlier route falls through here. */}
         <Route path="*" element={<NotFoundPage />} />

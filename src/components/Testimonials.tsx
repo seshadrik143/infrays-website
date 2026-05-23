@@ -12,7 +12,7 @@ import { MessageSquare, ArrowRight, Quote } from 'lucide-react'
 // initials, color}. Initials drive the avatar fallback.
 const testimonials = [
   {
-    quote: '"We swapped our Datadog setup for self-hosted infraYS. Same dashboards, same alerts, same SLOs — and we cut our observability bill by 71 percent. The 12 MB agent footprint vs the 80 MB Datadog one was the icing."',
+    quote: '"We swapped our previous observability stack for self-hosted infraYS. Same dashboards, same alerts, same SLOs — and we cut our observability bill significantly. The 12 MB agent footprint was the icing."',
     name: 'Sarah K.',
     role: 'Staff SRE',
     company: 'mid-size fintech (placeholder)',
@@ -28,7 +28,7 @@ const testimonials = [
     color: 'purple',
   },
   {
-    quote: '"We run on bare metal in a cage in Tier-4 colo. Datadog never quite fit. infraYS self-hosted just works — single binary, no Kubernetes required, and we control every byte that leaves our cabinet."',
+    quote: '"We run on bare metal in a cage in Tier-4 colo. Most monitoring vendors never quite fit. infraYS self-hosted just works — single binary, no Kubernetes required, and we control every byte that leaves our cabinet."',
     name: 'Priya N.',
     role: 'Infra Lead',
     company: 'colo-only e-commerce (placeholder)',

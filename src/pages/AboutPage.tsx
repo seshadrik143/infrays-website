@@ -54,9 +54,9 @@ export default function AboutPage() {
             </h1>
             <p className="text-lg text-white/50 max-w-2xl mx-auto leading-relaxed">
               infraYS started as a side project — one engineer who&apos;d spent
-              years gluing Prometheus + Grafana + Loki + Tempo + Datadog +
-              an APM tool + an on-call rotation together. We thought:
-              this could be one binary.
+              years gluing together a metrics tool, a logs tool, a tracing
+              tool, an APM tool, an on-call tool, and a billing department&apos;s
+              worth of invoices. We thought: this could be one binary.
             </p>
           </div>
         </section>
@@ -66,13 +66,13 @@ export default function AboutPage() {
           <div className="container-md space-y-6">
             <h2 className="text-3xl font-black text-white">The short version</h2>
             <p className="text-white/60 leading-relaxed">
-              Modern infrastructure monitoring is fragmented. The typical team runs five to eight separate tools — each with its own agent, its own storage, its own alerting, its own billing. The agents alone consume hundreds of MB of memory per host. The bill from Datadog or Splunk grows linearly with infrastructure, and they know it.
+              Modern infrastructure monitoring is fragmented. The typical team runs five to eight separate tools — each with its own agent, its own storage, its own alerting, its own billing. The agents alone consume hundreds of MB of memory per host. The bill from incumbent commercial vendors grows linearly with infrastructure, and they know it.
             </p>
             <p className="text-white/60 leading-relaxed">
-              We started infraYS with the boring hypothesis that <strong className="text-white">one binary could do almost all of it</strong>, at roughly 5% of the cost. After 34 development phases, that hypothesis turned out to be true.
+              We started infraYS with the boring hypothesis that <strong className="text-white">one binary could do almost all of it</strong>, at a fraction of the cost of stitching multiple commercial vendors together. After 34 development phases, that hypothesis turned out to be true.
             </p>
             <p className="text-white/60 leading-relaxed">
-              We are not VC-backed (yet). We are not trying to be the next CrowdStrike. We&apos;re building a tool we want to use ourselves, charging fairly for what it costs to run, and keeping the option to self-host so customers in regulated industries or air-gapped environments aren&apos;t locked out.
+              We are not VC-backed (yet). We are not trying to be the next mega-platform. We&apos;re building a tool we want to use ourselves, charging fairly for what it costs to run, and keeping the option to self-host so customers in regulated industries or air-gapped environments aren&apos;t locked out.
             </p>
           </div>
         </section>
@@ -130,7 +130,7 @@ export default function AboutPage() {
           <div className="container-md">
             <h2 className="text-3xl font-black text-white mb-6">What we&apos;re not</h2>
             <ul className="text-white/60 text-sm space-y-3 leading-relaxed">
-              <li><strong className="text-white">We&apos;re not a Datadog killer.</strong> Datadog is great for what it does. If you have unlimited budget and want every feature out of the box, use Datadog. We compete on cost, footprint, and self-hostability.</li>
+              <li><strong className="text-white">We&apos;re not a one-platform-rules-them-all play.</strong> If you have unlimited budget and want every feature out of the box from a mature incumbent, use a mature incumbent. We compete on cost, footprint, and self-hostability.</li>
               <li><strong className="text-white">We&apos;re not finished.</strong> v0.33 is a real, complete platform — but we&apos;re not at v1.0 yet. We don&apos;t pretend to be enterprise-grade in places we&apos;re not. The <Link to="/security" className="text-cyan-400 hover:underline">Security page</Link> is honest about what compliance we have and don&apos;t.</li>
               <li><strong className="text-white">We&apos;re not VC-funded.</strong> This is a deliberately patient project. Costs are low because the team is small and the infrastructure is efficient. That&apos;s the moat.</li>
               <li><strong className="text-white">We&apos;re not for everyone.</strong> If you want hand-holding, dedicated CSMs, and quarterly business reviews, the Enterprise tier (with paid support) is the right fit. The Free / Starter tiers are for teams who like reading docs.</li>
