@@ -2,6 +2,23 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Terminal, Zap, Shield, Activity } from 'lucide-react'
 
+// Respect the visitor's OS-level "reduce motion" preference. When set,
+// we skip the terminal typing animation + the floating orb animations
+// — content still renders, just no movement. Accessibility nit but a
+// real one for vestibular-sensitive users.
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(false)
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReduced(mq.matches)
+    const handler = (e: MediaQueryListEvent) => setReduced(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+  return reduced
+}
+
 const terminalLines = [
   { delay: 0,    text: '$ curl -fsSL https://infrays.org/install.sh | sudo bash', color: 'text-white/60' },
   { delay: 900,  text: '→ Fetching latest release: v0.33.0...',                    color: 'text-cyan-400' },
@@ -18,16 +35,25 @@ const pills = [
 ]
 
 export default function Hero() {
-  const [visibleLines, setVisibleLines] = useState<number[]>([])
+  const reducedMotion = usePrefersReducedMotion()
+  // When reduced motion is requested, render every line at once.
+  // Otherwise stagger them via the original timed reveal.
+  const [visibleLines, setVisibleLines] = useState<number[]>(
+    reducedMotion ? terminalLines.map((_, i) => i) : []
+  )
 
   useEffect(() => {
+    if (reducedMotion) {
+      setVisibleLines(terminalLines.map((_, i) => i))
+      return
+    }
     const timers: ReturnType<typeof setTimeout>[] = []
     terminalLines.forEach((line, i) => {
       const t = setTimeout(() => setVisibleLines((prev) => [...prev, i]), line.delay + 300)
       timers.push(t)
     })
     return () => timers.forEach(clearTimeout)
-  }, [])
+  }, [reducedMotion])
 
   return (
     <section className="hero-bg relative min-h-screen flex items-center pt-16 overflow-hidden">
@@ -85,22 +111,28 @@ export default function Hero() {
               ))}
             </div>
 
-            {/* CTA buttons */}
-            <div className="animate-fade-up delay-400 flex flex-wrap gap-4 mb-10">
-              <Link to="/install" className="btn-primary text-base px-8 py-4">
-                Deploy Free Now
+            {/* CTAs — ONE primary, one quiet secondary. Previous version
+                had Deploy + Docs competing equally; the marketing review
+                flagged that as the #1 conversion problem. The primary CTA
+                is the trial start; everything else is a secondary
+                affordance. */}
+            <div className="animate-fade-up delay-400 flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+              <Link to="/install" className="btn-primary text-base px-8 py-4 justify-center">
+                Start free — 15 days
                 <ArrowRight className="w-5 h-5" />
               </Link>
-              <Link to="/docs" className="btn-secondary text-base px-8 py-4">
-                Read the Docs
+              <Link to="/pricing" className="text-base text-white/60 hover:text-white/90 transition-colors">
+                or view pricing →
               </Link>
             </div>
 
-            {/* Bottom social proof */}
-            <div className="animate-fade-up delay-500 flex items-center gap-5 text-sm text-white/30">
-              <span>Self-hostable</span>
-              <span className="w-px h-4 bg-white/10" />
-              <span>No telemetry</span>
+            {/* Bottom social proof — quiet, factual */}
+            <div className="animate-fade-up delay-500 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/30">
+              <span>No credit card</span>
+              <span className="w-px h-4 bg-white/10 hidden sm:block" />
+              <span>Apache 2.0 — self-hostable</span>
+              <span className="w-px h-4 bg-white/10 hidden sm:block" />
+              <span>Single 12MB binary</span>
             </div>
           </div>
 

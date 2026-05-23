@@ -1,5 +1,6 @@
 import Navbar from '@/components/Navbar'
 import Hero from '@/components/Hero'
+import LogoStrip from '@/components/LogoStrip'
 import StatsBar from '@/components/StatsBar'
 import FeaturesSection from '@/components/FeaturesSection'
 import HowItWorks from '@/components/HowItWorks'
@@ -16,6 +17,9 @@ export default function HomePage() {
       <Navbar />
       <main>
         <Hero />
+        {/* LogoStrip sits immediately under Hero for social proof
+            above the fold-ish (depends on viewport). */}
+        <LogoStrip />
         <StatsBar />
         <FeaturesSection />
         <HowItWorks />

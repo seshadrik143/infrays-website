@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { Zap } from 'lucide-react'
+import NewsletterSignup from './NewsletterSignup'
 
 // Removed Plugin SDK / API Reference from Developers — both pointed at
 // /docs#sdk and /docs#api anchors that don't exist, so clicking did
@@ -56,6 +57,12 @@ export default function Footer() {
             <p className="text-sm text-white/40 leading-relaxed mb-6 max-w-xs">
               The unified observability platform for modern infrastructure teams. Open-source core, enterprise ready.
             </p>
+            {/* Newsletter signup — Formspree-routed (same form ID used
+                by the contact page) with topic='newsletter' so we can
+                filter in Zoho. Real ESP later. */}
+            <div className="max-w-xs">
+              <NewsletterSignup />
+            </div>
           </div>
 
           {/* Links */}
