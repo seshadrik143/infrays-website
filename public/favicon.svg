@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#0a0a14"/>
+  <rect x="3" y="3" width="58" height="58" rx="12" fill="url(#g)" opacity="0.9"/>
+  <text x="50%" y="50%" dy=".10em"
+        text-anchor="middle" dominant-baseline="middle"
+        font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto"
+        font-size="38" font-weight="900" fill="#0a0a14">i</text>
+</svg>

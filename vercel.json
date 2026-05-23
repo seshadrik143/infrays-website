@@ -1,6 +1,31 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "//": "SPA fallback. Excludes paths with a file extension (e.g. /favicon.svg, /robots.txt, /install.sh) so Vercel serves them as static assets from public/ — the previous unconditional /(.*) rewrite was returning index.html for every static-asset request, breaking SEO crawlers + favicon + sitemaps.",
+      "source": "/((?!api|assets|.*\\..*).*)",
+      "destination": "/index.html"
+    }
+  ],
+
+  "headers": [
+    {
+      "//": "Hashed asset bundles never change once shipped (Vite emits content-hashed filenames). Tell browsers + intermediaries to cache them forever so repeat visits never re-fetch ~100 KB of JS/CSS.",
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "//": "Defense-in-depth response headers on every HTML response. CSP intentionally permissive on style/script to allow inline tags from Vite's dev-flow + Tailwind's runtime style injection; tighten once the bundle is audited.",
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()" }
+      ]
+    }
   ]
 }
