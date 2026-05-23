@@ -211,12 +211,15 @@ export default function PricingSection() {
 
             return (
               <div key={tier.name}
-                className={`border ${s.card} rounded-2xl p-6 flex flex-col relative`}
+                className={`border ${s.card} rounded-2xl p-6 pt-7 flex flex-col relative`}
                 style={{ background: tier.color === 'cyan'
                   ? 'linear-gradient(135deg, rgba(0,212,255,0.06), rgba(13,13,26,0.9))'
                   : 'rgba(17, 17, 32, 0.7)' }}>
+                {/* Badge — added whitespace-nowrap + z-10 + max-width
+                    fits-content so it doesn't get clipped or wrapped on
+                    narrow mobile widths where the card collapses to ~280px. */}
                 {tier.badge && (
-                  <div className={`absolute -top-3 left-1/2 -translate-x-1/2 ${s.badge}`}>
+                  <div className={`absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap z-10 ${s.badge}`}>
                     <Zap className="w-3 h-3" />
                     {tier.badge}
                   </div>

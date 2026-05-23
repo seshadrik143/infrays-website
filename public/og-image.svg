@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#06060f"/>
+      <stop offset="100%" stop-color="#0d0d20"/>
+    </linearGradient>
+
+    <radialGradient id="orbCyan" cx="180" cy="120" r="380" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#22d3ee" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+
+    <radialGradient id="orbPurple" cx="1020" cy="540" r="420" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#a855f7" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#a855f7" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="brandGrad" x1="0" y1="0" x2="600" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+
+    <linearGradient id="iconGrad" x1="0" y1="0" x2="80" y2="80" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+
+    <!-- Subtle grid pattern overlay -->
+    <pattern id="grid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ffffff" stroke-opacity="0.025" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <!-- Background layers -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  <rect width="1200" height="630" fill="url(#orbCyan)"/>
+  <rect width="1200" height="630" fill="url(#orbPurple)"/>
+
+  <!-- Brand mark + name -->
+  <g transform="translate(80,80)">
+    <rect width="64" height="64" rx="14" fill="url(#iconGrad)"/>
+    <path d="M20 32 L28 40 L46 22" stroke="#0a0a14" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+  <text x="166" y="125" font-family="Inter, system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="34" font-weight="800" fill="#e6edf3">
+    infra<tspan fill="url(#brandGrad)">YS</tspan>
+  </text>
+
+  <!-- Headline -->
+  <g transform="translate(80,260)">
+    <text font-family="Inter, system-ui, sans-serif" font-size="84" font-weight="900" letter-spacing="-2" fill="#ffffff">
+      <tspan x="0" dy="0">Observe Everything.</tspan>
+      <tspan x="0" dy="100" fill="url(#brandGrad)">Miss Nothing.</tspan>
+    </text>
+  </g>
+
+  <!-- Subhead pills -->
+  <g transform="translate(80,490)">
+    <g>
+      <rect x="0" y="0" width="220" height="44" rx="22" fill="rgba(255,255,255,0.05)" stroke="rgba(34,211,238,0.3)" stroke-width="1"/>
+      <text x="22" y="29" font-family="Inter, system-ui, sans-serif" font-size="18" font-weight="600" fill="#22d3ee">
+        12 MB single binary
+      </text>
+    </g>
+    <g transform="translate(240,0)">
+      <rect x="0" y="0" width="200" height="44" rx="22" fill="rgba(255,255,255,0.05)" stroke="rgba(168,85,247,0.3)" stroke-width="1"/>
+      <text x="22" y="29" font-family="Inter, system-ui, sans-serif" font-size="18" font-weight="600" fill="#c084fc">
+        &lt; 30 MB RAM
+      </text>
+    </g>
+    <g transform="translate(460,0)">
+      <rect x="0" y="0" width="180" height="44" rx="22" fill="rgba(255,255,255,0.05)" stroke="rgba(74,222,128,0.3)" stroke-width="1"/>
+      <text x="22" y="29" font-family="Inter, system-ui, sans-serif" font-size="18" font-weight="600" fill="#4ade80">
+        Apache 2.0
+      </text>
+    </g>
+  </g>
+
+  <!-- URL strip bottom-right -->
+  <text x="1120" y="600" text-anchor="end" font-family="JetBrains Mono, ui-monospace, monospace" font-size="20" font-weight="500" fill="rgba(230,237,243,0.4)">
+    infrays.org
+  </text>
+</svg>

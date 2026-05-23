@@ -5,8 +5,39 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#060610" />
+
+    <!-- Primary tags. These apply on every SPA route until we wire a
+         per-route head manager (react-helmet-async). Tuned for the
+         homepage; deep routes inherit until that lands. -->
     <title>infraYS — Unified Observability Platform</title>
-    <meta name="description" content="Metrics, logs, traces, AI-powered insights — all in one lightweight agent. Monitor everything from bare metal to Kubernetes." />
+    <meta name="description" content="Unified observability — metrics, logs, traces, profiling, and AI-powered insights — from a single 12 MB agent. Apache 2.0 licensed core. Self-hostable." />
+    <link rel="canonical" href="https://infrays.org/" />
+
+    <!-- Open Graph (Facebook, LinkedIn, Slack unfurl, Discord unfurl) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="infraYS" />
+    <meta property="og:title" content="infraYS — Unified Observability Platform" />
+    <meta property="og:description" content="Metrics, logs, traces, profiling, and AI insights from a single 12 MB agent. Apache 2.0 core. Self-hostable." />
+    <meta property="og:url" content="https://infrays.org/" />
+    <meta property="og:image" content="https://infrays.org/og-image.svg" />
+    <meta property="og:image:type" content="image/svg+xml" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="infraYS — Unified Observability Platform" />
+    <meta property="og:locale" content="en_US" />
+
+    <!-- Twitter card (also picked up by some other parsers) -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="infraYS — Unified Observability Platform" />
+    <meta name="twitter:description" content="Metrics, logs, traces, profiling, AI insights from a single 12 MB agent. Apache 2.0 core. Self-hostable." />
+    <meta name="twitter:image" content="https://infrays.org/og-image.svg" />
+    <meta name="twitter:image:alt" content="infraYS — Unified Observability Platform" />
+
+    <!-- Robots: index-friendly. Per-page noindex (e.g. legal pages, if we
+         ever want to hide them) would need a head manager. For now the
+         site-wide signal is "yes, index us." -->
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
