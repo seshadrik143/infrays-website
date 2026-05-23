@@ -3,7 +3,7 @@ import Footer from '@/components/Footer'
 import { useState } from 'react'
 import { Mail, MessageSquare, ArrowRight, CheckCircle2, Copy, Loader2, AlertCircle } from 'lucide-react'
 
-const SALES_EMAIL = 'sales@infrays.org'
+const SALES_EMAIL = 'contact@infrays.org'
 
 // Paste your Formspree form ID here — https://formspree.io/f/YOUR_FORM_ID
 const FORMSPREE_URL = 'https://formspree.io/f/xzdokqzo'
