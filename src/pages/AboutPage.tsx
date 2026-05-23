@@ -143,11 +143,12 @@ export default function AboutPage() {
           <div className="container-md text-center">
             <h2 className="text-3xl font-black text-white mb-4">Try the product</h2>
             <p className="text-white/50 mb-8">
-              Sign up, pick a plan, get your license key. Self-host or use our cloud.
+              Sign up to get a license key — 15 days free, no credit card.
+              Self-host or use our cloud.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <a href="https://license.infrays.org/signup" className="btn-primary text-base px-8 py-4">
-                Get started
+                Sign up — 15 days free
                 <ArrowRight className="w-5 h-5" />
               </a>
               <Link to="/contact" className="btn-secondary text-base px-8 py-4">

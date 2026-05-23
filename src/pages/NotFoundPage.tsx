@@ -47,7 +47,7 @@ export default function NotFoundPage() {
           </div>
 
           <a href="https://license.infrays.org/signup" className="btn-primary text-sm">
-            Or sign up for a license
+            Or sign up — 15 days free
             <ArrowRight className="w-4 h-4" />
           </a>
         </div>

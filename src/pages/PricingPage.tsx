@@ -8,7 +8,11 @@ import { Check } from 'lucide-react'
 const faq = [
   {
     q: 'How do I get started?',
-    a: 'Sign up at license.infrays.org, verify your email, pick a plan, and pay via Stripe. You get an enrollment token in the portal immediately. Paste it into your NodePulse server config, restart, and you\'re running. Same flow whether you self-host or use our managed cloud.',
+    a: 'Sign up at license.infrays.org and verify your email. You get a license key immediately with a 15-day free trial — no credit card required to start. Paste the enrollment token into your NodePulse server config, restart, and you\'re running. Pick a paid plan any time before the 15 days are up to keep running.',
+  },
+  {
+    q: 'Do I need a license key from day one?',
+    a: 'Yes. NodePulse will not start without a valid license key. Signing up at the licensing portal is the only way to get one — there is no offline or unlicensed mode. Signup is free and the first 15 days are free; the key is just how we identify your account.',
   },
   {
     q: 'How are metrics counted?',
@@ -47,7 +51,7 @@ export default function PricingPage() {
             </h1>
             <p className="text-lg text-white/40 max-w-xl mx-auto">
               Transparent pricing, no hidden fees, no per-seat costs.
-              Sign up, pick a plan, get your license key. Self-host or use our cloud.
+              Sign up to get a license key — 15 days free, no credit card needed.
             </p>
           </div>
         </section>

@@ -27,8 +27,9 @@ type Tier = {
 
 const tiers: Tier[] = [
   // Phase E1 closed-commercial pivot: Free tier removed. A license key
-  // is required to run NodePulse. No free tier, no trial. Cheapest
-  // entry is Starter.
+  // is required to run NodePulse from day 1. New signups get a 15-day
+  // free trial key (no card required); after the trial, they must pay
+  // to continue. Cheapest paid entry is Starter.
   {
     name: 'Starter',
     monthly: 49,
@@ -138,8 +139,8 @@ export default function PricingSection() {
             pricing
           </h2>
           <p className="text-lg text-white/40 max-w-xl mx-auto">
-            No per-seat pricing. No surprise bills. Sign up, pick a plan,
-            get your license key, and start running.
+            No per-seat pricing. No surprise bills. Sign up to get a license key —
+            15 days free on every plan, no credit card required for the trial.
           </p>
         </div>
 
@@ -260,9 +261,9 @@ export default function PricingSection() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-sm text-white/50 text-center sm:text-left">
               <span className="text-green-400 font-semibold">Self-hosting?</span>{' '}
-              The same tier pricing applies for self-hosted deployments. Sign up,
-              pick your tier, get an enrollment token, and run NodePulse on your own
-              infrastructure. Cloud-hosted billing applies only to our managed cloud service.
+              Same tier pricing applies. Sign up, get your license key (15-day free
+              trial included), and run NodePulse on your own infrastructure. Pay when
+              the trial ends — cloud-hosted billing applies only to our managed cloud service.
             </p>
             <div className="flex gap-2 flex-shrink-0">
               <a href={PORTAL_SIGNUP}

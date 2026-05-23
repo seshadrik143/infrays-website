@@ -29,7 +29,7 @@ const methods = [
     title: 'One-Line Install (Recommended)',
     badge: 'Fastest',
     badgeColor: 'badge-cyan',
-    desc: 'Installs the NodePulse server, agent, and npctl CLI. A valid license key is required to start the server — sign up at license.infrays.org first. Works on any systemd-based Linux (amd64 / arm64).',
+    desc: 'Installs the NodePulse server, agent, and npctl CLI. A valid license key is required to start the server — sign up at license.infrays.org first to get one (15-day free trial included, no credit card). Works on any systemd-based Linux (amd64 / arm64).',
     steps: [
       {
         label: 'Download and install everything',
@@ -149,7 +149,7 @@ export default function InstallPage() {
                 License key required
               </div>
               <span className="w-px h-4 bg-white/10" />
-              <span className="text-white/50">Sign up + pay → enrollment token → run</span>
+              <span className="text-white/50">15 days free with signup — no credit card</span>
               <span className="w-px h-4 bg-white/10" />
               <div className="flex items-center gap-2 text-white/50">
                 <span>Get yours at</span>
@@ -240,15 +240,16 @@ export default function InstallPage() {
                 </div>
                 <p className="text-sm text-white/50 leading-relaxed mb-4">
                   NodePulse is commercial software and requires a valid license key to run.
-                  Sign up at the licensing portal, pick a plan, complete payment, and an
-                  enrollment token is issued instantly.
+                  Sign up at the licensing portal — you get a 15-day free trial key
+                  immediately, no credit card. Pick a paid plan any time before the trial
+                  ends to keep running.
                 </p>
                 <ul className="space-y-2 text-sm text-white/50">
                   {[
                     'No license = the server refuses to start',
+                    'Trial key issued immediately on signup (15 days, full features)',
                     'Keys are bound to your account and your tier',
                     'License + tier visible in Dashboard → Settings → License',
-                    'API: GET /api/v1/license',
                   ].map((item) => (
                     <li key={item} className="flex items-center gap-2">
                       <CheckCircle2 className="w-3.5 h-3.5 text-cyan-500/60 flex-shrink-0" />

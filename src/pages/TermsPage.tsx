@@ -47,9 +47,10 @@ const sections = [
     id: 'payment',
     title: '5. Payment & Subscriptions',
     body: [
+      'New accounts receive a 15-day free trial license on signup. No credit card is required to start the trial. At the end of the trial, the license expires and the Software stops accepting new data until a paid subscription is activated.',
       'Paid subscriptions are billed in advance via Stripe. Prices listed on infrays.org/pricing are in USD unless otherwise noted.',
       'Subscriptions auto-renew at the end of each billing period unless canceled. You can cancel at any time from the customer portal; cancellation takes effect at the end of the current period.',
-      'Refunds: we offer a pro-rated refund within 14 days of initial purchase. After 14 days, all sales are final. Contact contact@infrays.org for refund requests.',
+      'Refunds: we offer a pro-rated refund within 14 days of initial paid purchase. After 14 days, all sales are final. Contact contact@infrays.org for refund requests.',
       'We may change pricing with 30 days notice via email. Price changes do not apply to subscription periods already paid for.',
     ],
   },

@@ -22,7 +22,7 @@ function usePrefersReducedMotion() {
 const terminalLines = [
   { delay: 0,    text: '$ nodepulse-server --enroll NP-ENROLL-...',                color: 'text-white/60' },
   { delay: 900,  text: '→ Validating license against issuer...',                    color: 'text-cyan-400' },
-  { delay: 1800, text: '→ License accepted: tier=professional, kid=np-fly-2026-01', color: 'text-cyan-400' },
+  { delay: 1800, text: '→ License accepted: tier=trial, 15 days remaining',         color: 'text-cyan-400' },
   { delay: 2700, text: '→ All features unlocked ✓',                                 color: 'text-green-400' },
   { delay: 3600, text: '$ systemctl status nodepulse-server nodepulse-agent',      color: 'text-white/60' },
   { delay: 4500, text: '✦ Collecting 847 metrics/s  Latency: 2ms',                 color: 'text-purple-400' },
@@ -116,7 +116,7 @@ export default function Hero() {
                 CTA is signup. */}
             <div className="animate-fade-up delay-400 flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
               <a href="https://license.infrays.org/signup" className="btn-primary text-base px-8 py-4 justify-center">
-                Get started
+                Sign up — 15 days free
                 <ArrowRight className="w-5 h-5" />
               </a>
               <Link to="/pricing" className="text-base text-white/60 hover:text-white/90 transition-colors">

@@ -47,13 +47,14 @@ export default function CTABanner() {
               <span className="text-gradient-brand">clearly?</span>
             </h2>
             <p className="text-lg text-white/45 max-w-lg mx-auto mb-10 leading-relaxed">
-              Sign up, pick a plan, get your license key. Metrics, logs, traces, profiling,
-              and AI — from a single 12 MB agent. Cloud-hosted or self-hosted, your choice.
+              Sign up to get your license key — 15 days free, no credit card. Metrics,
+              logs, traces, profiling, and AI — from a single 12 MB agent. Cloud-hosted
+              or self-hosted, your choice.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
               <a href="https://license.infrays.org/signup" className="btn-primary text-base px-9 py-4">
-                Sign up
+                Sign up — 15 days free
                 <ArrowRight className="w-5 h-5" />
               </a>
               <Link to="/pricing" className="btn-secondary text-base px-9 py-4">
@@ -62,7 +63,7 @@ export default function CTABanner() {
             </div>
 
             <p className="text-xs text-white/20 tracking-wide">
-              Cloud or self-hosted · No telemetry sent without consent
+              Cloud or self-hosted · License key required to run · No telemetry without consent
             </p>
           </div>
         </div>
