@@ -20,18 +20,18 @@ function usePrefersReducedMotion() {
 }
 
 const terminalLines = [
-  { delay: 0,    text: '$ curl -fsSL https://infrays.org/install.sh | sudo bash', color: 'text-white/60' },
-  { delay: 900,  text: '→ Fetching latest release: v0.33.0...',                    color: 'text-cyan-400' },
-  { delay: 1800, text: '→ Installing server + agent + npctl...',                   color: 'text-cyan-400' },
-  { delay: 2700, text: '→ Trial started — 15 days remaining ✓',                    color: 'text-green-400' },
+  { delay: 0,    text: '$ nodepulse-server --enroll NP-ENROLL-...',                color: 'text-white/60' },
+  { delay: 900,  text: '→ Validating license against issuer...',                    color: 'text-cyan-400' },
+  { delay: 1800, text: '→ License accepted: tier=professional, kid=np-fly-2026-01', color: 'text-cyan-400' },
+  { delay: 2700, text: '→ All features unlocked ✓',                                 color: 'text-green-400' },
   { delay: 3600, text: '$ systemctl status nodepulse-server nodepulse-agent',      color: 'text-white/60' },
   { delay: 4500, text: '✦ Collecting 847 metrics/s  Latency: 2ms',                 color: 'text-purple-400' },
 ]
 
 const pills = [
-  { icon: Shield, label: 'Apache 2.0', color: 'text-green-400' },
-  { icon: Zap, label: '< 30MB RAM', color: 'text-cyan-400' },
-  { icon: Activity, label: 'Single Binary', color: 'text-purple-400' },
+  { icon: Activity, label: 'Single Binary', color: 'text-cyan-400' },
+  { icon: Zap, label: '< 30MB RAM', color: 'text-purple-400' },
+  { icon: Shield, label: 'Audit-grade', color: 'text-green-400' },
 ]
 
 export default function Hero() {
@@ -111,28 +111,27 @@ export default function Hero() {
               ))}
             </div>
 
-            {/* CTAs — ONE primary, one quiet secondary. Previous version
-                had Deploy + Docs competing equally; the marketing review
-                flagged that as the #1 conversion problem. The primary CTA
-                is the trial start; everything else is a secondary
-                affordance. */}
+            {/* CTAs — ONE primary, one quiet secondary. Phase E1 pivot:
+                no more "start free" — license key required, primary
+                CTA is signup. */}
             <div className="animate-fade-up delay-400 flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
-              <Link to="/install" className="btn-primary text-base px-8 py-4 justify-center">
-                Start free — 15 days
+              <a href="https://license.infrays.org/signup" className="btn-primary text-base px-8 py-4 justify-center">
+                Get started
                 <ArrowRight className="w-5 h-5" />
-              </Link>
+              </a>
               <Link to="/pricing" className="text-base text-white/60 hover:text-white/90 transition-colors">
                 or view pricing →
               </Link>
             </div>
 
-            {/* Bottom social proof — quiet, factual */}
+            {/* Bottom social proof — quiet, factual. Phase E1 pivot:
+                removed "Apache 2.0 — self-hostable" claim. */}
             <div className="animate-fade-up delay-500 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/30">
-              <span>No credit card</span>
-              <span className="w-px h-4 bg-white/10 hidden sm:block" />
-              <span>Apache 2.0 — self-hostable</span>
-              <span className="w-px h-4 bg-white/10 hidden sm:block" />
               <span>Single 12MB binary</span>
+              <span className="w-px h-4 bg-white/10 hidden sm:block" />
+              <span>Self-hostable</span>
+              <span className="w-px h-4 bg-white/10 hidden sm:block" />
+              <span>Cloud or on-prem</span>
             </div>
           </div>
 
@@ -175,7 +174,7 @@ export default function Hero() {
               {[
                 { label: 'Binary Size', value: '~12MB', color: 'text-cyan-400', glow: 'rgba(0,212,255,0.15)' },
                 { label: 'Agent RAM',   value: '< 30MB', color: 'text-purple-400', glow: 'rgba(168,85,247,0.15)' },
-                { label: 'License',    value: 'Apache 2.0', color: 'text-green-400', glow: 'rgba(16,185,129,0.15)' },
+                { label: 'Scrape Interval', value: '10s', color: 'text-green-400', glow: 'rgba(16,185,129,0.15)' },
               ].map((stat) => (
                 <div key={stat.label}
                   className="gradient-border text-center py-4 px-3 transition-all duration-300 hover:scale-105"

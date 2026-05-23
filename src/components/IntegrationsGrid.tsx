@@ -95,7 +95,7 @@ export default function IntegrationsGrid() {
           </h2>
           <p className="text-lg text-white/40 max-w-2xl mx-auto">
             Native OTLP means every OpenTelemetry-compatible tool works out of the box.
-            50+ community collector plugins, cloud secrets managers, IaC providers, and full ITSM integration.
+            50+ built-in collector plugins, cloud secrets managers, IaC providers, and full ITSM integration.
           </p>
         </div>
 
@@ -134,7 +134,7 @@ export default function IntegrationsGrid() {
             <h3 className="text-lg font-bold text-white mb-2">Build your own integration</h3>
             <p className="text-sm text-white/40 max-w-md">
               The infraYS Plugin SDK lets you write custom collectors in any language via a simple exec protocol.
-              Publish to the community marketplace.
+              Ship them privately within your deployment.
             </p>
           </div>
           <Link to="/docs" className="btn-secondary whitespace-nowrap flex-shrink-0">

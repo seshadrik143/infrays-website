@@ -46,10 +46,10 @@ export default function NotFoundPage() {
             </Link>
           </div>
 
-          <Link to="/install" className="btn-primary text-sm">
-            Or start the trial
+          <a href="https://license.infrays.org/signup" className="btn-primary text-sm">
+            Or sign up for a license
             <ArrowRight className="w-4 h-4" />
-          </Link>
+          </a>
         </div>
       </main>
       <Footer />

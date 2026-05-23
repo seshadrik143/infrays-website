@@ -99,7 +99,7 @@ export default function Testimonials() {
           })}
         </div>
 
-        {/* Community join banner */}
+        {/* Talk-to-us banner */}
         <div className="rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-6"
           style={{
             background: 'linear-gradient(135deg, rgba(0,212,255,0.06), rgba(168,85,247,0.04))',
@@ -111,16 +111,16 @@ export default function Testimonials() {
               <MessageSquare className="w-6 h-6 text-cyan-400" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Join the conversation</h3>
+              <h3 className="text-base font-bold text-white">Talk to us before you buy</h3>
               <p className="text-sm text-white/40 mt-1">
-                Ask questions, share configs, and connect with other infraYS users.
+                Sizing questions, deployment questions, security questions — we answer all of them.
               </p>
             </div>
           </div>
           <Link to="/contact"
             className="btn-secondary whitespace-nowrap flex-shrink-0 flex items-center gap-2">
             <MessageSquare className="w-4 h-4" />
-            Join Community
+            Contact Sales
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>

@@ -120,7 +120,7 @@ export default function EnterprisePage() {
             </h1>
             <p className="text-lg text-white/40 max-w-2xl mx-auto mb-8">
               SOC 2, ISO 27001, and GDPR controls out of the box. OIDC SSO, granular RBAC,
-              AES-256 encryption, Vault integration, and Raft HA — all self-hosted, all open source.
+              AES-256 encryption, Vault integration, and Raft HA — self-hosted or on our managed cloud.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
               <Link to="/contact" className="btn-primary">

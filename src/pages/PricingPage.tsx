@@ -7,12 +7,12 @@ import { Check } from 'lucide-react'
 
 const faq = [
   {
-    q: 'How does the self-hosted trial work?',
-    a: 'Install NodePulse with one command and a 15-day free trial starts automatically — no credit card, no license key. After the trial, a valid license key is required to continue. Keys are issued instantly at checkout and activated in your dashboard under Settings → License.',
+    q: 'How do I get started?',
+    a: 'Sign up at license.infrays.org, verify your email, pick a plan, and pay via Stripe. You get an enrollment token in the portal immediately. Paste it into your NodePulse server config, restart, and you\'re running. Same flow whether you self-host or use our managed cloud.',
   },
   {
     q: 'How are metrics counted?',
-    a: 'A metric is a unique time-series data point sent in a 1-minute window. System CPU = 1 metric. If you have 8 cores, that\'s 8 metrics. Our Free tier is generous for personal use; Starter covers most small teams comfortably.',
+    a: 'A metric is a unique time-series data point sent in a 1-minute window. System CPU = 1 metric. If you have 8 cores, that\'s 8 metrics. The Starter tier covers most small teams comfortably; Pro is for production scale.',
   },
   {
     q: 'Can I upgrade or downgrade mid-month?',
@@ -27,8 +27,8 @@ const faq = [
     a: 'We soft-throttle — metrics above quota are sampled rather than dropped entirely. You\'ll get an email warning and can upgrade at any time. We never silently drop your data.',
   },
   {
-    q: 'Do you offer discounts for startups or open-source projects?',
-    a: 'Yes. OSS projects with a public repository get 50% off Pro. Startups under $1M ARR get 30% off. Contact us at contact@infrays.org.',
+    q: 'Do you offer discounts for startups or non-profits?',
+    a: 'Yes. Non-profits with verified 501(c)(3) status get 50% off any tier. Startups under $1M ARR get 30% off for the first year. Contact us at contact@infrays.org.',
   },
 ]
 
@@ -47,7 +47,7 @@ export default function PricingPage() {
             </h1>
             <p className="text-lg text-white/40 max-w-xl mx-auto">
               Transparent pricing, no hidden fees, no per-seat costs.
-              Start with a 15-day free trial. Apache 2.0 licensed codebase.
+              Sign up, pick a plan, get your license key. Self-host or use our cloud.
             </p>
           </div>
         </section>

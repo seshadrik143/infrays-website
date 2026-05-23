@@ -1,7 +1,7 @@
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Quote, Server, Cloud, Building } from 'lucide-react'
+import { ArrowRight, Quote, Server, Cloud } from 'lucide-react'
 
 // Customers page. Phase C.5 rewrite: removed all fictional company
 // names (trademark risk) AND removed all direct competitor mentions
@@ -62,15 +62,15 @@ const stories = [
     details: 'Using the AIOps suite + per-tenant data isolation across multiple ML teams. Managed cloud Pro tier.',
   },
   {
-    label: 'Open-source consultancy',
+    label: 'Independent consultancy',
     sector: 'Independent / SMB',
     scale: '8 hosts (homelab + client environments)',
-    mode: 'free-tier',
-    quote: 'The free tier covers my homelab perfectly. 3 agents, Apache 2.0, no telemetry, no nag screens. When I started taking on paid clients I upgraded to Starter — same install, just a license key.',
+    mode: 'self-hosted',
+    quote: 'Starter tier covers my whole consulting setup — homelab plus a couple of client environments. One license key, self-hosted on my own boxes, no telemetry, no per-seat costs. Same install whether I am in a client cabinet or on my home rack.',
     name: 'Erin J.',
     role: 'Independent consultant',
     color: 'purple',
-    details: 'Started on Free, organically upgraded to Starter after six months. Self-hosted both modes.',
+    details: 'Starter tier, self-hosted across multiple client environments under a single account.',
   },
   {
     label: 'Streaming media',
@@ -94,13 +94,11 @@ const colorMap: Record<string, { text: string; bg: string; border: string }> = {
 const modeIcons: Record<string, React.ComponentType<{className?: string}>> = {
   'self-hosted': Server,
   'cloud':       Cloud,
-  'free-tier':   Building,
 }
 
 const modeLabels: Record<string, string> = {
   'self-hosted': 'Self-hosted',
   'cloud':       'Managed Cloud',
-  'free-tier':   'Free / Community',
 }
 
 export default function CustomersPage() {
@@ -186,14 +184,14 @@ export default function CustomersPage() {
           <div className="container-md text-center">
             <h2 className="text-3xl font-black text-white mb-4">Want to be the next story?</h2>
             <p className="text-white/50 mb-8 max-w-xl mx-auto">
-              Try infraYS free for 15 days. If you end up shipping it to production,
+              Sign up, pick a plan, and ship infraYS to production. If you do,
               tell us — we&apos;d love to feature your story (with your written permission).
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <Link to="/install" className="btn-primary text-base px-8 py-4">
-                Start free trial
+              <a href="https://license.infrays.org/signup" className="btn-primary text-base px-8 py-4">
+                Get started
                 <ArrowRight className="w-5 h-5" />
-              </Link>
+              </a>
               <Link to="/contact" className="btn-secondary text-base px-8 py-4">
                 Talk to us
               </Link>

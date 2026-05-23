@@ -4,10 +4,10 @@ const steps = [
   {
     step: '01',
     icon: Download,
-    title: 'Install the Agent',
-    desc: 'One curl command. The infraYS agent auto-registers with your server, discovers running services, and starts collecting immediately. Zero config required.',
+    title: 'Sign Up & Enroll',
+    desc: 'Sign up at the licensing portal, pick a plan, complete payment, and copy your enrollment token. The server validates it against the issuer on startup, then unlocks all features in your tier.',
     code: '$ curl -fsSL https://infrays.org/install.sh | sudo bash',
-    output: '→ Trial started — 15 days remaining ✓',
+    output: '→ License accepted: tier=professional ✓',
     outputColor: 'text-green-400',
     color: 'cyan',
   },

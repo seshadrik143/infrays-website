@@ -57,7 +57,7 @@ const pillars = [
     icon: Server,
     title: 'Self-hosted advantage',
     items: [
-      'Run NodePulse entirely on your own infrastructure — Apache 2.0 license',
+      'Run NodePulse entirely on your own infrastructure — same license tier, no extra fee',
       'Your metrics, logs, traces never leave your network',
       'License refresh phones home daily but transmits only license ID + deployment ID + version',
       'Optional offline / air-gap mode (license valid until exp without refresh)',

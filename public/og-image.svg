@@ -71,7 +71,7 @@
     <g transform="translate(460,0)">
       <rect x="0" y="0" width="180" height="44" rx="22" fill="rgba(255,255,255,0.05)" stroke="rgba(74,222,128,0.3)" stroke-width="1"/>
       <text x="22" y="29" font-family="Inter, system-ui, sans-serif" font-size="18" font-weight="600" fill="#4ade80">
-        Apache 2.0
+        Self-hostable
       </text>
     </g>
   </g>

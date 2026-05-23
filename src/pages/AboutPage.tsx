@@ -10,8 +10,8 @@ import { ArrowRight, Heart, Shield, Code2, Zap } from 'lucide-react'
 const principles = [
   {
     icon: Code2,
-    title: 'Open source first',
-    body: 'The core is Apache 2.0. Enterprise modules are FSL-1.1 with a 2-year MIT change date. Self-hosting is a real option, not a fallback.',
+    title: 'Self-hosting is a first-class option',
+    body: 'You can run the entire NodePulse stack on your own infrastructure under the same license tier you would buy for our cloud. Same binaries, same features, same support. Self-host or hosted — your choice, not ours.',
   },
   {
     icon: Shield,
@@ -34,7 +34,7 @@ const timeline = [
   { date: '2026 Q4', label: 'First commit. CPU + memory collector. Single binary.', kind: 'shipped' },
   { date: '2027 Q1', label: 'Logs + traces + distributed profiling. Plugin SDK v1.', kind: 'shipped' },
   { date: '2027 Q2', label: 'Enterprise modules: SSO, RBAC, AES, Vault, GDPR, audit log.', kind: 'shipped' },
-  { date: '2027 Q3', label: 'Open core launch — Apache 2.0 + FSL-1.1 split.', kind: 'shipped' },
+  { date: '2027 Q3', label: 'Commercial launch — signed-license enforcement on both self-hosted and cloud.', kind: 'shipped' },
   { date: '2027 Q4', label: 'Cloud licensing service at license.infrays.org.', kind: 'shipped' },
   { date: '2028 Q1', label: 'Hosted EU region. SOC 2 Type 1. Public bug-bounty.', kind: 'roadmap' },
 ]
@@ -133,7 +133,7 @@ export default function AboutPage() {
               <li><strong className="text-white">We&apos;re not a one-platform-rules-them-all play.</strong> If you have unlimited budget and want every feature out of the box from a mature incumbent, use a mature incumbent. We compete on cost, footprint, and self-hostability.</li>
               <li><strong className="text-white">We&apos;re not finished.</strong> v0.33 is a real, complete platform — but we&apos;re not at v1.0 yet. We don&apos;t pretend to be enterprise-grade in places we&apos;re not. The <Link to="/security" className="text-cyan-400 hover:underline">Security page</Link> is honest about what compliance we have and don&apos;t.</li>
               <li><strong className="text-white">We&apos;re not VC-funded.</strong> This is a deliberately patient project. Costs are low because the team is small and the infrastructure is efficient. That&apos;s the moat.</li>
-              <li><strong className="text-white">We&apos;re not for everyone.</strong> If you want hand-holding, dedicated CSMs, and quarterly business reviews, the Enterprise tier (with paid support) is the right fit. The Free / Starter tiers are for teams who like reading docs.</li>
+              <li><strong className="text-white">We&apos;re not for everyone.</strong> If you want hand-holding, dedicated CSMs, and quarterly business reviews, the Enterprise tier (with paid support) is the right fit. Starter and Pro tiers are for teams who like reading docs.</li>
             </ul>
           </div>
         </section>
@@ -143,14 +143,13 @@ export default function AboutPage() {
           <div className="container-md text-center">
             <h2 className="text-3xl font-black text-white mb-4">Try the product</h2>
             <p className="text-white/50 mb-8">
-              The best way to evaluate infraYS is to deploy it.
-              15 days free, no credit card.
+              Sign up, pick a plan, get your license key. Self-host or use our cloud.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <Link to="/install" className="btn-primary text-base px-8 py-4">
-                Start free trial
+              <a href="https://license.infrays.org/signup" className="btn-primary text-base px-8 py-4">
+                Get started
                 <ArrowRight className="w-5 h-5" />
-              </Link>
+              </a>
               <Link to="/contact" className="btn-secondary text-base px-8 py-4">
                 Talk to us
               </Link>

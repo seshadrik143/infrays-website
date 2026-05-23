@@ -3,9 +3,9 @@ import Footer from '@/components/Footer'
 import { Link } from 'react-router-dom'
 
 // Terms of Service boilerplate — NOT legal advice. Standard SaaS template
-// adapted for infraYS's open-source + paid-license + cloud model.
-// Replace company contact + jurisdiction-specific lines once legal
-// counsel reviews.
+// adapted for infraYS's commercial-license + cloud model. Replace
+// company contact + jurisdiction-specific lines once legal counsel
+// reviews.
 const EFFECTIVE = '2026-05-23'
 
 const sections = [
@@ -21,9 +21,9 @@ const sections = [
     id: 'license',
     title: '2. Software License',
     body: [
-      'The NodePulse open-source core is licensed under the Apache License 2.0. You may use, modify, and redistribute it under those terms.',
-      'Enterprise modules in the Software are licensed under the Functional Source License v1.1 with a 2-year MIT change date. See the LICENSING.md file in the NodePulse source repository for the canonical terms.',
-      'Your subscription with infraYS grants you a non-exclusive, non-transferable, revocable right to use the Enterprise features for the duration of the subscription period.',
+      'The NodePulse software is proprietary, commercial software of infraYS Solutions. Your active subscription grants you a non-exclusive, non-transferable, revocable right to install, run, and use the Software (on your own infrastructure or on our managed cloud) solely for the duration of your subscription period and only within the limits of your purchased tier.',
+      'No source code, binaries, or any part of the Software may be redistributed, sublicensed, sold, or made available to third parties. You may not remove, obscure, or circumvent any license-enforcement mechanism.',
+      'License keys and enrollment tokens are bound to your account. Sharing them with parties outside your organization is a material breach of these Terms.',
     ],
   },
   {
@@ -91,7 +91,7 @@ const sections = [
     title: '10. Termination',
     body: [
       'You may terminate your account at any time via the customer portal. We may terminate or suspend your account for material breach of these Terms with notice (immediate for security-critical breaches).',
-      'Upon termination, your right to use the Enterprise features ends. The Apache 2.0 open-source core remains licensed to you under those terms.',
+      'Upon termination, your license to use the Software ends immediately. You must stop running the Software and uninstall it from your infrastructure within 30 days of termination.',
       'Sections 6, 7, 8, 9, and 12 survive termination.',
     ],
   },

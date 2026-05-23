@@ -25,11 +25,11 @@ const posts: Record<string, {
       '## What is infraYS?',
       'infraYS is a unified observability platform. It replaces the typical monitoring stack — Prometheus + Grafana + Loki + Tempo + an APM tool + an alerting tool + an on-call tool — with a single binary agent and a unified server. You get metrics, logs, traces, continuous profiling, AI-powered anomaly detection, synthetic monitoring, SLO tracking, and cloud cost tracking from one install.',
       '## Why build this?',
-      'Modern infrastructure monitoring is fragmented. Most teams run 5–8 separate tools, each with its own agent, its own storage, its own alerting logic, and its own billing. We built infraYS to collapse that into one coherent system — with a 12MB agent, < 30MB memory footprint, and an Apache 2.0 license.',
+      'Modern infrastructure monitoring is fragmented. Most teams run 5–8 separate tools, each with its own agent, its own storage, its own alerting logic, and its own billing. We built infraYS to collapse that into one coherent system — with a 12MB agent and a < 30MB memory footprint.',
       '## What shipped in v0.33',
-      'The v0.33 release includes everything from the first heartbeat to enterprise compliance: 34 phases covering metrics collection, structured log ingestion, distributed tracing, continuous profiling with flame graphs, AI anomaly detection, predictive alerting, flap detection, synthetic monitoring, SLO tracking, cloud cost import, OIDC SSO, RBAC, AES-256 encryption, Vault integration, GDPR erasure, SOC2/ISO27001 compliance reports, a 50+ plugin ecosystem, Terraform and Pulumi providers, a fully managed SaaS mode with Stripe billing, and a 15-day self-hosted trial with license key enforcement.',
+      'The v0.33 release includes everything from the first heartbeat to enterprise compliance: 34 phases covering metrics collection, structured log ingestion, distributed tracing, continuous profiling with flame graphs, AI anomaly detection, predictive alerting, flap detection, synthetic monitoring, SLO tracking, cloud cost import, OIDC SSO, RBAC, AES-256 encryption, Vault integration, GDPR erasure, SOC2/ISO27001 compliance reports, a 50+ plugin ecosystem, Terraform and Pulumi providers, a managed SaaS tier with Stripe billing, and signed-license-key enforcement on both self-hosted and cloud installs.',
       '## What\'s next',
-      'v0.34 will focus on the hosted cloud offering — streamlining the onboarding flow and expanding global synthetic probe coverage. Community contributions are welcome. The codebase is Apache 2.0 licensed.',
+      'v0.34 will focus on the hosted cloud offering — streamlining the onboarding flow and expanding global synthetic probe coverage.',
     ],
   },
   'ai-anomaly-detection': {
@@ -94,7 +94,7 @@ const posts: Record<string, {
       '## Where Self-Hosting Wins',
       'Self-hosting wins when: you have a team that can handle ops, your data is sensitive and can\'t leave your network, you\'re cost-conscious at scale, or you want the flexibility to customize the stack.',
       '## The infraYS Middle Ground',
-      'infraYS is designed for both. The Apache 2.0-licensed NodePulse server runs on your infrastructure at a fraction of the SaaS cost. The managed cloud tier ($49–$199/month) covers teams that want the economics of self-hosting with the ops simplicity of SaaS.',
+      'infraYS is designed for both. The same NodePulse server runs on your infrastructure at a fraction of typical SaaS-monitoring cost — same tier price ($49–$199/month) whether you self-host or use our managed cloud. The license key is the same; only the operator (you or us) changes.',
     ],
   },
   'ebpf-autodiscovery': {

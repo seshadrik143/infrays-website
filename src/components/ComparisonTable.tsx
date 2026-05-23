@@ -2,7 +2,7 @@ import { Check, ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 const features = [
-  { label: 'Open Source (Apache 2.0)', desc: '15-day free trial, then a license key required' },
+  { label: 'Single license key', desc: 'One key unlocks everything in your tier — no add-on fees' },
   { label: 'Single Agent Binary', desc: 'One 12MB binary, no runtime dependencies' },
   { label: 'Metrics + Logs + Traces + Profiles', desc: 'All four observability pillars in one agent' },
   { label: 'AI-Powered Anomaly Detection', desc: 'Z-score + Isolation Forest baseline analysis' },
@@ -20,8 +20,8 @@ const features = [
   { label: 'Multi-Tenancy', desc: 'Isolated data per tenant, per-team dashboards' },
   { label: 'On-Call Scheduling', desc: 'Built-in rotation, escalation, and notifications' },
   { label: 'Cloud Cost Tracking', desc: 'AWS, Azure, GCP cost import alongside metrics' },
-  { label: 'Self-Hostable Open Source', desc: 'Run on your own infra. Apache 2.0 licensed; 15-day trial then a license key for Enterprise features' },
-  { label: '50+ Community Plugins', desc: 'MySQL, Kafka, Cassandra, NGINX, Redis, and 45+ more' },
+  { label: 'Self-Hostable', desc: 'Run on your own infrastructure with the same license tier — no extra fee' },
+  { label: '50+ Collector Plugins', desc: 'MySQL, Kafka, Cassandra, NGINX, Redis, and 45+ more' },
   { label: 'Custom Plugin SDK', desc: 'Write collectors in any language via exec protocol' },
   { label: '50+ Dashboard Templates', desc: 'Pre-built dashboards for system, web, DB, cloud, SRE' },
   { label: 'Terraform / Pulumi Provider', desc: 'Infrastructure-as-code for your observability' },
@@ -84,9 +84,9 @@ export default function ComparisonTable() {
             border: '1px solid rgba(16,185,129,0.15)',
           }}>
           <p className="text-sm text-white/55 leading-relaxed">
-            <span className="text-green-400 font-bold">All features above are included when self-hosting.</span>{' '}
-            infraYS is Apache 2.0 licensed. Install and start a 15-day free trial — no credit card needed.
-            A license key is required after the trial. Cloud plans add managed hosting and priority support.
+            <span className="text-green-400 font-bold">All features above are included in your tier.</span>{' '}
+            One license key unlocks everything — no add-on SKUs, no per-feature charges.
+            Self-hosting and cloud-hosting share the same pricing.
           </p>
           <Link to="/pricing"
             className="inline-flex items-center gap-2 mt-4 text-sm text-cyan-400 hover:text-cyan-300 transition-colors font-medium">

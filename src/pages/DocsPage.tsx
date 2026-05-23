@@ -57,7 +57,7 @@ const sections = [
       { title: 'Plugin SDK v1.0', href: '#sdk', desc: 'Build custom collectors' },
       { title: 'Exec Protocol', href: '#exec', desc: 'Any language, any binary' },
       { title: 'Notifier SDK', href: '#notifier', desc: 'Custom alert channels' },
-      { title: 'Community Plugins', href: '#marketplace', desc: 'Browse the marketplace' },
+      { title: 'Plugin Catalog', href: '#marketplace', desc: 'Browse the built-in collector catalog' },
     ],
   },
   {
@@ -216,7 +216,7 @@ export default function DocsPage() {
               </div>
               <div className="p-5 text-left">
                 <p className="font-mono text-sm text-cyan-400">$ curl -fsSL https://infrays.org/install.sh | sudo bash</p>
-                <p className="font-mono text-sm text-green-400 mt-2">→ Trial started — 15 days remaining ✓</p>
+                <p className="font-mono text-sm text-green-400 mt-2">→ License accepted — all features unlocked ✓</p>
                 <p className="font-mono text-sm text-white/40 mt-1">$ npctl --help</p>
               </div>
             </div>

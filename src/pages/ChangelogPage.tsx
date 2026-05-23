@@ -31,7 +31,7 @@ const releases = [
       '20 new enterprise-grade collector plugins added to the catalog',
       'ActiveMQ, Cassandra, Kafka, MongoDB, Elasticsearch plugins',
       'HAProxy, Vault, Consul, etcd, ZooKeeper collectors',
-      'Total plugin catalog now at 67 community plugins',
+      'Total plugin catalog now at 67 collectors',
     ],
   },
   {
@@ -89,8 +89,8 @@ const releases = [
     highlights: [
       'Billing metering store — real-time agent/metric/log/span usage tracking',
       'Stripe integration — subscriptions, usage records, portal, invoices, HMAC webhooks',
-      'Free / Starter ($49) / Pro ($199) / Enterprise pricing tiers',
-      'Org provisioner — signup, trial periods, tier changes, onboarding checklist',
+      'Starter ($49) / Pro ($199) / Enterprise pricing tiers',
+      'Org provisioner — signup, tier selection, paid activation, onboarding checklist',
     ],
   },
   {
@@ -138,7 +138,7 @@ const releases = [
     highlights: [
       'Plugin SDK v1.0.0 — Go interfaces + exec protocol for any language',
       'GitHub, Jira, ServiceNow, PagerDuty HMAC-verified webhook integrations',
-      'Plugin marketplace — 17 seeded community plugins, BoltDB catalog',
+      'Plugin catalog — 17 seeded collector plugins, BoltDB catalog',
       'Webhook template engine — Slack, Teams, PagerDuty, OpsGenie built-in',
       '67 pre-built dashboard JSON templates (system/web/db/cloud/SRE)',
       'Terraform provider — alert_rule, annotation, agents datasource',

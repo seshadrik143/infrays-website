@@ -1,7 +1,7 @@
 
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
-import { Terminal, Package, Server, Cloud, Copy, CheckCircle2, ArrowRight, Key, Clock } from 'lucide-react'
+import { Terminal, Package, Cloud, Copy, CheckCircle2, ArrowRight, Key } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
 
@@ -29,7 +29,7 @@ const methods = [
     title: 'One-Line Install (Recommended)',
     badge: 'Fastest',
     badgeColor: 'badge-cyan',
-    desc: 'Installs the NodePulse server, agent, and npctl CLI. A 15-day free trial starts automatically — no license key required. Works on any systemd-based Linux (amd64 / arm64).',
+    desc: 'Installs the NodePulse server, agent, and npctl CLI. A valid license key is required to start the server — sign up at license.infrays.org first. Works on any systemd-based Linux (amd64 / arm64).',
     steps: [
       {
         label: 'Download and install everything',
@@ -141,20 +141,19 @@ export default function InstallPage() {
               your setup.
             </p>
 
-            {/* Trial banner */}
+            {/* License-required banner */}
             <div className="inline-flex items-center gap-6 border border-cyan-500/20 rounded-2xl px-6 py-4 text-sm"
               style={{ background: 'rgba(0,212,255,0.05)' }}>
               <div className="flex items-center gap-2 text-cyan-400 font-semibold">
-                <Clock className="w-4 h-4" />
-                15-day free trial
+                <Key className="w-4 h-4" />
+                License key required
               </div>
               <span className="w-px h-4 bg-white/10" />
-              <span className="text-white/50">No credit card required at install</span>
+              <span className="text-white/50">Sign up + pay → enrollment token → run</span>
               <span className="w-px h-4 bg-white/10" />
               <div className="flex items-center gap-2 text-white/50">
-                <Key className="w-4 h-4" />
-                <span>Get a license key at</span>
-                <Link to="/pricing" className="text-cyan-400 hover:underline font-medium">infrays.org/pricing</Link>
+                <span>Get yours at</span>
+                <a href="https://license.infrays.org/signup" className="text-cyan-400 hover:underline font-medium">license.infrays.org/signup</a>
               </div>
             </div>
           </div>
@@ -229,25 +228,26 @@ export default function InstallPage() {
           </div>
         </section>
 
-        {/* License / Trial info */}
+        {/* License flow info */}
         <section className="section py-16 border-t border-white/[0.06]"
           style={{ background: 'rgba(0,212,255,0.03)' }}>
           <div className="container-md">
             <div className="grid md:grid-cols-2 gap-8 items-start">
               <div>
                 <div className="flex items-center gap-3 mb-4">
-                  <Clock className="w-5 h-5 text-cyan-400" />
-                  <h2 className="text-xl font-black text-white">15-Day Free Trial</h2>
+                  <Key className="w-5 h-5 text-cyan-400" />
+                  <h2 className="text-xl font-black text-white">How licensing works</h2>
                 </div>
                 <p className="text-sm text-white/50 leading-relaxed mb-4">
-                  After installation, NodePulse automatically starts a 15-day free trial.
-                  No license key, no credit card — just install and go.
+                  NodePulse is commercial software and requires a valid license key to run.
+                  Sign up at the licensing portal, pick a plan, complete payment, and an
+                  enrollment token is issued instantly.
                 </p>
                 <ul className="space-y-2 text-sm text-white/50">
                   {[
-                    'All features unlocked during trial',
-                    'Warning emails at 7, 3, and 1 day before expiry',
-                    'Trial status visible in Dashboard → Settings → License',
+                    'No license = the server refuses to start',
+                    'Keys are bound to your account and your tier',
+                    'License + tier visible in Dashboard → Settings → License',
                     'API: GET /api/v1/license',
                   ].map((item) => (
                     <li key={item} className="flex items-center gap-2">
@@ -263,8 +263,9 @@ export default function InstallPage() {
                   <h2 className="text-xl font-black text-white">Activating a License Key</h2>
                 </div>
                 <p className="text-sm text-white/50 leading-relaxed mb-4">
-                  After your trial, activate a license key to keep NodePulse running.
-                  Keys are issued instantly at checkout.
+                  Paste your enrollment token into the server config, restart, and the
+                  signed license JWS is fetched automatically. Keys are issued instantly
+                  at checkout.
                 </p>
                 <div className="terminal rounded-xl mb-4">
                   <div className="terminal-header">
@@ -274,19 +275,19 @@ export default function InstallPage() {
                     <span className="ml-auto text-xs text-white/20 font-mono">bash</span>
                   </div>
                   <pre className="p-4 text-sm font-mono text-cyan-300 overflow-x-auto leading-relaxed">
-                    <code>{`# Via API
-curl -X POST http://localhost:8080/api/v1/license \\
-  -H "Authorization: Bearer <token>" \\
-  -d '{"key":"NPLIC-..."}'
+                    <code>{`# /etc/nodepulse/license.yaml
+issuer: https://license.infrays.org
+enrollment_token: NP-ENROLL-...
 
-# Or: Dashboard → Settings → License → Activate Key`}</code>
+# Restart the server to fetch + apply
+sudo systemctl restart nodepulse-server`}</code>
                   </pre>
                 </div>
-                <Link to="/pricing"
+                <a href="https://license.infrays.org/signup"
                   className="inline-flex items-center gap-2 btn-primary text-sm px-5 py-2.5">
-                  View Pricing & Get a Key
+                  Sign Up & Get a Key
                   <ArrowRight className="w-4 h-4" />
-                </Link>
+                </a>
               </div>
             </div>
           </div>

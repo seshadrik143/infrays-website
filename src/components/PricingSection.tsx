@@ -26,32 +26,14 @@ type Tier = {
 }
 
 const tiers: Tier[] = [
-  {
-    name: 'Free',
-    monthly: 0,
-    annual: 0,
-    freeLabel: '$0',
-    desc: 'Perfect for personal projects, homelab, and evaluation.',
-    color: 'default',
-    features: [
-      'Up to 3 agents',
-      '1M metrics / month',
-      '5GB log storage',
-      '1GB trace storage',
-      '7-day data retention',
-      'Community support',
-      'All collectors included',
-      'Basic alerting',
-    ],
-    cta: 'Start Free',
-    ctaHref: '/install',
-    badge: null,
-  },
+  // Phase E1 closed-commercial pivot: Free tier removed. A license key
+  // is required to run NodePulse. No free tier, no trial. Cheapest
+  // entry is Starter.
   {
     name: 'Starter',
     monthly: 49,
     annual: 39, // billed annually = 39 * 12 = $468/yr ≈ -20% off $588
-    desc: 'For small teams and growing startups that need more scale.',
+    desc: 'For small teams getting started with infraYS.',
     color: 'cyan',
     features: [
       'Up to 25 agents',
@@ -65,7 +47,7 @@ const tiers: Tier[] = [
       'RBAC (3 roles)',
       'API access',
     ],
-    cta: 'Get Started',
+    cta: 'Sign up',
     ctaHref: PORTAL_SIGNUP,
     badge: 'Most Popular',
   },
@@ -90,7 +72,7 @@ const tiers: Tier[] = [
       'SSO / OIDC',
       'Compliance reports',
     ],
-    cta: 'Start Pro Trial',
+    cta: 'Sign up',
     ctaHref: PORTAL_SIGNUP,
     badge: null,
   },
@@ -156,8 +138,8 @@ export default function PricingSection() {
             pricing
           </h2>
           <p className="text-lg text-white/40 max-w-xl mx-auto">
-            No per-seat pricing. No surprise bills. Start with a 15-day free trial,
-            then a license key to keep running.
+            No per-seat pricing. No surprise bills. Sign up, pick a plan,
+            get your license key, and start running.
           </p>
         </div>
 
@@ -193,8 +175,9 @@ export default function PricingSection() {
           </div>
         </div>
 
-        {/* Cards */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-5">
+        {/* Cards. Was lg:grid-cols-4 with Free/Starter/Pro/Enterprise;
+            Phase E1 removed Free so now 3 cols on desktop. */}
+        <div className="grid md:grid-cols-3 gap-5 max-w-5xl mx-auto">
           {tiers.map((tier) => {
             const s = colorStyles[tier.color]
             const showAnnual = billing === 'annual'
@@ -277,8 +260,9 @@ export default function PricingSection() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-sm text-white/50 text-center sm:text-left">
               <span className="text-green-400 font-semibold">Self-hosting?</span>{' '}
-              infraYS is Apache 2.0 licensed. Self-hosting starts with a free 15-day trial.
-              After the trial, a license key is required. Cloud pricing applies only to our managed cloud service.
+              The same tier pricing applies for self-hosted deployments. Sign up,
+              pick your tier, get an enrollment token, and run NodePulse on your own
+              infrastructure. Cloud-hosted billing applies only to our managed cloud service.
             </p>
             <div className="flex gap-2 flex-shrink-0">
               <a href={PORTAL_SIGNUP}
