@@ -13,6 +13,11 @@ import CLIPage from './pages/CLIPage'
 import BlogPostPage from './pages/BlogPostPage'
 import PluginsPage from './pages/PluginsPage'
 import ContactPage from './pages/ContactPage'
+import PrivacyPage from './pages/PrivacyPage'
+import TermsPage from './pages/TermsPage'
+import GDPRPage from './pages/GDPRPage'
+import SecurityPage from './pages/SecurityPage'
+import CookieBanner from './components/CookieBanner'
 
 
 class ErrorBoundary extends React.Component<{children: React.ReactNode}, {error: Error | null}> {
@@ -63,7 +68,12 @@ export default function App() {
         <Route path="/blog/:slug" element={<BlogPostPage />} />
         <Route path="/plugins" element={<PluginsPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/terms" element={<TermsPage />} />
+        <Route path="/gdpr" element={<GDPRPage />} />
+        <Route path="/security" element={<SecurityPage />} />
       </Routes>
+      <CookieBanner />
     </ErrorBoundary>
   )
 }

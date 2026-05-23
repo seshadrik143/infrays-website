@@ -32,9 +32,10 @@ const footerLinks = {
     { href: '/contact', label: 'Contact' },
   ],
   Legal: [
-    { href: '/contact', label: 'Privacy Policy' },
-    { href: '/contact', label: 'Terms of Service' },
-    { href: '/contact', label: 'GDPR / Data Requests' },
+    { href: '/privacy', label: 'Privacy Policy' },
+    { href: '/terms', label: 'Terms of Service' },
+    { href: '/gdpr', label: 'GDPR / Data Requests' },
+    { href: '/security', label: 'Security' },
   ],
 }
 

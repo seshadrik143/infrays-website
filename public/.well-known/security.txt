@@ -1,0 +1,16 @@
+# infraYS Solutions — Responsible Disclosure Policy
+# RFC 9116: https://www.rfc-editor.org/rfc/rfc9116
+
+Contact: mailto:contact@infrays.org
+Expires: 2027-05-23T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://infrays.org/.well-known/security.txt
+Policy: https://infrays.org/security
+
+# Please email with subject [SECURITY] for fast triage.
+# We aim to acknowledge within 48 hours and ship a fix within
+# 30 days for critical issues. Coordinated disclosure preferred.
+#
+# Do not run automated scans against license.infrays.org or
+# infrays.org without notifying us first — email and we will
+# allowlist your IP for the test window.
