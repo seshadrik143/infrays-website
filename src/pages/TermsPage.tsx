@@ -35,6 +35,15 @@ const sections = [
     ],
   },
   {
+    id: 'no-reverse-engineering',
+    title: '3a. No Reverse Engineering or Circumvention',
+    body: [
+      'You may NOT: (a) decompile, disassemble, reverse-engineer, or otherwise attempt to derive the source code, internal design, ideas, algorithms, or trade secrets of the Software, except to the extent applicable law expressly permits despite this restriction; (b) modify, patch, or remove any license-enforcement mechanism, version check, telemetry, or signed-license verification logic embedded in the Software; (c) generate, forge, share, redistribute, resell, or sublicense license keys, enrollment tokens, or signed license artifacts (JWS) issued to your account; (d) operate the Software past the expiry of a valid license, including by tampering with system clocks, blocking outbound license-refresh requests, or running modified builds intended to bypass these checks; (e) publish, distribute, or make available any modified build of the Software or any tool whose primary purpose is to circumvent these restrictions.',
+      'Violations of this section are a material breach of these Terms and may also constitute a violation of applicable copyright, trade-secret, and computer-misuse laws, including the U.S. Digital Millennium Copyright Act (DMCA) §1201 and equivalent statutes in other jurisdictions. We reserve the right to seek injunctive relief, damages, and to issue takedown notices against any distribution of modified or circumvented builds.',
+      'Independent benchmarking, internal security testing of your own deployment, and good-faith vulnerability research conducted under our published disclosure policy are not restricted by this section.',
+    ],
+  },
+  {
     id: 'accounts',
     title: '4. Accounts & Security',
     body: [
