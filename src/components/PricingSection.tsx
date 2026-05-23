@@ -1,6 +1,11 @@
 import { Link } from 'react-router-dom'
 import { Check, ArrowRight, Zap, Key } from 'lucide-react'
 
+// PORTAL_SIGNUP — the customer self-service licensing portal. Used by
+// paid-tier CTAs so customers can pay + receive an enrollment token
+// without going through the contact form.
+const PORTAL_SIGNUP = 'https://license.infrays.org/signup'
+
 const tiers = [
   {
     name: 'Free',
@@ -41,7 +46,7 @@ const tiers = [
       'API access',
     ],
     cta: 'Get Started',
-    ctaHref: '/install',
+    ctaHref: PORTAL_SIGNUP,
     badge: 'Most Popular',
   },
   {
@@ -66,7 +71,7 @@ const tiers = [
       'Compliance reports',
     ],
     cta: 'Start Pro Trial',
-    ctaHref: '/install',
+    ctaHref: PORTAL_SIGNUP,
     badge: null,
   },
   {
@@ -170,10 +175,17 @@ export default function PricingSection() {
                   ))}
                 </ul>
 
-                <Link to={tier.ctaHref} className={s.cta}>
-                  {tier.cta}
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
+                {tier.ctaHref.startsWith('http') ? (
+                  <a href={tier.ctaHref} className={s.cta}>
+                    {tier.cta}
+                    <ArrowRight className="w-4 h-4" />
+                  </a>
+                ) : (
+                  <Link to={tier.ctaHref} className={s.cta}>
+                    {tier.cta}
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                )}
               </div>
             )
           })}
@@ -188,11 +200,17 @@ export default function PricingSection() {
               infraYS is Apache 2.0 licensed. Self-hosting starts with a free 15-day trial.
               After the trial, a license key is required. Cloud pricing applies only to our managed cloud service.
             </p>
-            <Link to="/contact"
-              className="btn-secondary text-sm whitespace-nowrap flex-shrink-0 flex items-center gap-2">
-              <Key className="w-4 h-4" />
-              Get License Key
-            </Link>
+            <div className="flex gap-2 flex-shrink-0">
+              <a href={PORTAL_SIGNUP}
+                className="btn-primary text-sm whitespace-nowrap flex items-center gap-2">
+                <Key className="w-4 h-4" />
+                Get License Key
+              </a>
+              <Link to="/contact"
+                className="btn-secondary text-sm whitespace-nowrap">
+                Talk to Sales
+              </Link>
+            </div>
           </div>
         </div>
       </div>

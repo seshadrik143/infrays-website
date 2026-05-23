@@ -328,18 +328,25 @@ curl -X POST http://localhost:8080/api/v1/license \\
               {[
                 { title: 'Read the Docs', desc: 'Full configuration reference, collector guides, and API docs.', href: '/docs', icon: '📖' },
                 { title: 'Set Up Alerts', desc: 'Configure alert rules, on-call schedules, and integrations.', href: '/docs#alerts', icon: '🔔' },
-                { title: 'Get a License', desc: 'Contact us to get a license key after your trial.', href: '/contact', icon: '🔑' },
-              ].map((item) => (
-                <Link key={item.title} to={item.href}
-                  className="group border border-white/[0.07] rounded-xl p-5 hover:border-cyan-500/20 transition-all"
-                  style={{ background: 'rgba(17,17,32,0.6)' }}>
-                  <div className="text-2xl mb-3">{item.icon}</div>
-                  <h3 className="text-sm font-bold text-white mb-2 group-hover:text-cyan-400 transition-colors">
-                    {item.title} <ArrowRight className="w-3.5 h-3.5 inline ml-1" />
-                  </h3>
-                  <p className="text-xs text-white/40 leading-relaxed">{item.desc}</p>
-                </Link>
-              ))}
+                { title: 'Get a License', desc: 'Sign up and self-serve at the licensing portal, or contact sales.', href: 'https://license.infrays.org/signup', icon: '🔑' },
+              ].map((item) => {
+                const className = "group border border-white/[0.07] rounded-xl p-5 hover:border-cyan-500/20 transition-all"
+                const style = { background: 'rgba(17,17,32,0.6)' }
+                const inner = (
+                  <>
+                    <div className="text-2xl mb-3">{item.icon}</div>
+                    <h3 className="text-sm font-bold text-white mb-2 group-hover:text-cyan-400 transition-colors">
+                      {item.title} <ArrowRight className="w-3.5 h-3.5 inline ml-1" />
+                    </h3>
+                    <p className="text-xs text-white/40 leading-relaxed">{item.desc}</p>
+                  </>
+                )
+                return item.href.startsWith('http') ? (
+                  <a key={item.title} href={item.href} className={className} style={style}>{inner}</a>
+                ) : (
+                  <Link key={item.title} to={item.href} className={className} style={style}>{inner}</Link>
+                )
+              })}
             </div>
           </div>
         </section>
