@@ -53,12 +53,12 @@ export default function HowItWorks() {
         <div className="text-center mb-16">
           <span className="badge-purple mb-5">Quick Start</span>
           <h2 className="text-4xl md:text-5xl font-black tracking-tight mb-5">
-            Up and running in{' '}
-            <span className="text-gradient-cyan">60 seconds</span>
+            Single command.{' '}
+            <span className="text-gradient-cyan">Single binary.</span>
           </h2>
           <p className="text-lg text-white/40 max-w-xl mx-auto">
             No Helm charts to debug. No Prometheus scrape configs. No week-long onboarding.
-            Just one command.
+            Just install, configure, and watch metrics flow.
           </p>
         </div>
 

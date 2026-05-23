@@ -132,12 +132,13 @@ export default function InstallPage() {
           <div className="container-md text-center">
             <span className="badge-cyan mb-4">Installation Guide</span>
             <h1 className="text-5xl font-black tracking-tight mb-5">
-              Deploy in{' '}
-              <span className="text-gradient-cyan">60 seconds</span>
+              Get NodePulse{' '}
+              <span className="text-gradient-cyan">running</span>
             </h1>
             <p className="text-lg text-white/40 max-w-xl mx-auto mb-8">
-              One command installs the server, agent, and CLI.
-              Always installs the latest release — no version pinning needed.
+              Single binary. No Kubernetes required. Works on any
+              systemd-based Linux. Pick the path below that matches
+              your setup.
             </p>
 
             {/* Trial banner */}

@@ -10,7 +10,7 @@ const sections = [
     title: 'Getting Started',
     color: 'cyan',
     articles: [
-      { title: 'Quick Start Guide', href: '/install', desc: 'Deploy in 60 seconds' },
+      { title: 'Quick Start Guide', href: '/install', desc: 'Install the server + first agent' },
       { title: 'Architecture Overview', href: '#architecture', desc: 'How infraYS works' },
       { title: 'First Dashboard', href: '#dashboard', desc: 'Create your first view' },
       { title: 'Set Up Alerting', href: '#alerts', desc: 'Get notified when it matters' },

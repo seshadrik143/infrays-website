@@ -47,8 +47,8 @@ export default function CTABanner() {
               <span className="text-gradient-brand">clearly?</span>
             </h2>
             <p className="text-lg text-white/45 max-w-lg mx-auto mb-10 leading-relaxed">
-              Deploy NodePulse in 60 seconds. 15-day free trial, no credit card. Full observability stack —
-              metrics, logs, traces, profiling, and AI — all in one agent.
+              Start a 15-day free trial. No credit card. Full observability stack —
+              metrics, logs, traces, profiling, and AI — from a single 12 MB agent.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-10">
