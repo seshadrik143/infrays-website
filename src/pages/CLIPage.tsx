@@ -256,8 +256,8 @@ export default function CLIPage() {
                 <span className="ml-auto text-xs text-white/20 font-mono">install</span>
               </div>
               <div className="p-5 text-left flex items-center justify-between">
-                <p className="font-mono text-sm text-cyan-400">curl -fsSL https://get.infrays.org/install | sudo bash</p>
-                <CopyButton text="curl -fsSL https://get.infrays.org/install | sudo bash" />
+                <p className="font-mono text-sm text-cyan-400">curl -fsSL https://infrays.org/install.sh | sudo bash</p>
+                <CopyButton text="curl -fsSL https://infrays.org/install.sh | sudo bash" />
               </div>
             </div>
 

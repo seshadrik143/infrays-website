@@ -2,9 +2,9 @@ const specs = [
   { value: '~12MB',  label: 'Agent Binary Size',   color: 'text-cyan-400',   glow: 'rgba(0,212,255,0.2)' },
   { value: '< 30MB', label: 'Agent RAM Usage',      color: 'text-purple-400', glow: 'rgba(168,85,247,0.2)' },
   { value: '10s',    label: 'Default Scrape Interval', color: 'text-green-400', glow: 'rgba(16,185,129,0.2)' },
-  { value: 'MIT',    label: 'License',              color: 'text-orange-400', glow: 'rgba(245,158,11,0.2)' },
-  { value: '67+',    label: 'Collector Plugins',    color: 'text-pink-400',   glow: 'rgba(236,72,153,0.2)' },
-  { value: 'v1.0',   label: 'Current Release',      color: 'text-cyan-400',   glow: 'rgba(0,212,255,0.2)' },
+  { value: 'Apache 2.0', label: 'License',           color: 'text-orange-400', glow: 'rgba(245,158,11,0.2)' },
+  { value: '50+',    label: 'Collector Plugins',    color: 'text-pink-400',   glow: 'rgba(236,72,153,0.2)' },
+  { value: 'v0.33',  label: 'Current Release',      color: 'text-cyan-400',   glow: 'rgba(0,212,255,0.2)' },
 ]
 
 export default function StatsBar() {

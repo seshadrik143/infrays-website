@@ -33,7 +33,7 @@ const methods = [
     steps: [
       {
         label: 'Download and install everything',
-        code: 'curl -fsSL https://get.infrays.org/install | sudo bash',
+        code: 'curl -fsSL https://infrays.org/install.sh | sudo bash',
         lang: 'bash',
       },
       {
@@ -82,38 +82,10 @@ journalctl -u nodepulse-agent  -f`,
       },
     ],
   },
-  {
-    id: 'kubernetes',
-    icon: Server,
-    title: 'Kubernetes / Helm',
-    badge: 'K8s',
-    badgeColor: 'badge-green',
-    desc: 'Deploy as a DaemonSet across all nodes. Includes auto-discovery for pods and services.',
-    steps: [
-      {
-        label: 'Add Helm repo',
-        code: `helm repo add nodepulse https://charts.infrays.org
-helm repo update`,
-        lang: 'bash',
-      },
-      {
-        label: 'Install chart',
-        code: `helm install nodepulse nodepulse/nodepulse \\
-  --namespace monitoring \\
-  --create-namespace \\
-  --set server.url=http://your-server:8080 \\
-  --set server.apiKey=your-api-key \\
-  --set autodiscovery.enabled=true`,
-        lang: 'bash',
-      },
-      {
-        label: 'Verify pods are running',
-        code: `kubectl get pods -n monitoring
-# nodepulse-agent-xxxxx   1/1   Running   0   30s`,
-        lang: 'bash',
-      },
-    ],
-  },
+  // Kubernetes / Helm card removed temporarily — the Helm chart at
+  // charts.infrays.org isn't published yet. Showing a broken `helm
+  // repo add` command mid-page misleads customers. Restore this entry
+  // once we publish charts (likely to ghcr.io OCI artifacts).
   {
     id: 'compose',
     icon: Cloud,
@@ -124,8 +96,8 @@ helm repo update`,
     steps: [
       {
         label: 'Download and start',
-        code: `curl -fsSL https://get.infrays.org/docker-compose.yml -o docker-compose.yml
-curl -fsSL https://get.infrays.org/.env.example -o .env
+        code: `curl -fsSL https://infrays.org/docker-compose.yml -o docker-compose.yml
+curl -fsSL https://infrays.org/.env.example -o .env
 # Edit .env with your settings
 docker compose up -d`,
         lang: 'bash',

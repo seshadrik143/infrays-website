@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Terminal, Zap, Shield, Activity } from 'lucide-react'
 
 const terminalLines = [
-  { delay: 0,    text: '$ curl -fsSL https://get.infrays.org/install | sudo bash', color: 'text-white/60' },
+  { delay: 0,    text: '$ curl -fsSL https://infrays.org/install.sh | sudo bash', color: 'text-white/60' },
   { delay: 900,  text: '→ Fetching latest release: v0.33.0...',                    color: 'text-cyan-400' },
   { delay: 1800, text: '→ Installing server + agent + npctl...',                   color: 'text-cyan-400' },
   { delay: 2700, text: '→ Trial started — 15 days remaining ✓',                    color: 'text-green-400' },
