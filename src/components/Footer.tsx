@@ -28,6 +28,8 @@ const footerLinks = {
     { href: '/changelog', label: 'Changelog' },
   ],
   Company: [
+    { href: '/about', label: 'About us' },
+    { href: '/customers', label: 'Customers' },
     { href: '/blog', label: 'Blog' },
     { href: '/changelog', label: "What's New" },
     { href: '/contact', label: 'Contact' },

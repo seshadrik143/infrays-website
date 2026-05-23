@@ -17,6 +17,10 @@ import PrivacyPage from './pages/PrivacyPage'
 import TermsPage from './pages/TermsPage'
 import GDPRPage from './pages/GDPRPage'
 import SecurityPage from './pages/SecurityPage'
+import AboutPage from './pages/AboutPage'
+import CustomersPage from './pages/CustomersPage'
+import VsDatadogPage from './pages/VsDatadogPage'
+import NotFoundPage from './pages/NotFoundPage'
 import CookieBanner from './components/CookieBanner'
 
 
@@ -72,6 +76,12 @@ export default function App() {
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/gdpr" element={<GDPRPage />} />
         <Route path="/security" element={<SecurityPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/customers" element={<CustomersPage />} />
+        <Route path="/vs/datadog" element={<VsDatadogPage />} />
+        {/* Catch-all 404 — must be LAST so any path that doesn't match
+            an earlier route falls through here. */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <CookieBanner />
     </ErrorBoundary>
