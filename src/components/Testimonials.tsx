@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { MessageSquare, ArrowRight, Users, Star, GitPullRequest } from 'lucide-react'
 
 const cards = [
@@ -94,12 +95,12 @@ export default function Testimonials() {
               </p>
             </div>
           </div>
-          <a href="/contact"
+          <Link to="/contact"
             className="btn-secondary whitespace-nowrap flex-shrink-0 flex items-center gap-2">
             <MessageSquare className="w-4 h-4" />
             Join Community
             <ArrowRight className="w-4 h-4" />
-          </a>
+          </Link>
         </div>
       </div>
     </section>

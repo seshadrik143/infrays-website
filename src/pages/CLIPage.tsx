@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom'
 
 const commands = [
   {
-    cmd: 'infrays agents list',
+    cmd: 'npctl agents list',
     desc: 'List all registered agents with status, version, OS, CPU, memory, and last-seen time.',
     example: `AGENT ID     HOSTNAME      STATUS  VERSION  OS            CPU  MEMORY    METRICS  LAST SEEN
 prod-web-01  web-server-1  online  1.0.0    ubuntu 24.04  8    31.1 GiB  48293    3s ago
@@ -15,7 +15,7 @@ prod-db-01   db-server-1   online  1.0.0    ubuntu 22.04  16   63.9 GiB  12847  
     color: 'cyan',
   },
   {
-    cmd: 'infrays agents get <id>',
+    cmd: 'npctl agents get <id>',
     desc: 'Get full details for a single agent including tenant, version, CPU, memory, and registration times.',
     example: `Agent ID:      prod-web-01
 Tenant ID:     default
@@ -31,7 +31,7 @@ Last Seen:     2026-04-11 08:15:03`,
     color: 'cyan',
   },
   {
-    cmd: 'infrays alerts list [--all]',
+    cmd: 'npctl alerts list [--all]',
     desc: 'List active alerts. Pass --all to include resolved alerts.',
     example: `ID          AGENT        SEVERITY  STATE    RULE               FIRED
 alert-001   prod-web-01  critical  firing   High CPU Usage     2m ago
@@ -39,7 +39,7 @@ alert-002   prod-db-01   warning   firing   Disk Usage > 80%   15m ago`,
     color: 'red',
   },
   {
-    cmd: 'infrays slo list [--window 7] [--target 99] [--failing]',
+    cmd: 'npctl slo list [--window 7] [--target 99] [--failing]',
     desc: 'List per-agent SLO status for a given window (days) and target percentage.',
     example: `Target: 99.0%  |  Window: 7 days
 
@@ -51,7 +51,7 @@ prod-db-01   db-server-1   online  100.000%  —         0          PASS
     color: 'green',
   },
   {
-    cmd: 'infrays slo summary [--window 7] [--target 99]',
+    cmd: 'npctl slo summary [--window 7] [--target 99]',
     desc: 'Fleet-wide SLO summary with averages, downtime totals, and pass/fail counts.',
     example: `SLO Summary — 7-day window, 99.0% target
 ─────────────────────────────────────────
@@ -64,7 +64,7 @@ Total incidents: 1`,
     color: 'green',
   },
   {
-    cmd: 'infrays health',
+    cmd: 'npctl health',
     desc: 'Check server health and VictoriaMetrics connectivity.',
     example: `Server:          ok (http://localhost:8080)
 Version:         1.0.0
@@ -72,7 +72,7 @@ VictoriaMetrics: ok`,
     color: 'green',
   },
   {
-    cmd: 'infrays config get <agent-id>',
+    cmd: 'npctl config get <agent-id>',
     desc: 'Fetch the current YAML config for an agent.',
     example: `agent_id: prod-web-01
 server_url: http://infrays-server:8080
@@ -85,13 +85,13 @@ collectors:
     color: 'purple',
   },
   {
-    cmd: 'infrays config push <agent-id> <file>',
+    cmd: 'npctl config push <agent-id> <file>',
     desc: 'Push a new YAML config file to an agent. Agent reloads on next check-in.',
     example: `Config pushed to prod-web-01 ✓`,
     color: 'purple',
   },
   {
-    cmd: 'infrays logs tail [--agent <id>] [--level <lvl>] [--n <count>] [--q <text>]',
+    cmd: 'npctl logs tail [--agent <id>] [--level <lvl>] [--n <count>] [--q <text>]',
     desc: 'Tail recent log entries. Filter by agent, level (info/warn/error), count, or full-text search.',
     example: `TIMESTAMP            AGENT        LEVEL  SOURCE               MESSAGE
 2026-04-11 08:14:44  prod-web-01  error  /var/log/nginx/err   upstream connect error
@@ -99,7 +99,7 @@ collectors:
     color: 'yellow',
   },
   {
-    cmd: 'infrays oncall current',
+    cmd: 'npctl oncall current',
     desc: 'Show who is currently on-call across all configured schedules.',
     example: `Schedule:  Platform Team
 On-Call:   Jane Smith
@@ -110,7 +110,7 @@ Until:     2026-04-14 09:00:00`,
     color: 'orange',
   },
   {
-    cmd: 'infrays oncall list',
+    cmd: 'npctl oncall list',
     desc: 'List all configured on-call schedules with member count and description.',
     example: `ID              NAME             MEMBERS  DESCRIPTION
 platform-team   Platform Team    4        24/7 infrastructure on-call
@@ -118,7 +118,7 @@ sre-rotation    SRE Rotation     3        Business hours SRE team`,
     color: 'orange',
   },
   {
-    cmd: 'infrays annotations list',
+    cmd: 'npctl annotations list',
     desc: 'List all annotations (deployment markers) with time, title, tags, and creator.',
     example: `ID                   TIME                 TITLE             TAGS           CREATED BY
 1744329600000000000  2026-04-11 08:00:00  Deploy v2.1.0     deploy,prod    ci-bot
@@ -126,13 +126,13 @@ sre-rotation    SRE Rotation     3        Business hours SRE team`,
     color: 'teal',
   },
   {
-    cmd: 'infrays annotations create --title <t> [--desc <d>] [--tags <a,b>]',
+    cmd: 'npctl annotations create --title <t> [--desc <d>] [--tags <a,b>]',
     desc: 'Create a deployment annotation visible as a marker on all metric charts.',
     example: `Annotation created: ID=1744329600000000000`,
     color: 'teal',
   },
   {
-    cmd: 'infrays groups list',
+    cmd: 'npctl groups list',
     desc: 'List all agent groups with label selector, agent count, and description.',
     example: `ID            NAME             AGENTS  SELECTOR           DESCRIPTION
 prod-web      Production Web   12      env=prod,role=web  Production web tier
@@ -140,26 +140,26 @@ staging       Staging Fleet    4       env=staging        All staging agents`,
     color: 'blue',
   },
   {
-    cmd: 'infrays groups command --id <id> --action <act> [--params key=val,...]',
+    cmd: 'npctl groups command --id <id> --action <act> [--params key=val,...]',
     desc: 'Send a bulk command (restart, update, config-reload) to all agents matching a group.',
     example: `Command dispatched to 12 agents in group prod-web ✓`,
     color: 'blue',
   },
   {
-    cmd: 'infrays admin backup [--out <file>]',
+    cmd: 'npctl admin backup [--out <file>]',
     desc: 'Download a complete server backup as a tar.gz archive. Includes all BoltDB stores.',
     example: `Backup saved to nodepulse-backup-20260411-081503.tar.gz (26450 bytes)`,
     color: 'rose',
   },
   {
-    cmd: 'infrays admin restore --file <file>',
+    cmd: 'npctl admin restore --file <file>',
     desc: 'Restore server data from a backup archive. Restart the server to reopen DB files.',
     example: `Restored: agents.db, alerts.db, annotations.db, groups.db
 Total: 4 files restored. Restart the server to apply.`,
     color: 'rose',
   },
   {
-    cmd: 'infrays report latest',
+    cmd: 'npctl report latest',
     desc: 'Show the current monitoring report — agent counts, alerts, SLO status, and dispatch note.',
     example: `NodePulse Report — 7-day summary
 Generated: 2026-04-11 08:15 UTC
@@ -171,13 +171,13 @@ SLO    : target 99.0%  |  2 passing, 0 failing`,
     color: 'purple',
   },
   {
-    cmd: 'infrays report trigger',
+    cmd: 'npctl report trigger',
     desc: 'Dispatch the current report to all configured notification channels immediately.',
     example: `Report triggered — dispatched to 2 channel(s) ✓`,
     color: 'purple',
   },
   {
-    cmd: 'infrays cluster',
+    cmd: 'npctl cluster',
     desc: 'Show Raft cluster and HA status — leader, node state, term, and log index.',
     example: `Mode:   raft
 State:  leader
@@ -187,14 +187,14 @@ Index:  18341`,
     color: 'indigo',
   },
   {
-    cmd: 'infrays completion [bash|zsh|fish]',
+    cmd: 'npctl completion [bash|zsh|fish]',
     desc: 'Generate shell completion scripts for bash, zsh, or fish.',
     example: `# Add to ~/.bashrc:
-source <(infrays completion bash)`,
+source <(npctl completion bash)`,
     color: 'white',
   },
   {
-    cmd: 'infrays version',
+    cmd: 'npctl version',
     desc: 'Print the CLI version.',
     example: `npctl v0.33.0`,
     color: 'white',
@@ -240,7 +240,7 @@ export default function CLIPage() {
           <div className="container-md text-center">
             <span className="badge-cyan mb-4">CLI Reference</span>
             <h1 className="text-5xl font-black tracking-tight mb-5">
-              <span className="text-gradient-cyan">infrays</span> — the CLI
+              <span className="text-gradient-cyan">npctl</span> — the CLI
             </h1>
             <p className="text-lg text-white/40 max-w-xl mx-auto mb-8">
               Manage agents, alerts, SLOs, logs, groups, backups, and on-call rotations
@@ -273,12 +273,12 @@ export default function CLIPage() {
                 <p className="font-mono text-sm">
                   <span className="text-yellow-400">-server</span>
                   <span className="text-white/40"> string  </span>
-                  <span className="text-white/50">Server URL (env: INFRAYS_SERVER)</span>
+                  <span className="text-white/50">Server URL (env: NODEPULSE_SERVER)</span>
                 </p>
                 <p className="font-mono text-sm">
                   <span className="text-yellow-400">-key   </span>
                   <span className="text-white/40"> string  </span>
-                  <span className="text-white/50">API key  (env: INFRAYS_KEY)</span>
+                  <span className="text-white/50">API key  (env: NODEPULSE_KEY)</span>
                 </p>
               </div>
             </div>
@@ -339,11 +339,11 @@ export default function CLIPage() {
                   </div>
                   <div className="p-4 text-left space-y-1">
                     <p className="font-mono text-xs text-cyan-400">
-                      infrays completion {shell}
+                      npctl completion {shell}
                     </p>
-                    {shell === 'bash' && <p className="font-mono text-xs text-white/30"># → source &lt;(infrays completion bash)</p>}
-                    {shell === 'zsh' && <p className="font-mono text-xs text-white/30"># → infrays completion zsh &gt; ~/.zfunc/_infrays</p>}
-                    {shell === 'fish' && <p className="font-mono text-xs text-white/30"># → infrays completion fish | source</p>}
+                    {shell === 'bash' && <p className="font-mono text-xs text-white/30"># → source &lt;(npctl completion bash)</p>}
+                    {shell === 'zsh' && <p className="font-mono text-xs text-white/30"># → npctl completion zsh &gt; ~/.zfunc/_npctl</p>}
+                    {shell === 'fish' && <p className="font-mono text-xs text-white/30"># → npctl completion fish | source</p>}
                   </div>
                 </div>
               ))}

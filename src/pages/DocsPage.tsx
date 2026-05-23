@@ -120,18 +120,18 @@ export default function DocsPage() {
                 <div className="terminal-dot bg-[#ff5f57]" />
                 <div className="terminal-dot bg-[#ffbd2e]" />
                 <div className="terminal-dot bg-[#28ca41]" />
-                <span className="ml-auto text-xs text-white/20 font-mono">infrays — infraYS CLI</span>
+                <span className="ml-auto text-xs text-white/20 font-mono">npctl — infraYS CLI</span>
               </div>
               <div className="p-6 grid md:grid-cols-2 gap-x-8 gap-y-2">
                 {[
-                  ['infrays agents list', 'List all registered agents'],
-                  ['infrays alerts list', 'View active alerts'],
-                  ['infrays slo summary', 'SLO burn rate summary'],
-                  ['infrays logs tail --agent prod-01', 'Tail agent logs'],
-                  ['infrays admin backup', 'Backup all data to tar.gz'],
-                  ['infrays groups list', 'List agent groups'],
-                  ['infrays annotations create', 'Add deployment annotation'],
-                  ['infrays health', 'Check server health'],
+                  ['npctl agents list', 'List all registered agents'],
+                  ['npctl alerts list', 'View active alerts'],
+                  ['npctl slo summary', 'SLO burn rate summary'],
+                  ['npctl logs tail --agent prod-01', 'Tail agent logs'],
+                  ['npctl admin backup', 'Backup all data to tar.gz'],
+                  ['npctl groups list', 'List agent groups'],
+                  ['npctl annotations create', 'Add deployment annotation'],
+                  ['npctl health', 'Check server health'],
                 ].map(([cmd, desc]) => (
                   <div key={cmd} className="flex items-baseline gap-3">
                     <code className="text-cyan-400 text-xs font-mono flex-shrink-0">{cmd}</code>
