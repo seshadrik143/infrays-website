@@ -5,38 +5,40 @@ import (
 	"os"
 )
 
-// NewSenderFromEnv constructs the appropriate Sender based on env
-// vars. Called once from cmd/issuer/main.go at startup.
+// NewSenderFromEnv constructs the appropriate Sender based on env vars.
+// Called once from cmd/issuer/main.go at startup.
 //
-//	NP_POSTMARK_SERVER_TOKEN   — required to enable Postmark
+//	NP_BREVO_API_KEY           — preferred provider; takes precedence when set
+//	NP_POSTMARK_SERVER_TOKEN   — fallback provider when Brevo key is absent
 //	NP_EMAIL_FROM              — sender address (defaults to no-reply@infrays.org)
-//	NP_EMAIL_ALLOWED_DOMAINS   — optional, comma-separated. When set,
-//	                             only recipients on these domains are
-//	                             forwarded to the upstream sender;
+//	NP_EMAIL_ALLOWED_DOMAINS   — optional, comma-separated. When set, only
+//	                             recipients on these domains are forwarded;
 //	                             everything else is logged and dropped.
-//	                             Used during the Postmark "pending
-//	                             approval" period — once approved, unset
-//	                             this env var to allow all recipients.
 //
-// When NP_POSTMARK_SERVER_TOKEN is empty, returns a NoopSender and
-// logs a warning at startup. Issuer still functions — email
-// triggers run, the sender just no-ops.
+// When neither key is set, returns a NoopSender and logs a warning.
+// The issuer still functions — email triggers fire, the sender just no-ops.
 func NewSenderFromEnv() Sender {
-	token := os.Getenv("NP_POSTMARK_SERVER_TOKEN")
-	if token == "" {
-		log.Println("⚠  email: NP_POSTMARK_SERVER_TOKEN unset — emails will NOT be sent (noop sender)")
-		return NewNoopSender()
-	}
 	from := os.Getenv("NP_EMAIL_FROM")
-	base := NewPostmarkSender(token, from)
-
 	allowed := os.Getenv("NP_EMAIL_ALLOWED_DOMAINS")
-	if allowed != "" {
-		log.Printf("email: postmark sender configured (from=%q) — domain gate active, allowed=%q",
-			from, allowed)
-		log.Printf("email: ⚠  domain gate will be REMOVED when NP_EMAIL_ALLOWED_DOMAINS is unset (after Postmark approval)")
-		return NewDomainGatedSender(base, allowed)
+
+	if token := os.Getenv("NP_BREVO_API_KEY"); token != "" {
+		base := NewBrevoSender(token, from)
+		return wrapGate(base, allowed)
 	}
-	log.Printf("email: postmark sender configured (from=%q) — no domain gate", from)
-	return base
+	if token := os.Getenv("NP_POSTMARK_SERVER_TOKEN"); token != "" {
+		base := NewPostmarkSender(token, from)
+		return wrapGate(base, allowed)
+	}
+	log.Println("⚠  email: NP_BREVO_API_KEY and NP_POSTMARK_SERVER_TOKEN both unset — emails will NOT be sent (noop sender)")
+	return NewNoopSender()
+}
+
+func wrapGate(s Sender, allowed string) Sender {
+	if allowed == "" {
+		log.Printf("email: %s sender configured — no domain gate", s.Name())
+		return s
+	}
+	log.Printf("email: %s sender configured — domain gate active, allowed=%q", s.Name(), allowed)
+	log.Printf("email: ⚠  domain gate will be REMOVED when NP_EMAIL_ALLOWED_DOMAINS is unset")
+	return NewDomainGatedSender(s, allowed)
 }

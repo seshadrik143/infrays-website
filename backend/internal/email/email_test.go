@@ -152,6 +152,7 @@ func TestRenderEnrollmentToken(t *testing.T) {
 }
 
 func TestNewSenderFromEnv_NoopWithoutToken(t *testing.T) {
+	t.Setenv("NP_BREVO_API_KEY", "")
 	t.Setenv("NP_POSTMARK_SERVER_TOKEN", "")
 	s := NewSenderFromEnv()
 	if s.Name() != "noop" {
@@ -159,7 +160,26 @@ func TestNewSenderFromEnv_NoopWithoutToken(t *testing.T) {
 	}
 }
 
+func TestNewSenderFromEnv_BrevoWithToken(t *testing.T) {
+	t.Setenv("NP_BREVO_API_KEY", "fake-brevo-key")
+	t.Setenv("NP_POSTMARK_SERVER_TOKEN", "")
+	s := NewSenderFromEnv()
+	if s.Name() != "brevo" {
+		t.Errorf("expected brevo, got %s", s.Name())
+	}
+}
+
+func TestNewSenderFromEnv_BrevoTakesPrecedence(t *testing.T) {
+	t.Setenv("NP_BREVO_API_KEY", "fake-brevo-key")
+	t.Setenv("NP_POSTMARK_SERVER_TOKEN", "fake-postmark-token")
+	s := NewSenderFromEnv()
+	if s.Name() != "brevo" {
+		t.Errorf("expected brevo to win over postmark, got %s", s.Name())
+	}
+}
+
 func TestNewSenderFromEnv_PostmarkWithToken(t *testing.T) {
+	t.Setenv("NP_BREVO_API_KEY", "")
 	t.Setenv("NP_POSTMARK_SERVER_TOKEN", "fake-token-xyz")
 	s := NewSenderFromEnv()
 	if s.Name() != "postmark" {

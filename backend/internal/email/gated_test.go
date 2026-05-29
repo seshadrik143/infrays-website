@@ -134,10 +134,21 @@ func TestExtractDomain(t *testing.T) {
 }
 
 func TestNewSenderFromEnv_DomainGateActive(t *testing.T) {
+	t.Setenv("NP_BREVO_API_KEY", "")
 	t.Setenv("NP_POSTMARK_SERVER_TOKEN", "fake-token-xyz")
 	t.Setenv("NP_EMAIL_ALLOWED_DOMAINS", "infrays.org")
 	s := NewSenderFromEnv()
 	if s.Name() != "postmark+domain-gate" {
 		t.Errorf("expected gated postmark, got %s", s.Name())
+	}
+}
+
+func TestNewSenderFromEnv_BrevoGateActive(t *testing.T) {
+	t.Setenv("NP_BREVO_API_KEY", "fake-brevo-key")
+	t.Setenv("NP_POSTMARK_SERVER_TOKEN", "")
+	t.Setenv("NP_EMAIL_ALLOWED_DOMAINS", "infrays.org")
+	s := NewSenderFromEnv()
+	if s.Name() != "brevo+domain-gate" {
+		t.Errorf("expected gated brevo, got %s", s.Name())
 	}
 }

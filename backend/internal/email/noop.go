@@ -18,7 +18,7 @@ func NewNoopSender() *NoopSender { return &NoopSender{} }
 func (n *NoopSender) Name() string { return "noop" }
 
 func (n *NoopSender) Send(_ context.Context, msg Message) error {
-	log.Printf("email[noop]: would send type=%q to=%q subject=%q (NP_POSTMARK_SERVER_TOKEN unset)",
+	log.Printf("email[noop]: would send type=%q to=%q subject=%q (no email provider configured)",
 		msg.MessageType, msg.To, msg.Subject)
 	return nil
 }
