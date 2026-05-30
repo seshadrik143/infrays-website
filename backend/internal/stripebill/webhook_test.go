@@ -273,6 +273,50 @@ func TestWebhook_SubscriptionLifecycle(t *testing.T) {
 	}
 }
 
+func TestWebhook_SubscriptionBindsViaMetadataCustomerID(t *testing.T) {
+	h, st, _ := newTestHandler(t)
+	now := time.Now().UTC()
+	// Existing portal customer with NO Stripe ID linked yet, and an
+	// email that won't match what Stripe sends on the event.
+	_ = st.CreateCustomer(context.Background(), &store.Customer{
+		ID: "cust_meta", Email: "portal-email@test",
+		Status: "active", CreatedAt: now, UpdatedAt: now,
+	})
+
+	sub := map[string]any{
+		"id":       "sub_meta",
+		"customer": map[string]any{"id": "cus_brand_new"}, // no email expanded
+		"status":   "active",
+		"metadata": map[string]any{"customer_id": "cust_meta"},
+		"items": map[string]any{
+			"data": []map[string]any{
+				{
+					"price":                map[string]any{"id": "price_test_pro"},
+					"current_period_start": now.Unix(),
+					"current_period_end":   now.Add(30 * 24 * time.Hour).Unix(),
+				},
+			},
+		},
+	}
+	w := postEvent(t, h, "evt_meta_001", "customer.subscription.created", sub)
+	if w.Code != http.StatusOK {
+		t.Fatalf("created: got %d body=%s", w.Code, w.Body.String())
+	}
+	got, _ := st.GetSubscriptionByStripeID(context.Background(), "sub_meta")
+	if got == nil || got.CustomerID != "cust_meta" {
+		t.Fatalf("subscription not bound to metadata customer: %+v", got)
+	}
+	// The Stripe customer ID should now be linked for billing-portal use.
+	cust, _ := st.GetCustomer(context.Background(), "cust_meta")
+	if cust.StripeCustomerID != "cus_brand_new" {
+		t.Errorf("stripe customer id not linked: %q", cust.StripeCustomerID)
+	}
+	// And no duplicate customer was created.
+	if _, err := st.GetCustomerByEmail(context.Background(), "portal-email@test"); err != nil {
+		t.Errorf("original customer lookup failed: %v", err)
+	}
+}
+
 func TestWebhook_UnknownPriceFallsBackToFree(t *testing.T) {
 	h, st, _ := newTestHandler(t)
 	now := time.Now().UTC()

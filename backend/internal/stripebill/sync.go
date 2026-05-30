@@ -107,8 +107,11 @@ func (h *Handler) handleSubscriptionEvent(ctx context.Context, event *stripe.Eve
 		return errors.New("stripebill: subscription event has no id")
 	}
 
-	// Find the local customer.
-	customer, err := h.findCustomerByStripe(ctx, ss.Customer)
+	// Find the local customer. Self-serve checkouts started from the
+	// portal stamp the local customer_id into subscription metadata, so
+	// we can bind deterministically without relying on an email match
+	// (and attach the Stripe customer ID if it isn't linked yet).
+	customer, err := h.findCustomerForSubscription(ctx, &ss)
 	if err != nil {
 		return fmt.Errorf("subscription %s: %w", ss.ID, err)
 	}
@@ -297,6 +300,35 @@ func (h *Handler) handleInvoicePaymentFailed(ctx context.Context, event *stripe.
 }
 
 // ── helpers ────────────────────────────────────────────────────────
+
+// findCustomerForSubscription resolves the local Customer for a Stripe
+// subscription. It prefers the customer_id stamped into subscription
+// metadata by the portal's authenticated checkout (deterministic, no
+// email guessing), and falls back to the email/Stripe-ID match used by
+// the public pricing-page flow.
+func (h *Handler) findCustomerForSubscription(ctx context.Context, ss *stripe.Subscription) (*store.Customer, error) {
+	if id := ss.Metadata["customer_id"]; id != "" {
+		c, err := h.store.GetCustomer(ctx, id)
+		if err == nil {
+			// Link the Stripe customer ID on first paid conversion so
+			// the billing portal works immediately afterwards.
+			if c.StripeCustomerID == "" && ss.Customer != nil && ss.Customer.ID != "" {
+				c.StripeCustomerID = ss.Customer.ID
+				c.UpdatedAt = time.Now().UTC()
+				_ = h.store.UpdateCustomer(ctx, c)
+			}
+			return c, nil
+		}
+		// Metadata pointed at a missing customer — log and fall through
+		// to the email-based path rather than dropping the event.
+		_, _ = h.audit.Append(ctx, audit.Entry{
+			EventType: "stripe.subscription.metadata_customer_missing",
+			Actor:     "stripe",
+			Payload:   map[string]any{"customer_id": id, "subscription_id": ss.ID},
+		})
+	}
+	return h.findCustomerByStripe(ctx, ss.Customer)
+}
 
 // findCustomerByStripe resolves the local Customer row for a Stripe
 // customer reference. Tries Stripe customer ID first; falls back to

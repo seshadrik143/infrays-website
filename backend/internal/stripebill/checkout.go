@@ -125,10 +125,19 @@ func (h *CheckoutHandler) createSession(priceID, customerEmail string, trialDays
 	if customerEmail != "" {
 		params.CustomerEmail = stripe.String(customerEmail)
 	}
-	if trialDays > 0 {
-		params.SubscriptionData = &stripe.CheckoutSessionSubscriptionDataParams{
-			TrialPeriodDays: stripe.Int64(int64(trialDays)),
+	// Propagate metadata to BOTH the session and the resulting
+	// subscription. Subscription-level metadata is what the webhook
+	// reads to bind the subscription to an existing local customer
+	// (customer_id), so it must survive onto the Subscription object.
+	if trialDays > 0 || len(metadata) > 0 {
+		sd := &stripe.CheckoutSessionSubscriptionDataParams{}
+		if trialDays > 0 {
+			sd.TrialPeriodDays = stripe.Int64(int64(trialDays))
 		}
+		if len(metadata) > 0 {
+			sd.Metadata = metadata
+		}
+		params.SubscriptionData = sd
 	}
 	if len(metadata) > 0 {
 		params.Metadata = metadata
