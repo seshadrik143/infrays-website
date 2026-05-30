@@ -47,6 +47,15 @@ type CheckoutCreator interface {
 	CreateCheckoutSession(tier, interval, customerEmail, customerID string) (url string, err error)
 }
 
+// PlanOption is one purchasable tier the portal exposes to the plan
+// picker, with the billing intervals configured for it. Built from the
+// issuer's tier map so the UI only ever offers tiers that actually
+// resolve to a Stripe price (no "unknown plan" dead-ends).
+type PlanOption struct {
+	Tier      string   `json:"tier"`
+	Intervals []string `json:"intervals"` // subset of {"month","annual"}
+}
+
 // Config holds the portal's wiring. AppURL is the public origin used
 // to build verification / reset links inside email templates.
 type Config struct {
@@ -55,6 +64,7 @@ type Config struct {
 	Email         email.Sender
 	BillingPortal BillingPortalCreator // optional — nil disables the route
 	Checkout      CheckoutCreator      // optional — nil disables self-serve checkout
+	Plans         []PlanOption         // purchasable tiers served to the picker
 	AppURL        string
 	Secure        bool             // emit Secure cookies (true behind TLS)
 	Now           func() time.Time // injectable for tests
@@ -164,6 +174,7 @@ func (s *Server) Routes() *http.ServeMux {
 
 	// Self-serve checkout — only when Stripe checkout is configured.
 	if s.cfg.Checkout != nil {
+		mux.HandleFunc("GET /api/portal/plans", s.requireSession(s.handleListPlans))
 		mux.HandleFunc("POST /api/portal/checkout-session", s.requireSession(s.handleCreateCheckoutSession))
 	}
 

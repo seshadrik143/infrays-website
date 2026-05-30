@@ -305,27 +305,34 @@ func (h *Handler) handleInvoicePaymentFailed(ctx context.Context, event *stripe.
 // subscription. It prefers the customer_id stamped into subscription
 // metadata by the portal's authenticated checkout (deterministic, no
 // email guessing), and falls back to the email/Stripe-ID match used by
-// the public pricing-page flow.
+// the public pricing-page flow (which carries no metadata).
+//
+// When metadata IS present it is authoritative: a missing target is
+// treated as an error rather than silently falling through to the
+// email match. The email path can bind to a *different* account if the
+// buyer typed someone else's address into Stripe's (editable) hosted
+// checkout — which would attach a paid subscription to the wrong
+// customer. Erroring lets Stripe redeliver and surfaces the anomaly via
+// audit instead of mis-binding.
 func (h *Handler) findCustomerForSubscription(ctx context.Context, ss *stripe.Subscription) (*store.Customer, error) {
 	if id := ss.Metadata["customer_id"]; id != "" {
 		c, err := h.store.GetCustomer(ctx, id)
-		if err == nil {
-			// Link the Stripe customer ID on first paid conversion so
-			// the billing portal works immediately afterwards.
-			if c.StripeCustomerID == "" && ss.Customer != nil && ss.Customer.ID != "" {
-				c.StripeCustomerID = ss.Customer.ID
-				c.UpdatedAt = time.Now().UTC()
-				_ = h.store.UpdateCustomer(ctx, c)
-			}
-			return c, nil
+		if err != nil {
+			_, _ = h.audit.Append(ctx, audit.Entry{
+				EventType: "stripe.subscription.metadata_customer_missing",
+				Actor:     "stripe",
+				Payload:   map[string]any{"customer_id": id, "subscription_id": ss.ID},
+			})
+			return nil, fmt.Errorf("metadata customer_id %s not found (refusing email fallback to avoid mis-binding)", id)
 		}
-		// Metadata pointed at a missing customer — log and fall through
-		// to the email-based path rather than dropping the event.
-		_, _ = h.audit.Append(ctx, audit.Entry{
-			EventType: "stripe.subscription.metadata_customer_missing",
-			Actor:     "stripe",
-			Payload:   map[string]any{"customer_id": id, "subscription_id": ss.ID},
-		})
+		// Link the Stripe customer ID on first paid conversion so the
+		// billing portal works immediately afterwards.
+		if c.StripeCustomerID == "" && ss.Customer != nil && ss.Customer.ID != "" {
+			c.StripeCustomerID = ss.Customer.ID
+			c.UpdatedAt = time.Now().UTC()
+			_ = h.store.UpdateCustomer(ctx, c)
+		}
+		return c, nil
 	}
 	return h.findCustomerByStripe(ctx, ss.Customer)
 }

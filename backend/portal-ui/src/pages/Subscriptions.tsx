@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
-import { api, Subscription } from "../api/client";
+import { api, Subscription, PlanOption } from "../api/client";
 
-// Plans shown in the self-serve picker. `tier` is the identifier sent
-// to the backend — it MUST match a tier configured in the issuer's
-// NP_STRIPE_PRICE_MAP (e.g. "professional"), otherwise checkout returns
-// "unknown plan". Prices are display-only (Stripe is the source of
-// truth); keep them in sync with docs/LICENSING.md and infrays.org/pricing.
-type Plan = {
-  tier: string;
+// Display metadata keyed by tier id. The set of tiers actually OFFERED
+// is driven by the server (GET /api/portal/plans), so the picker can
+// never show a tier that won't resolve to a Stripe price. This map only
+// supplies the human-facing name/price/blurb; a configured tier with no
+// entry here still renders with a sensible fallback. Prices are
+// display-only (Stripe is the source of truth) — keep in sync with
+// docs/LICENSING.md and infrays.org/pricing.
+type PlanDisplay = {
   name: string;
   monthly: string;
   annual: string;
@@ -15,23 +16,32 @@ type Plan = {
   highlight?: boolean;
 };
 
-const PLANS: Plan[] = [
-  {
-    tier: "starter",
+const PLAN_DISPLAY: Record<string, PlanDisplay> = {
+  starter: {
     name: "Starter",
     monthly: "$49/mo",
-    annual: "$39/mo billed annually",
+    annual: "$39/mo",
     blurb: "For small teams getting started with NodePulse.",
   },
-  {
-    tier: "professional",
+  professional: {
     name: "Pro",
     monthly: "$199/mo",
-    annual: "$159/mo billed annually",
+    annual: "$159/mo",
     blurb: "Production monitoring with higher limits and full features.",
     highlight: true,
   },
-];
+};
+
+function displayFor(tier: string): PlanDisplay {
+  return (
+    PLAN_DISPLAY[tier] ?? {
+      name: tier.charAt(0).toUpperCase() + tier.slice(1),
+      monthly: "",
+      annual: "",
+      blurb: "",
+    }
+  );
+}
 
 export default function SubscriptionsPage() {
   const [subs, setSubs] = useState<Subscription[]>([]);
@@ -105,8 +115,13 @@ export default function SubscriptionsPage() {
 }
 
 function PlanPicker({ onError }: { onError: (msg: string) => void }) {
+  const [plans, setPlans] = useState<PlanOption[]>([]);
   const [interval, setInterval] = useState<"month" | "annual">("month");
   const [busyTier, setBusyTier] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.listPlans().then((r) => setPlans(r.plans || [])).catch((e) => onError(e.message));
+  }, [onError]);
 
   const subscribe = async (tier: string) => {
     setBusyTier(tier);
@@ -119,54 +134,83 @@ function PlanPicker({ onError }: { onError: (msg: string) => void }) {
     }
   };
 
+  // Nothing to sell (Stripe not configured, or no tiers) — surface the
+  // marketing pricing page instead of an empty picker.
+  if (plans.length === 0) {
+    return (
+      <div className="card text-sm text-gray-400">
+        Plans aren't available here yet. See{" "}
+        <a className="text-indigo-300 hover:underline" href="https://infrays.org/pricing">
+          infrays.org/pricing
+        </a>{" "}
+        or contact{" "}
+        <a className="text-indigo-300 hover:underline" href="mailto:contact@infrays.org">
+          sales
+        </a>
+        .
+      </div>
+    );
+  }
+
+  // Only offer an interval toggle option if at least one plan supports it.
+  const anyAnnual = plans.some((p) => p.intervals.includes("annual"));
+  const anyMonthly = plans.some((p) => p.intervals.includes("month"));
+
   return (
     <div className="space-y-4 pt-2">
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-medium">Choose a plan</h2>
-        <div className="inline-flex rounded-md border border-gray-700 text-xs overflow-hidden">
-          <button
-            onClick={() => setInterval("month")}
-            className={`px-3 py-1.5 ${interval === "month" ? "bg-gray-700 text-white" : "text-gray-400"}`}
-          >
-            Monthly
-          </button>
-          <button
-            onClick={() => setInterval("annual")}
-            className={`px-3 py-1.5 ${interval === "annual" ? "bg-gray-700 text-white" : "text-gray-400"}`}
-          >
-            Annual
-          </button>
-        </div>
+        {anyAnnual && anyMonthly && (
+          <div className="inline-flex rounded-md border border-gray-700 text-xs overflow-hidden">
+            <button
+              onClick={() => setInterval("month")}
+              className={`px-3 py-1.5 ${interval === "month" ? "bg-gray-700 text-white" : "text-gray-400"}`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setInterval("annual")}
+              className={`px-3 py-1.5 ${interval === "annual" ? "bg-gray-700 text-white" : "text-gray-400"}`}
+            >
+              Annual
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        {PLANS.map((p) => (
-          <div
-            key={p.tier}
-            className={`card flex flex-col ${p.highlight ? "border border-indigo-600/70" : ""}`}
-          >
-            <div className="flex items-center justify-between">
-              <div className="font-semibold">{p.name}</div>
-              {p.highlight && (
-                <span className="text-[10px] uppercase tracking-wide text-indigo-300">Popular</span>
-              )}
-            </div>
-            <div className="mt-2 text-xl font-semibold">
-              {interval === "month" ? p.monthly : p.annual.split(" ")[0] + "/mo"}
-            </div>
-            <div className="text-xs text-gray-400">
-              {interval === "annual" ? "billed annually" : "billed monthly"}
-            </div>
-            <p className="mt-3 text-sm text-gray-400 flex-1">{p.blurb}</p>
-            <button
-              onClick={() => subscribe(p.tier)}
-              disabled={busyTier !== null}
-              className="btn-primary text-sm mt-4"
+        {plans.map((p) => {
+          const d = displayFor(p.tier);
+          // Fall back to whatever interval this plan supports if it
+          // doesn't offer the currently-selected one.
+          const useInterval = p.intervals.includes(interval) ? interval : p.intervals[0];
+          const price = useInterval === "annual" ? d.annual : d.monthly;
+          return (
+            <div
+              key={p.tier}
+              className={`card flex flex-col ${d.highlight ? "border border-indigo-600/70" : ""}`}
             >
-              {busyTier === p.tier ? "Redirecting…" : `Subscribe to ${p.name}`}
-            </button>
-          </div>
-        ))}
+              <div className="flex items-center justify-between">
+                <div className="font-semibold">{d.name}</div>
+                {d.highlight && (
+                  <span className="text-[10px] uppercase tracking-wide text-indigo-300">Popular</span>
+                )}
+              </div>
+              {price && <div className="mt-2 text-xl font-semibold">{price}</div>}
+              <div className="text-xs text-gray-400">
+                {useInterval === "annual" ? "billed annually" : "billed monthly"}
+              </div>
+              {d.blurb && <p className="mt-3 text-sm text-gray-400 flex-1">{d.blurb}</p>}
+              <button
+                onClick={() => subscribe(p.tier)}
+                disabled={busyTier !== null}
+                className="btn-primary text-sm mt-4"
+              >
+                {busyTier === p.tier ? "Redirecting…" : `Subscribe to ${d.name}`}
+              </button>
+            </div>
+          );
+        })}
       </div>
 
       <div className="text-xs text-gray-500">

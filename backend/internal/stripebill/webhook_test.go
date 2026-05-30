@@ -317,6 +317,45 @@ func TestWebhook_SubscriptionBindsViaMetadataCustomerID(t *testing.T) {
 	}
 }
 
+// When subscription metadata names a customer_id that doesn't exist,
+// the handler must NOT fall back to email matching (which could bind to
+// the wrong account). It errors so Stripe redelivers and the anomaly is
+// visible — even when a different customer shares the event's email.
+func TestWebhook_MetadataMissingCustomerDoesNotEmailFallback(t *testing.T) {
+	h, st, _ := newTestHandler(t)
+	now := time.Now().UTC()
+	// A DIFFERENT customer that happens to own the email Stripe sends.
+	_ = st.CreateCustomer(context.Background(), &store.Customer{
+		ID: "cust_other", Email: "shared@test", StripeCustomerID: "cus_other",
+		Status: "active", CreatedAt: now, UpdatedAt: now,
+	})
+
+	sub := map[string]any{
+		"id":       "sub_orphan",
+		"customer": map[string]any{"id": "cus_x", "email": "shared@test"},
+		"status":   "active",
+		"metadata": map[string]any{"customer_id": "cust_DOES_NOT_EXIST"},
+		"items": map[string]any{
+			"data": []map[string]any{
+				{
+					"price":                map[string]any{"id": "price_test_pro"},
+					"current_period_start": now.Unix(),
+					"current_period_end":   now.Add(30 * 24 * time.Hour).Unix(),
+				},
+			},
+		},
+	}
+	w := postEvent(t, h, "evt_orphan_001", "customer.subscription.created", sub)
+	if w.Code == http.StatusOK {
+		t.Fatalf("expected non-200 for missing metadata customer, got 200")
+	}
+	// The unrelated customer must NOT have been bound to this subscription.
+	subs, _ := st.ListSubscriptionsByCustomer(context.Background(), "cust_other")
+	if len(subs) != 0 {
+		t.Errorf("subscription mis-bound to wrong customer: %+v", subs)
+	}
+}
+
 func TestWebhook_UnknownPriceFallsBackToFree(t *testing.T) {
 	h, st, _ := newTestHandler(t)
 	now := time.Now().UTC()

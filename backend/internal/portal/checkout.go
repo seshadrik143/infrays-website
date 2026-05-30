@@ -15,6 +15,17 @@ type checkoutRequest struct {
 	Interval string `json:"interval"` // "month" | "annual"; empty → month
 }
 
+// handleListPlans returns the purchasable tiers configured on the
+// issuer so the picker only offers plans that resolve to a real Stripe
+// price. Returns an empty list (not an error) when none are configured.
+func (s *Server) handleListPlans(w http.ResponseWriter, r *http.Request) {
+	plans := s.cfg.Plans
+	if plans == nil {
+		plans = []PlanOption{}
+	}
+	writeJSON(w, http.StatusOK, map[string]any{"plans": plans})
+}
+
 // handleCreateCheckoutSession starts a Stripe Checkout Session for the
 // authenticated customer and returns its URL. The browser follows the
 // redirect to Stripe's hosted checkout; on success Stripe bounces back

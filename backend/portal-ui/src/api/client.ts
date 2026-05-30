@@ -125,4 +125,12 @@ export const api = {
     request<{ url: string }>("POST", "/api/portal/billing-portal-url"),
   createCheckoutSession: (b: { tier: string; interval: "month" | "annual" }) =>
     request<{ url: string }>("POST", "/api/portal/checkout-session", b),
+  listPlans: () =>
+    request<{ plans: PlanOption[] }>("GET", "/api/portal/plans"),
+};
+
+// PlanOption mirrors the backend's configured purchasable tiers.
+export type PlanOption = {
+  tier: string;
+  intervals: string[]; // subset of "month" | "annual"
 };

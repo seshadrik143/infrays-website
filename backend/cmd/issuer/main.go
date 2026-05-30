@@ -164,6 +164,18 @@ func main() {
 		obs.Default().Info("stripe checkout handler registered")
 	}
 
+	// Purchasable tiers for the portal plan picker, derived from the
+	// configured price map so the UI can't offer a tier that won't
+	// resolve to a Stripe price.
+	var portalPlans []portal.PlanOption
+	for _, p := range priceMap.ListPlans() {
+		intervals := make([]string, 0, len(p.Options))
+		for _, o := range p.Options {
+			intervals = append(intervals, o.Interval)
+		}
+		portalPlans = append(portalPlans, portal.PlanOption{Tier: p.Tier, Intervals: intervals})
+	}
+
 	srv := issuer.NewServer(issuer.Config{
 		Store:                st,
 		Audit:                auditLog,
@@ -197,6 +209,7 @@ func main() {
 		Email:         mailer,
 		BillingPortal: billingPortal,
 		Checkout:      checkoutCreator,
+		Plans:         portalPlans,
 		AppURL:        appURL,
 		Secure:        strings.HasPrefix(appURL, "https://"),
 	})

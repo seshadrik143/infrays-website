@@ -1,7 +1,6 @@
 package stripebill
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"io"
@@ -143,7 +142,6 @@ func (h *CheckoutHandler) createSession(priceID, customerEmail string, trialDays
 		params.Metadata = metadata
 	}
 
-	_ = context.Background() // hooks for future tracing
 	sess, err := session.New(params)
 	if err != nil {
 		return "", "", err

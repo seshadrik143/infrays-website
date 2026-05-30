@@ -98,9 +98,12 @@ func newHarness(t *testing.T) *harness {
 		Email:         em,
 		BillingPortal: bp,
 		Checkout:      co,
-		AppURL:        "https://app.infrays.org",
-		Secure:        false,
-		Now:           h.now,
+		Plans: []portal.PlanOption{
+			{Tier: "professional", Intervals: []string{"month", "annual"}},
+		},
+		AppURL: "https://app.infrays.org",
+		Secure: false,
+		Now:    h.now,
 	})
 	h.srv = httptest.NewServer(srv.Routes())
 	t.Cleanup(h.srv.Close)
@@ -621,6 +624,36 @@ func TestCreateCheckoutSessionUnauthenticated(t *testing.T) {
 	h := newHarness(t)
 	c := h.client() // no session
 	resp, _ := h.do(c, "POST", "/api/portal/checkout-session", map[string]any{"tier": "pro"})
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", resp.StatusCode)
+	}
+}
+
+func TestListPlansReturnsConfiguredTiers(t *testing.T) {
+	h := newHarness(t)
+	c, _ := h.signupAndVerify("plans@x.com", "password1")
+	resp, body := h.do(c, "GET", "/api/portal/plans", nil)
+	if resp.StatusCode != 200 {
+		t.Fatalf("expected 200, got %d (%s)", resp.StatusCode, body)
+	}
+	var out struct {
+		Plans []portal.PlanOption `json:"plans"`
+	}
+	if err := json.Unmarshal(body, &out); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if len(out.Plans) != 1 || out.Plans[0].Tier != "professional" {
+		t.Fatalf("unexpected plans: %+v", out.Plans)
+	}
+	if len(out.Plans[0].Intervals) != 2 {
+		t.Errorf("expected month+annual intervals, got %v", out.Plans[0].Intervals)
+	}
+}
+
+func TestListPlansRequiresAuth(t *testing.T) {
+	h := newHarness(t)
+	c := h.client()
+	resp, _ := h.do(c, "GET", "/api/portal/plans", nil)
 	if resp.StatusCode != http.StatusUnauthorized {
 		t.Fatalf("expected 401, got %d", resp.StatusCode)
 	}
