@@ -50,6 +50,18 @@ type fakeBilling struct {
 
 func (f *fakeBilling) CreateSession(_ string) (string, error) { return f.url, f.err }
 
+type fakeCheckout struct {
+	url string
+	err error
+	// captured args from the most recent call, for assertions.
+	gotTier, gotInterval, gotEmail, gotCustomerID string
+}
+
+func (f *fakeCheckout) CreateCheckoutSession(tier, interval, customerEmail, customerID string) (string, error) {
+	f.gotTier, f.gotInterval, f.gotEmail, f.gotCustomerID = tier, interval, customerEmail, customerID
+	return f.url, f.err
+}
+
 type harness struct {
 	t          *testing.T
 	srv        *httptest.Server
@@ -57,6 +69,7 @@ type harness struct {
 	auditLog   audit.Log
 	email      *captureEmail
 	billing    *fakeBilling
+	checkout   *fakeCheckout
 	clock      time.Time
 	clockMutex sync.Mutex
 }
@@ -67,12 +80,14 @@ func newHarness(t *testing.T) *harness {
 	auditLog := audit.NewMemory()
 	em := &captureEmail{}
 	bp := &fakeBilling{url: "https://stripe.example/portal"}
+	co := &fakeCheckout{url: "https://stripe.example/checkout"}
 	h := &harness{
 		t:        t,
 		store:    st,
 		auditLog: auditLog,
 		email:    em,
 		billing:  bp,
+		checkout: co,
 		// Anchor to real wall time so cookies the server sets aren't
 		// retroactively expired by cookiejar's real-clock comparison.
 		clock: time.Now().UTC().Truncate(time.Second),
@@ -82,6 +97,7 @@ func newHarness(t *testing.T) *harness {
 		Audit:         auditLog,
 		Email:         em,
 		BillingPortal: bp,
+		Checkout:      co,
 		AppURL:        "https://app.infrays.org",
 		Secure:        false,
 		Now:           h.now,
@@ -545,6 +561,68 @@ func TestBillingPortalWithStripeCustomer(t *testing.T) {
 	}
 	if !strings.Contains(string(body), "stripe.example/portal") {
 		t.Fatalf("expected portal URL in body: %s", body)
+	}
+}
+
+func TestCreateCheckoutSessionSuccess(t *testing.T) {
+	h := newHarness(t)
+	c, cust := h.signupAndVerify("buyer@x.com", "password1")
+	resp, body := h.do(c, "POST", "/api/portal/checkout-session", map[string]any{
+		"tier": "pro", "interval": "annual",
+	})
+	if resp.StatusCode != 200 {
+		t.Fatalf("expected 200, got %d (%s)", resp.StatusCode, body)
+	}
+	if !strings.Contains(string(body), "stripe.example/checkout") {
+		t.Fatalf("expected checkout URL in body: %s", body)
+	}
+	// Tier/interval forwarded; email + customer ID taken from the
+	// session (not the request) so they can't be spoofed.
+	if h.checkout.gotTier != "pro" || h.checkout.gotInterval != "annual" {
+		t.Fatalf("forwarded tier/interval = %q/%q", h.checkout.gotTier, h.checkout.gotInterval)
+	}
+	if h.checkout.gotEmail != "buyer@x.com" || h.checkout.gotCustomerID != cust.ID {
+		t.Fatalf("expected session-derived email/id, got %q/%q", h.checkout.gotEmail, h.checkout.gotCustomerID)
+	}
+}
+
+func TestCreateCheckoutSessionRequiresEmailVerification(t *testing.T) {
+	h := newHarness(t)
+	c := h.client()
+	h.do(c, "POST", "/api/portal/auth/signup", map[string]any{"email": "unv@x.com", "password": "password1"})
+	h.do(c, "POST", "/api/portal/auth/login", map[string]any{"email": "unv@x.com", "password": "password1"})
+	resp, body := h.do(c, "POST", "/api/portal/checkout-session", map[string]any{"tier": "pro"})
+	if resp.StatusCode != http.StatusForbidden {
+		t.Fatalf("expected 403 without verified email, got %d (%s)", resp.StatusCode, body)
+	}
+}
+
+func TestCreateCheckoutSessionMissingTier(t *testing.T) {
+	h := newHarness(t)
+	c, _ := h.signupAndVerify("notier@x.com", "password1")
+	resp, _ := h.do(c, "POST", "/api/portal/checkout-session", map[string]any{"interval": "month"})
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("expected 400 for missing tier, got %d", resp.StatusCode)
+	}
+}
+
+func TestCreateCheckoutSessionUnknownPlan(t *testing.T) {
+	h := newHarness(t)
+	c, _ := h.signupAndVerify("badplan@x.com", "password1")
+	// Simulate the tier map having no matching price.
+	h.checkout.err = errors.New("stripebill: no Stripe price configured for tier/interval")
+	resp, body := h.do(c, "POST", "/api/portal/checkout-session", map[string]any{"tier": "ghost"})
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("expected 400 unknown plan, got %d (%s)", resp.StatusCode, body)
+	}
+}
+
+func TestCreateCheckoutSessionUnauthenticated(t *testing.T) {
+	h := newHarness(t)
+	c := h.client() // no session
+	resp, _ := h.do(c, "POST", "/api/portal/checkout-session", map[string]any{"tier": "pro"})
+	if resp.StatusCode != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", resp.StatusCode)
 	}
 }
 

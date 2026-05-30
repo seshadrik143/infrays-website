@@ -38,6 +38,15 @@ type BillingPortalCreator interface {
 	CreateSession(stripeCustomerID string) (string, error)
 }
 
+// CheckoutCreator is the narrow surface the portal needs to start a
+// self-serve Stripe Checkout for an authenticated customer. The tier +
+// interval are resolved to a Stripe Price ID by the implementation
+// (the client never supplies a raw Price ID). Kept as an interface so
+// the portal package doesn't import stripe-go directly.
+type CheckoutCreator interface {
+	CreateCheckoutSession(tier, interval, customerEmail, customerID string) (url string, err error)
+}
+
 // Config holds the portal's wiring. AppURL is the public origin used
 // to build verification / reset links inside email templates.
 type Config struct {
@@ -45,6 +54,7 @@ type Config struct {
 	Audit         audit.Log
 	Email         email.Sender
 	BillingPortal BillingPortalCreator // optional — nil disables the route
+	Checkout      CheckoutCreator      // optional — nil disables self-serve checkout
 	AppURL        string
 	Secure        bool             // emit Secure cookies (true behind TLS)
 	Now           func() time.Time // injectable for tests
@@ -148,6 +158,11 @@ func (s *Server) Routes() *http.ServeMux {
 	// Stripe billing portal redirect — only when configured.
 	if s.cfg.BillingPortal != nil {
 		mux.HandleFunc("POST /api/portal/billing-portal-url", s.requireSession(s.handleBillingPortalURL))
+	}
+
+	// Self-serve checkout — only when Stripe checkout is configured.
+	if s.cfg.Checkout != nil {
+		mux.HandleFunc("POST /api/portal/checkout-session", s.requireSession(s.handleCreateCheckoutSession))
 	}
 
 	return mux

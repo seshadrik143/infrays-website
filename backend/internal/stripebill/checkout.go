@@ -96,39 +96,74 @@ func (h *CheckoutHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		req.TrialDays = 30
 	}
 
-	successURL := h.appURL + "/welcome?session_id={CHECKOUT_SESSION_ID}"
-	cancelURL := h.appURL + "/pricing?canceled=1"
-
-	params := &stripe.CheckoutSessionParams{
-		Mode: stripe.String(string(stripe.CheckoutSessionModeSubscription)),
-		LineItems: []*stripe.CheckoutSessionLineItemParams{
-			{Price: stripe.String(req.PriceID), Quantity: stripe.Int64(1)},
-		},
-		SuccessURL: stripe.String(successURL),
-		CancelURL:  stripe.String(cancelURL),
-	}
-	if req.CustomerEmail != "" {
-		params.CustomerEmail = stripe.String(req.CustomerEmail)
-	}
-	if req.TrialDays > 0 {
-		params.SubscriptionData = &stripe.CheckoutSessionSubscriptionDataParams{
-			TrialPeriodDays: stripe.Int64(int64(req.TrialDays)),
-		}
-	}
-	if len(req.Metadata) > 0 {
-		params.Metadata = req.Metadata
-	}
-
-	_ = context.Background() // hooks for future tracing
-	sess, err := session.New(params)
+	sessionID, url, err := h.createSession(req.PriceID, req.CustomerEmail, req.TrialDays, req.Metadata)
 	if err != nil {
 		http.Error(w, `{"error":"stripe error","detail":"`+err.Error()+`"}`, http.StatusBadGateway)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(createSessionResp{
-		SessionID: sess.ID,
-		URL:       sess.URL,
-	})
+	_ = json.NewEncoder(w).Encode(createSessionResp{SessionID: sessionID, URL: url})
+}
+
+// createSession builds and creates a Stripe Checkout Session for a
+// known Price ID. Shared by the public ServeHTTP path (pricing page)
+// and CreateCheckoutSession (authenticated portal path). Callers are
+// responsible for validating the priceID against the tier map.
+func (h *CheckoutHandler) createSession(priceID, customerEmail string, trialDays int, metadata map[string]string) (sessionID, url string, err error) {
+	successURL := h.appURL + "/welcome?session_id={CHECKOUT_SESSION_ID}"
+	cancelURL := h.appURL + "/pricing?canceled=1"
+
+	params := &stripe.CheckoutSessionParams{
+		Mode: stripe.String(string(stripe.CheckoutSessionModeSubscription)),
+		LineItems: []*stripe.CheckoutSessionLineItemParams{
+			{Price: stripe.String(priceID), Quantity: stripe.Int64(1)},
+		},
+		SuccessURL: stripe.String(successURL),
+		CancelURL:  stripe.String(cancelURL),
+	}
+	if customerEmail != "" {
+		params.CustomerEmail = stripe.String(customerEmail)
+	}
+	if trialDays > 0 {
+		params.SubscriptionData = &stripe.CheckoutSessionSubscriptionDataParams{
+			TrialPeriodDays: stripe.Int64(int64(trialDays)),
+		}
+	}
+	if len(metadata) > 0 {
+		params.Metadata = metadata
+	}
+
+	_ = context.Background() // hooks for future tracing
+	sess, err := session.New(params)
+	if err != nil {
+		return "", "", err
+	}
+	return sess.ID, sess.URL, nil
+}
+
+// CreateCheckoutSession issues a Checkout Session URL for an
+// authenticated portal customer who picked a tier + interval. The
+// price is resolved server-side from the tier map (the client never
+// supplies a raw Price ID), and customerID is stamped into session
+// metadata so the webhook binds the resulting subscription to the
+// existing customer instead of creating a duplicate.
+//
+// No trial days are granted here — the customer already consumed the
+// signup trial; this is a paid conversion. Satisfies
+// portal.CheckoutCreator.
+func (h *CheckoutHandler) CreateCheckoutSession(tier, interval, customerEmail, customerID string) (string, error) {
+	priceID, ok := h.priceMap.LookupTier(tier, interval)
+	if !ok {
+		return "", errors.New("stripebill: no Stripe price configured for tier/interval")
+	}
+	meta := map[string]string{}
+	if customerID != "" {
+		meta["customer_id"] = customerID
+	}
+	_, url, err := h.createSession(priceID, customerEmail, 0, meta)
+	if err != nil {
+		return "", err
+	}
+	return url, nil
 }

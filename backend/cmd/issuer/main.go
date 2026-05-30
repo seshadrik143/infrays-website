@@ -135,6 +135,7 @@ func main() {
 	// before sales is set up. Webhooks + checkout routes only
 	// register when their respective configs are present.
 	var stripeWebhook, stripeCheckout issuer.StripeBillHandler
+	var checkoutCreator portal.CheckoutCreator // self-serve checkout for the portal
 	priceMap, err := stripebill.ParseTierMappingFromEnv(os.Getenv("NP_STRIPE_PRICE_MAP"))
 	if err != nil {
 		log.Fatalf("stripe price map: %v", err)
@@ -158,6 +159,7 @@ func main() {
 			log.Fatalf("stripe checkout: %v", err)
 		}
 		stripeCheckout = ch
+		checkoutCreator = ch // same handler serves the authenticated portal path
 		obs.Default().Info("stripe checkout handler registered")
 	}
 
@@ -193,6 +195,7 @@ func main() {
 		Audit:         auditLog,
 		Email:         mailer,
 		BillingPortal: billingPortal,
+		Checkout:      checkoutCreator,
 		AppURL:        appURL,
 		Secure:        strings.HasPrefix(appURL, "https://"),
 	})
