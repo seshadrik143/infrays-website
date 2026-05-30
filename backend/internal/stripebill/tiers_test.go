@@ -25,7 +25,7 @@ func TestParseTierMappingFromEnv_IntervalsAndReverseLookup(t *testing.T) {
 	}{
 		{"professional", "month", "price_m"},
 		{"professional", "annual", "price_a"},
-		{"professional", "", "price_m"},   // empty defaults to month
+		{"professional", "", "price_m"},    // empty defaults to month
 		{"enterprise", "month", "price_e"}, // omitted interval defaulted to month
 	}
 	for _, c := range cases {

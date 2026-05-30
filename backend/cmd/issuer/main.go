@@ -7,9 +7,10 @@
 // to PostgreSQL (Phase 49 follow-up).
 //
 // Signing key:
-//   --signer=local --signer-key-file=<pem>     (DEV / CI ONLY)
-//   --signer=gcp-kms ... (TODO)
-//   --signer=vault   ... (TODO)
+//
+//	--signer=local --signer-key-file=<pem>     (DEV / CI ONLY)
+//	--signer=gcp-kms ... (TODO)
+//	--signer=vault   ... (TODO)
 //
 // See backend/docs/LICENSE_KEY_CUSTODY.md for production key custody.
 package main

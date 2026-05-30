@@ -22,8 +22,8 @@ import (
 // page handles card UI, 3DS, fraud, SCA, etc. We just construct the
 // session.
 type CheckoutHandler struct {
-	apiKey  string
-	appURL  string // base URL of app.infrays.org (where success/cancel redirects land)
+	apiKey   string
+	appURL   string // base URL of app.infrays.org (where success/cancel redirects land)
 	priceMap *TierMapping
 }
 
@@ -55,9 +55,9 @@ func NewCheckoutHandler(apiKey, appURL string, priceMap *TierMapping) (*Checkout
 
 // createSessionReq is the POST body shape.
 type createSessionReq struct {
-	PriceID       string `json:"price_id"`        // REQUIRED — must be in cfg.PriceMap
-	CustomerEmail string `json:"customer_email"`  // pre-fill on Checkout; optional
-	TrialDays     int    `json:"trial_days"`      // 0 = no trial. Cap at 30.
+	PriceID       string            `json:"price_id"`       // REQUIRED — must be in cfg.PriceMap
+	CustomerEmail string            `json:"customer_email"` // pre-fill on Checkout; optional
+	TrialDays     int               `json:"trial_days"`     // 0 = no trial. Cap at 30.
 	Metadata      map[string]string `json:"metadata,omitempty"`
 }
 

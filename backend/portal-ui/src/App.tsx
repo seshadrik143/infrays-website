@@ -8,6 +8,7 @@ import VerifyEmailPage from "./pages/VerifyEmail";
 import ResetPasswordPage from "./pages/ResetPassword";
 import DashboardPage from "./pages/Dashboard";
 import SubscriptionsPage from "./pages/Subscriptions";
+import WelcomePage from "./pages/Welcome";
 import DeploymentsPage from "./pages/Deployments";
 import EnrollmentTokensPage from "./pages/EnrollmentTokens";
 import LicensesPage from "./pages/Licenses";
@@ -45,6 +46,7 @@ export default function App() {
       <Route element={<RequireAuth><Layout /></RequireAuth>}>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/subscriptions" element={<SubscriptionsPage />} />
+        <Route path="/welcome" element={<WelcomePage />} />
         <Route path="/deployments" element={<DeploymentsPage />} />
         <Route path="/enrollment-tokens" element={<EnrollmentTokensPage />} />
         <Route path="/licenses" element={<LicensesPage />} />

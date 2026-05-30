@@ -123,4 +123,6 @@ export const api = {
     request<CustomerProfile>("PATCH", "/api/portal/account", b),
   billingPortalURL: () =>
     request<{ url: string }>("POST", "/api/portal/billing-portal-url"),
+  createCheckoutSession: (b: { tier: string; interval: "month" | "annual" }) =>
+    request<{ url: string }>("POST", "/api/portal/checkout-session", b),
 };

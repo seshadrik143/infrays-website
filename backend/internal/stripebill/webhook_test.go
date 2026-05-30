@@ -131,9 +131,9 @@ func TestWebhook_IdempotentReplay(t *testing.T) {
 		"items": map[string]any{
 			"data": []map[string]any{
 				{
-					"price":                  map[string]any{"id": "price_test_pro"},
-					"current_period_start":   now.Unix(),
-					"current_period_end":     now.Add(30 * 24 * time.Hour).Unix(),
+					"price":                map[string]any{"id": "price_test_pro"},
+					"current_period_start": now.Unix(),
+					"current_period_end":   now.Add(30 * 24 * time.Hour).Unix(),
 				},
 			},
 		},
@@ -502,10 +502,10 @@ func TestEmail_PaymentFailedFirstAttemptOnly(t *testing.T) {
 
 	// First failed attempt → email
 	invoice1 := map[string]any{
-		"id":             "in_001",
-		"amount_due":     4900,
-		"attempt_count":  1,
-		"customer":       map[string]any{"id": "cus_pf", "email": "payfail@test.com"},
+		"id":            "in_001",
+		"amount_due":    4900,
+		"attempt_count": 1,
+		"customer":      map[string]any{"id": "cus_pf", "email": "payfail@test.com"},
 	}
 	w := postEvent(t, h, "evt_pf_001", "invoice.payment_failed", invoice1)
 	if w.Code != http.StatusOK {
@@ -517,10 +517,10 @@ func TestEmail_PaymentFailedFirstAttemptOnly(t *testing.T) {
 
 	// Second + third attempts (dunning retries) → no email
 	invoice2 := map[string]any{
-		"id":             "in_001",
-		"amount_due":     4900,
-		"attempt_count":  2,
-		"customer":       map[string]any{"id": "cus_pf", "email": "payfail@test.com"},
+		"id":            "in_001",
+		"amount_due":    4900,
+		"attempt_count": 2,
+		"customer":      map[string]any{"id": "cus_pf", "email": "payfail@test.com"},
 	}
 	cap.Reset()
 	postEvent(t, h, "evt_pf_002", "invoice.payment_failed", invoice2)

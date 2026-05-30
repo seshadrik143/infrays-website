@@ -250,10 +250,10 @@ func (h *Handler) handleInvoicePaid(ctx context.Context, event *stripe.Event) er
 		EventType: "stripe.invoice.paid",
 		Actor:     "stripe",
 		Payload: map[string]any{
-			"invoice_id":       inv.ID,
-			"amount_paid":      inv.AmountPaid,
-			"currency":         string(inv.Currency),
-			"stripe_customer":  inv.Customer,
+			"invoice_id":      inv.ID,
+			"amount_paid":     inv.AmountPaid,
+			"currency":        string(inv.Currency),
+			"stripe_customer": inv.Customer,
 		},
 	})
 	return nil
@@ -268,11 +268,11 @@ func (h *Handler) handleInvoicePaymentFailed(ctx context.Context, event *stripe.
 		EventType: "stripe.invoice.payment_failed",
 		Actor:     "stripe",
 		Payload: map[string]any{
-			"invoice_id":         inv.ID,
-			"amount_due":         inv.AmountDue,
-			"attempt_count":      inv.AttemptCount,
+			"invoice_id":           inv.ID,
+			"amount_due":           inv.AmountDue,
+			"attempt_count":        inv.AttemptCount,
 			"next_payment_attempt": unixOrZero(inv.NextPaymentAttempt),
-			"stripe_customer":    inv.Customer,
+			"stripe_customer":      inv.Customer,
 		},
 	})
 	// Customer email — only on first attempt to avoid the noise of
