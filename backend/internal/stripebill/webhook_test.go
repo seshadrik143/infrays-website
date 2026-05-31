@@ -131,9 +131,9 @@ func TestWebhook_IdempotentReplay(t *testing.T) {
 		"items": map[string]any{
 			"data": []map[string]any{
 				{
-					"price":                  map[string]any{"id": "price_test_pro"},
-					"current_period_start":   now.Unix(),
-					"current_period_end":     now.Add(30 * 24 * time.Hour).Unix(),
+					"price":                map[string]any{"id": "price_test_pro"},
+					"current_period_start": now.Unix(),
+					"current_period_end":   now.Add(30 * 24 * time.Hour).Unix(),
 				},
 			},
 		},
@@ -206,6 +206,57 @@ func TestWebhook_CustomerCreated_AttachToExisting(t *testing.T) {
 	}
 	if c.ID != "cust_existing_001" {
 		t.Errorf("should reuse existing customer row, got %q", c.ID)
+	}
+}
+
+func TestWebhook_PaidSubscriptionSupersedesLocalTrial(t *testing.T) {
+	h, st, _ := newTestHandler(t)
+	now := time.Now().UTC()
+	_ = st.CreateCustomer(context.Background(), &store.Customer{
+		ID: "cust_conv", Email: "convert@test", StripeCustomerID: "cus_conv",
+		Status: "active", CreatedAt: now, UpdatedAt: now,
+	})
+	// The local signup trial (ManualOffline, trialing, no Stripe ID).
+	_ = st.CreateSubscription(context.Background(), &store.Subscription{
+		ID: "sub_local_trial", CustomerID: "cust_conv", Tier: "professional",
+		Status: "trialing", ManualOffline: true,
+		TrialEnd: now.Add(10 * 24 * time.Hour), CreatedAt: now, UpdatedAt: now,
+	})
+
+	// Customer converts → a real Stripe subscription arrives.
+	sub := map[string]any{
+		"id":       "sub_paid",
+		"customer": map[string]any{"id": "cus_conv", "email": "convert@test"},
+		"status":   "active",
+		"items": map[string]any{"data": []map[string]any{{
+			"price":                map[string]any{"id": "price_test_pro"},
+			"current_period_start": now.Unix(),
+			"current_period_end":   now.Add(30 * 24 * time.Hour).Unix(),
+		}}},
+	}
+	w := postEvent(t, h, "evt_conv_001", "customer.subscription.created", sub)
+	if w.Code != http.StatusOK {
+		t.Fatalf("created: got %d body=%s", w.Code, w.Body.String())
+	}
+
+	subs, _ := st.ListSubscriptionsByCustomer(context.Background(), "cust_conv")
+	var trial, paid *store.Subscription
+	for _, s := range subs {
+		if s.ID == "sub_local_trial" {
+			trial = s
+		}
+		if s.StripeSubscriptionID == "sub_paid" {
+			paid = s
+		}
+	}
+	if paid == nil || paid.Status != "active" {
+		t.Fatalf("paid subscription should be active: %+v", paid)
+	}
+	if trial == nil || trial.Status != "canceled" {
+		t.Errorf("local trial should be superseded (canceled), got %+v", trial)
+	}
+	if trial != nil && trial.CanceledAt.IsZero() {
+		t.Error("superseded trial should have CanceledAt set")
 	}
 }
 
@@ -458,10 +509,10 @@ func TestEmail_PaymentFailedFirstAttemptOnly(t *testing.T) {
 
 	// First failed attempt → email
 	invoice1 := map[string]any{
-		"id":             "in_001",
-		"amount_due":     4900,
-		"attempt_count":  1,
-		"customer":       map[string]any{"id": "cus_pf", "email": "payfail@test.com"},
+		"id":            "in_001",
+		"amount_due":    4900,
+		"attempt_count": 1,
+		"customer":      map[string]any{"id": "cus_pf", "email": "payfail@test.com"},
 	}
 	w := postEvent(t, h, "evt_pf_001", "invoice.payment_failed", invoice1)
 	if w.Code != http.StatusOK {
@@ -473,10 +524,10 @@ func TestEmail_PaymentFailedFirstAttemptOnly(t *testing.T) {
 
 	// Second + third attempts (dunning retries) → no email
 	invoice2 := map[string]any{
-		"id":             "in_001",
-		"amount_due":     4900,
-		"attempt_count":  2,
-		"customer":       map[string]any{"id": "cus_pf", "email": "payfail@test.com"},
+		"id":            "in_001",
+		"amount_due":    4900,
+		"attempt_count": 2,
+		"customer":      map[string]any{"id": "cus_pf", "email": "payfail@test.com"},
 	}
 	cap.Reset()
 	postEvent(t, h, "evt_pf_002", "invoice.payment_failed", invoice2)

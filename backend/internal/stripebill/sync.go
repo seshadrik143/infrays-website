@@ -175,6 +175,9 @@ func (h *Handler) handleSubscriptionEvent(ctx context.Context, event *stripe.Eve
 				"period_end":             sub.CurrentPeriodEnd.Format(time.RFC3339),
 			},
 		})
+		// A real Stripe subscription supersedes the local signup trial — cancel
+		// the trial so the customer isn't left with two active subscriptions.
+		h.supersedeLocalTrials(ctx, customer.ID)
 		return nil
 	}
 	if err != nil {
@@ -247,10 +250,10 @@ func (h *Handler) handleInvoicePaid(ctx context.Context, event *stripe.Event) er
 		EventType: "stripe.invoice.paid",
 		Actor:     "stripe",
 		Payload: map[string]any{
-			"invoice_id":       inv.ID,
-			"amount_paid":      inv.AmountPaid,
-			"currency":         string(inv.Currency),
-			"stripe_customer":  inv.Customer,
+			"invoice_id":      inv.ID,
+			"amount_paid":     inv.AmountPaid,
+			"currency":        string(inv.Currency),
+			"stripe_customer": inv.Customer,
 		},
 	})
 	return nil
@@ -265,11 +268,11 @@ func (h *Handler) handleInvoicePaymentFailed(ctx context.Context, event *stripe.
 		EventType: "stripe.invoice.payment_failed",
 		Actor:     "stripe",
 		Payload: map[string]any{
-			"invoice_id":         inv.ID,
-			"amount_due":         inv.AmountDue,
-			"attempt_count":      inv.AttemptCount,
+			"invoice_id":           inv.ID,
+			"amount_due":           inv.AmountDue,
+			"attempt_count":        inv.AttemptCount,
 			"next_payment_attempt": unixOrZero(inv.NextPaymentAttempt),
-			"stripe_customer":    inv.Customer,
+			"stripe_customer":      inv.Customer,
 		},
 	})
 	// Customer email — only on first attempt to avoid the noise of
@@ -297,6 +300,36 @@ func (h *Handler) handleInvoicePaymentFailed(ctx context.Context, event *stripe.
 }
 
 // ── helpers ────────────────────────────────────────────────────────
+
+// supersedeLocalTrials cancels a customer's local signup-trial subscriptions
+// (ManualOffline, trialing, no Stripe ID) once they have a real Stripe
+// subscription, so they aren't left showing two active subscriptions.
+// Best-effort: failures are logged via audit, not propagated.
+func (h *Handler) supersedeLocalTrials(ctx context.Context, customerID string) {
+	subs, err := h.store.ListSubscriptionsByCustomer(ctx, customerID)
+	if err != nil {
+		return
+	}
+	now := time.Now().UTC()
+	for _, sub := range subs {
+		if !sub.ManualOffline || sub.StripeSubscriptionID != "" || sub.Status != "trialing" {
+			continue // only local signup trials, not the Stripe sub we just created
+		}
+		sub.Status = "canceled"
+		sub.CanceledAt = now
+		sub.UpdatedAt = now
+		if err := h.store.UpdateSubscription(ctx, sub); err != nil {
+			continue
+		}
+		_, _ = h.audit.Append(ctx, audit.Entry{
+			EventType:      "trial.superseded",
+			CustomerID:     customerID,
+			SubscriptionID: sub.ID,
+			Actor:          "stripe",
+			Payload:        map[string]any{"reason": "paid subscription created"},
+		})
+	}
+}
 
 // findCustomerByStripe resolves the local Customer row for a Stripe
 // customer reference. Tries Stripe customer ID first; falls back to
