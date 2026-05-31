@@ -1,17 +1,17 @@
-// Package trialscheduler is the periodic job that sends 30/7/1-day-
+// Package trialscheduler is the periodic job that sends 7/3/1-day-
 // before-trial-end reminder emails to SaaS customers.
 //
 // Lifecycle:
 //
-//   1. Issuer starts → NewScheduler + Start()
-//   2. Every CheckInterval (default 1h), Tick() runs:
-//      a. Query subs with TrialEnd in the next 30 days
-//      b. For each, compute days-until-trial-end
-//      c. For each threshold (30, 7, 1) where:
-//           days-until-trial-end ≤ threshold
-//           AND threshold NOT in sub.TrialRemindersSent
-//         → send the reminder email, append threshold, update sub
-//   3. Stop() cancels the goroutine and waits for it to exit
+//  1. Issuer starts → NewScheduler + Start()
+//  2. Every CheckInterval (default 1h), Tick() runs:
+//     a. Query subs with TrialEnd in the next 30 days
+//     b. For each, compute days-until-trial-end
+//     c. For each threshold (30, 7, 1) where:
+//     days-until-trial-end ≤ threshold
+//     AND threshold NOT in sub.TrialRemindersSent
+//     → send the reminder email, append threshold, update sub
+//  3. Stop() cancels the goroutine and waits for it to exit
 //
 // Idempotency: each threshold fires exactly once per subscription via
 // the TrialRemindersSent list. Lost-update races on the same threshold
@@ -38,7 +38,7 @@ import (
 // Default reminder thresholds (days before trial end). Configurable
 // via Config.Thresholds — set to []int{} to disable reminders while
 // keeping the scheduler running (rare).
-var DefaultThresholds = []int{30, 7, 1}
+var DefaultThresholds = []int{7, 3, 1}
 
 // Config bundles the scheduler's wiring. Tick interval defaults to
 // 1h, which gives ~1-hour granularity on reminder firing — fine for
@@ -48,9 +48,9 @@ type Config struct {
 	Email         email.Sender
 	Audit         audit.Log
 	AppURL        string
-	CheckInterval time.Duration // default 1h
-	Thresholds    []int         // default {30, 7, 1}
-	LookaheadDays int           // how far ahead to scan for trials ending; default = max(Thresholds) + 1
+	CheckInterval time.Duration    // default 1h
+	Thresholds    []int            // default {30, 7, 1}
+	LookaheadDays int              // how far ahead to scan for trials ending; default = max(Thresholds) + 1
 	Now           func() time.Time // injected for tests
 }
 
@@ -295,10 +295,10 @@ func (s *Scheduler) sendReminder(ctx context.Context, sub *store.Subscription, t
 		SubscriptionID: sub.ID,
 		Actor:          "trialscheduler",
 		Payload: map[string]any{
-			"threshold":  threshold,
-			"days_left":  daysLeft,
-			"trial_end":  sub.TrialEnd.Format(time.RFC3339),
-			"email_to":   customer.Email,
+			"threshold": threshold,
+			"days_left": daysLeft,
+			"trial_end": sub.TrialEnd.Format(time.RFC3339),
+			"email_to":  customer.Email,
 		},
 	})
 	return nil

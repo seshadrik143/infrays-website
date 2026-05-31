@@ -28,7 +28,8 @@ import (
 const (
 	SessionCookieName = "np_portal_session"
 	SessionTTL        = 7 * 24 * time.Hour
-	TokenTTL          = 24 * time.Hour // verify-email / reset-password
+	TokenTTL          = 24 * time.Hour      // verify-email / reset-password
+	TrialDuration     = 15 * 24 * time.Hour // free trial length on signup
 )
 
 // BillingPortalCreator is the narrow surface the portal needs from
@@ -58,10 +59,10 @@ type Server struct {
 	// + reset; looser on signup (legit traffic isn't bursty there
 	// either, but we want to avoid annoying false-positives if a
 	// shared NAT bursts a few new signups).
-	loginIPRL  *Limiter
-	signupRL   *Limiter
-	resetRL    *Limiter
-	verifyRL   *Limiter
+	loginIPRL *Limiter
+	signupRL  *Limiter
+	resetRL   *Limiter
+	verifyRL  *Limiter
 	// Per-account lockout for customer logins: 5 fails within 15min
 	// → reject for 15min from the most recent miss.
 	loginAccountRL *Limiter
@@ -105,17 +106,19 @@ func (s *Server) Close() {
 // (the issuer main strips the prefix before delegating).
 //
 // Public routes — no session required:
-//   POST /api/portal/auth/signup
-//   POST /api/portal/auth/login
-//   POST /api/portal/auth/verify-email
-//   POST /api/portal/auth/request-password-reset
-//   POST /api/portal/auth/reset-password
+//
+//	POST /api/portal/auth/signup
+//	POST /api/portal/auth/login
+//	POST /api/portal/auth/verify-email
+//	POST /api/portal/auth/request-password-reset
+//	POST /api/portal/auth/reset-password
 //
 // Authenticated routes — session cookie required:
-//   POST /api/portal/auth/logout
-//   GET  /api/portal/auth/me
-//   POST /api/portal/auth/change-password
-//   POST /api/portal/auth/resend-verification
+//
+//	POST /api/portal/auth/logout
+//	GET  /api/portal/auth/me
+//	POST /api/portal/auth/change-password
+//	POST /api/portal/auth/resend-verification
 //
 // Data routes added in Task #85.
 func (s *Server) Routes() *http.ServeMux {

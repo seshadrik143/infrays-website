@@ -123,6 +123,32 @@ func (s *Server) handleSignup(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "create customer")
 		return
 	}
+
+	// Start the 15-day free trial as a local "trialing" subscription. Without
+	// this, self-serve trial users (no credit card → no Stripe subscription)
+	// have no row in the subscriptions table, so the expiry-reminder scheduler
+	// — which queries subscriptions by trial_end — never finds them and no
+	// reminder emails are ever sent. Best-effort: signup still succeeds if it
+	// fails.
+	if subID, idErr := newOpaqueID("sub"); idErr == nil {
+		trialEnd := now.Add(TrialDuration)
+		trialSub := &store.Subscription{
+			ID:                 subID,
+			CustomerID:         cust.ID,
+			Tier:               "professional", // trial includes Pro-tier features
+			Status:             "trialing",
+			CurrentPeriodStart: now,
+			CurrentPeriodEnd:   trialEnd,
+			TrialEnd:           trialEnd,
+			ManualOffline:      true, // license trial, not a Stripe subscription
+			CreatedAt:          now,
+			UpdatedAt:          now,
+		}
+		if err := s.cfg.Store.CreateSubscription(r.Context(), trialSub); err != nil {
+			obs.Default().Warn("signup: could not create trial subscription", "customer_id", cust.ID, "error", err.Error())
+		}
+	}
+
 	s.sendVerificationEmail(cust, tokenPlain)
 	obs.PortalSignupsTotal.WithLabelValues("created").Inc()
 	s.appendAudit("portal.signup_created", cust, nil)
@@ -494,13 +520,13 @@ func newOpaqueID(prefix string) (string, error) {
 // customerProfile is the safe shape we return to the browser — no
 // password hash, no token state.
 type CustomerProfile struct {
-	ID             string    `json:"id"`
-	Email          string    `json:"email"`
-	Name           string    `json:"name"`
-	Company        string    `json:"company"`
-	Status         string    `json:"status"`
-	EmailVerified  bool      `json:"email_verified"`
-	CreatedAt      time.Time `json:"created_at"`
+	ID            string    `json:"id"`
+	Email         string    `json:"email"`
+	Name          string    `json:"name"`
+	Company       string    `json:"company"`
+	Status        string    `json:"status"`
+	EmailVerified bool      `json:"email_verified"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
 func customerProfile(c *store.Customer) CustomerProfile {

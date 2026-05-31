@@ -7,9 +7,10 @@
 // to PostgreSQL (Phase 49 follow-up).
 //
 // Signing key:
-//   --signer=local --signer-key-file=<pem>     (DEV / CI ONLY)
-//   --signer=gcp-kms ... (TODO)
-//   --signer=vault   ... (TODO)
+//
+//	--signer=local --signer-key-file=<pem>     (DEV / CI ONLY)
+//	--signer=gcp-kms ... (TODO)
+//	--signer=vault   ... (TODO)
 //
 // See backend/docs/LICENSE_KEY_CUSTODY.md for production key custody.
 package main
@@ -255,14 +256,14 @@ func main() {
 		Audit:         auditLog,
 		AppURL:        appURL,
 		CheckInterval: time.Hour,
-		Thresholds:    []int{30, 7, 1},
+		Thresholds:    []int{7, 3, 1},
 	})
 	if err != nil {
 		log.Fatalf("trialscheduler: %v", err)
 	}
 	trialCtx, trialCancel := context.WithCancel(context.Background())
 	trialSched.Start(trialCtx)
-	obs.Default().Info("trialscheduler started", "thresholds_days", []int{30, 7, 1}, "tick", "1h")
+	obs.Default().Info("trialscheduler started", "thresholds_days", []int{7, 3, 1}, "tick", "1h")
 
 	go func() {
 		obs.Default().Info("issuer listening", "addr", *addr, "signer", *signerSource, "kid", signer.KID())

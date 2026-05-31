@@ -203,6 +203,42 @@ func TestSignupVerifyLoginMeFlow(t *testing.T) {
 	}
 }
 
+func TestSignupCreatesTrialSubscription(t *testing.T) {
+	// Regression: self-serve signup must create a "trialing" subscription with
+	// trial_end, otherwise the expiry-reminder scheduler (which queries
+	// subscriptions by trial_end) never finds trial users and no reminder
+	// emails go out.
+	h := newHarness(t)
+	c := h.client()
+	resp, _ := h.do(c, "POST", "/api/portal/auth/signup", map[string]any{
+		"email": "trialuser@example.com", "password": "supersecret",
+	})
+	if resp.StatusCode != 200 {
+		t.Fatalf("signup: %d", resp.StatusCode)
+	}
+	cust, err := h.store.GetCustomerByEmail(context.Background(), "trialuser@example.com")
+	if err != nil {
+		t.Fatalf("lookup customer: %v", err)
+	}
+	subs, err := h.store.ListSubscriptionsByCustomer(context.Background(), cust.ID)
+	if err != nil {
+		t.Fatalf("list subscriptions: %v", err)
+	}
+	if len(subs) != 1 {
+		t.Fatalf("expected 1 trial subscription after signup, got %d", len(subs))
+	}
+	sub := subs[0]
+	if sub.Status != "trialing" {
+		t.Errorf("status: got %q, want trialing", sub.Status)
+	}
+	if sub.TrialEnd.IsZero() {
+		t.Fatal("TrialEnd should be set so the reminder scheduler can find it")
+	}
+	if d := sub.TrialEnd.Sub(h.now()); d < 14*24*time.Hour || d > 16*24*time.Hour {
+		t.Errorf("trial end should be ~15 days out, got %s", d)
+	}
+}
+
 func TestUnauthenticatedAccessDenied(t *testing.T) {
 	h := newHarness(t)
 	c := h.client()
