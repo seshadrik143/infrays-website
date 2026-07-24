@@ -1,14 +1,31 @@
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import CTABanner from '@/components/CTABanner'
-import { CheckCircle2, Zap, Shield, Globe, Brain, Database, Puzzle, Cloud, Activity, Server, Code2, Package, GitBranch } from 'lucide-react'
+import { CheckCircle2, Zap, Shield, Globe, Brain, Database, Puzzle, Cloud, Activity, Server, Code2, Package, GitBranch, Video, Wand2 } from 'lucide-react'
 
 const releases = [
   {
-    version: 'v1.0.27',
-    date: '2026-04-08',
+    version: 'v1.1.0',
+    date: '2026-07-24',
     badge: 'Latest',
     badgeColor: 'badge-cyan',
+    title: 'Camera Monitoring, Database Health & SRE Reliability Dashboard',
+    icon: Video,
+    color: 'fuchsia',
+    highlights: [
+      'CCTV & RTSP Camera Monitoring — stream-up health, latency, diagnostics, site/zone hierarchy, and alert correlation',
+      'Database Health Monitoring — PostgreSQL, MongoDB, and Redis as first-class monitored databases with insight-driven recommendations',
+      'SRE Reliability Dashboard — production-grade SLO tracking with error budgets and burn rates',
+      'SLA-specific compliance PDF reports and persisted maintenance windows',
+      'Config Manager module palette — enable any of 84 collectors without hand-editing YAML',
+      'Synthetic monitoring hardening — SSRF protections, alert lifecycle, and probe authentication',
+    ],
+  },
+  {
+    version: 'v1.0.27',
+    date: '2026-04-08',
+    badge: null,
+    badgeColor: '',
     title: 'Alert Rule Library, Config Wizard & Coverage Score',
     icon: Activity,
     color: 'cyan',
@@ -353,6 +370,7 @@ const colorMap: Record<string, { icon: string; line: string }> = {
   rose:   { icon: 'text-rose-400 bg-rose-500/10 border-rose-500/30',   line: 'bg-rose-500/20' },
   sky:    { icon: 'text-sky-400 bg-sky-500/10 border-sky-500/30',     line: 'bg-sky-500/20' },
   violet: { icon: 'text-violet-400 bg-violet-500/10 border-violet-500/30', line: 'bg-violet-500/20' },
+  fuchsia:{ icon: 'text-fuchsia-400 bg-fuchsia-500/10 border-fuchsia-500/30', line: 'bg-fuchsia-500/20' },
 }
 
 export default function ChangelogPage() {

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import {
   BarChart3, FileText, GitBranch, Brain, Bell, Shield,
   Activity, Globe, Cpu, Database, Cloud, Puzzle,
-  ArrowRight, Network, Bug, BarChart2
+  ArrowRight, Network, Bug, BarChart2, Video, Wand2, Gauge
 } from 'lucide-react'
 
 const features = [
@@ -77,6 +77,27 @@ const features = [
     tags: ['Raft HA', 'Multi-tenant', 'Quotas'],
   },
   {
+    icon: Video,
+    color: 'fuchsia',
+    title: 'CCTV & RTSP Camera Monitoring',
+    desc: 'Register any RTSP/RTSPS stream and get stream-up health, latency, and diagnostics — plus site/zone hierarchy, alert correlation, and maintenance-window suppression.',
+    tags: ['RTSP', 'Camera Health', 'Site Hierarchy'],
+  },
+  {
+    icon: Gauge,
+    color: 'cyan',
+    title: 'Database Health Monitoring',
+    desc: 'First-class monitoring for PostgreSQL, MongoDB, and Redis — connection usage, cache hit rate, replication lag, deadlocks, and memory-pressure insights with a recommended fix.',
+    tags: ['PostgreSQL', 'MongoDB', 'Redis'],
+  },
+  {
+    icon: Wand2,
+    color: 'purple',
+    title: 'No-YAML Config Wizard',
+    desc: 'Discovery-driven, credential-aware setup — pick from an 84-collector module palette and push validated, redacted config to any agent without hand-editing YAML.',
+    tags: ['Auto-Discovery', '84 Collectors', 'Safe Push'],
+  },
+  {
     icon: Cloud,
     color: 'sky',
     title: 'Cloud Cost Intelligence',
@@ -129,6 +150,7 @@ const colorMap: Record<string, { bg: string; border: string; text: string; shado
   amber:  { bg: 'rgba(245,158,11,0.08)',   border: 'rgba(245,158,11,0.2)',   text: 'text-amber-400',  shadow: '0 0 30px rgba(245,158,11,0.08)' },
   red:    { bg: 'rgba(239,68,68,0.08)',    border: 'rgba(239,68,68,0.2)',    text: 'text-red-400',    shadow: '0 0 30px rgba(239,68,68,0.08)' },
   lime:   { bg: 'rgba(132,204,22,0.08)',   border: 'rgba(132,204,22,0.2)',   text: 'text-lime-400',   shadow: '0 0 30px rgba(132,204,22,0.08)' },
+  fuchsia:{ bg: 'rgba(217,70,239,0.08)',    border: 'rgba(217,70,239,0.2)',   text: 'text-fuchsia-400', shadow: '0 0 30px rgba(217,70,239,0.08)' },
 }
 
 export default function FeaturesSection() {
